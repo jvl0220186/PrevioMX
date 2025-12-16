@@ -1,0 +1,6 @@
+@PrevioMX_Api_HostAddress = http://localhost:5196
+
+GET {{PrevioMX_Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
