@@ -1,10 +1,10 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../contexts/AuthContext.js'
 import LoginView from '../views/LoginView'
 import DashboardView from '../views/DashboardView'
+import CaptureView from '../views/CaptureView'
 import LoadingSpinner from '../components/common/LoadingSpinner'
 
-// Componente para proteger rutas
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth()
 
@@ -12,10 +12,9 @@ const ProtectedRoute = ({ children }) => {
     return <LoadingSpinner />
   }
 
-  return isAuthenticated ? children : <Navigate to="/login" replace />
+  return isAuthenticated ? children : <Navigate to="/" replace />
 }
 
-// Componente para rutas públicas (redirige si ya está autenticado)
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth()
 
@@ -30,13 +29,14 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route
-        path="/login"
+        path="/"
         element={
           <PublicRoute>
             <LoginView />
           </PublicRoute>
         }
       />
+      <Route path="/login" element={<Navigate to="/" replace />} />
       <Route
         path="/dashboard"
         element={
@@ -45,7 +45,14 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route
+        path="/capture/:reference"
+        element={
+          <ProtectedRoute>
+            <CaptureView />
+          </ProtectedRoute>
+        }
+      />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   )

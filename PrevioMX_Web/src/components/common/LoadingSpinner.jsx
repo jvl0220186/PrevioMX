@@ -1,9 +1,11 @@
 import './LoadingSpinner.css'
 
-const LoadingSpinner = () => {
+const LoadingSpinner = ({ size = 'medium', color = 'primary' }) => {
   return (
-    <div className="loading-spinner-container">
-      <div className="loading-spinner"></div>
+    <div className={`loading-spinner-container ${size} ${color}`}>
+      <div className="lds-roller">
+        <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+      </div>
     </div>
   )
 }

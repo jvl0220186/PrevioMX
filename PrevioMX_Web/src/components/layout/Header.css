@@ -1,46 +1,59 @@
 .header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: #ffffff;
+  border: 1px solid #E9E8E2;
   padding: 15px 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
 }
 
 .header-content {
-  max-width: 1200px;
-  margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.header-logo {
+.header-title-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.header-title {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #292929;
+  font-family: 'Outfit', sans-serif;
+}
+
+.header-subtitle {
+  font-size: 0.875rem;
+  color: #666;
+  font-weight: 400;
+  font-family: 'Outfit', sans-serif;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+}
+
+.status-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background-color: #ffffff;
+  border: 1px solid #E9E8E2;
+  border-radius: 22px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.875rem;
+  color: #292929;
+}
+
+.status-count {
   font-weight: 600;
 }
 
-.header-user {
-  display: flex;
-  align-items: center;
-  gap: 15px;
+.status-label {
+  font-weight: 400;
 }
-
-.user-name {
-  font-weight: 500;
-}
-
-.logout-button {
-  padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: background 0.3s;
-}
-
-.logout-button:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-

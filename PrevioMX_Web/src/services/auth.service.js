@@ -3,14 +3,14 @@ import apiClient from './api.service'
 const authService = {
   /**
    * Inicia sesión y obtiene el token JWT
-   * @param {string} email - Email del usuario
+   * @param {string} usuario - Usuario o Email del usuario
    * @param {string} password - Contraseña del usuario
-   * @returns {Promise} Respuesta con token y datos del usuario
+   * @returns {Promise<import('../models/api.models').AuthResponse>} Respuesta con token y datos del usuario
    */
-  async login(email, password) {
+  async login(usuario, password) {
     try {
-      const response = await apiClient.post('/auth/login', {
-        email,
+      const response = await apiClient.post('/api/Auth/login', {
+        usuario,
         password
       })
       
@@ -25,6 +25,9 @@ const authService = {
       throw error.response?.data || error.message
     }
   },
+
+  /**
+
 
   /**
    * Cierra sesión
@@ -66,7 +69,7 @@ const authService = {
    */
   async register(userData) {
     try {
-      const response = await apiClient.post('/auth/register', userData)
+      const response = await apiClient.post('/api/Auth/register', userData)
       return response.data
     } catch (error) {
       throw error.response?.data || error.message
@@ -79,7 +82,7 @@ const authService = {
    */
   async refreshToken() {
     try {
-      const response = await apiClient.post('/auth/refresh')
+      const response = await apiClient.post('/api/Auth/refresh')
       if (response.data.token) {
         localStorage.setItem('token', response.data.token)
       }

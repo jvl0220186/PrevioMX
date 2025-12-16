@@ -1,16 +1,15 @@
 import axios from 'axios'
 import { API_CONFIG } from '../config/api.config'
 
-// Crear instancia de axios
 const apiClient = axios.create({
   baseURL: API_CONFIG.BASE_URL,
   timeout: API_CONFIG.TIMEOUT,
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'true'
   }
 })
 
-// Interceptor para agregar el token JWT a las peticiones
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token')
@@ -24,17 +23,23 @@ apiClient.interceptors.request.use(
   }
 )
 
-// Interceptor para manejar respuestas y errores
 apiClient.interceptors.response.use(
   (response) => {
     return response
   },
   (error) => {
+    console.error('API Error:', error)
+    if (error.config) {
+      console.log('Failed Request URL:', error.config.url)
+      console.log('Failed Request BaseURL:', error.config.baseURL)
+      console.log('Failed Request Method:', error.config.method)
+      console.log('Full URL:', (error.config.baseURL || '') + error.config.url)
+    }
+
     if (error.response?.status === 401) {
-      // Token expirado o inválido
       localStorage.removeItem('token')
       localStorage.removeItem('user')
-      window.location.href = '/login'
+      window.location.href = '/'
     }
     return Promise.reject(error)
   }
