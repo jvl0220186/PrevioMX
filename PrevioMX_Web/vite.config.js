@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://zelma-disturbed-robbyn.ngrok-free.dev',
+        target: process.env.VITE_API_BASE_URL || 'http://localhost:8888',
         changeOrigin: true,
         secure: false
       }

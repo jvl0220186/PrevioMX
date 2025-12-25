@@ -13,9 +13,9 @@ public class VisualizationService : IVisualizationService
         _logger = logger;
     }
 
-    public async Task<PendientesResponse> GetPendientesAsync()
+    public async Task<PendientesResponse> GetPendientesAsync(string equipo)
     {
-        var items = await _context.GetPendientesAsync();
+        var items = await _context.GetPendientesAsync(equipo);
 
         return new PendientesResponse
         {
@@ -36,6 +36,40 @@ public class VisualizationService : IVisualizationService
     public async Task<ValidarCierrePrevioResponse?> GetValidarCierrePrevioAsync(string idEntrada, string idUsuario)
     {
         return await _context.GetValidarCierrePrevioAsync(idEntrada, idUsuario);
+    }
+
+    public async Task<RegistrarPartidaResponse?> RegistrarPartidaAsync(RegistrarPartidaRequest request)
+    {
+        _logger.LogInformation("Registrando partida para bulto: {IdBulto}, producto: {IdProducto}", 
+            request.IdBulto, request.IdProducto);
+        
+        return await _context.RegistrarPartidaAsync(request);
+    }
+
+    public async Task<RegistrarPartidaResponse?> ActualizarPartidaAsync(ActualizarPartidaRequest request)
+    {
+        _logger.LogInformation("Actualizando partida Id: {Id}, bulto: {IdBulto}, producto: {IdProducto}", 
+            request.Id, request.IdBulto, request.IdProducto);
+        
+        return await _context.ActualizarPartidaAsync(request);
+    }
+
+    public async Task<DetallePOsResponse> GetDetallePOsAsync(string idEntrada)
+    {
+        var items = await _context.GetDetallePOsAsync(idEntrada);
+
+        return new DetallePOsResponse
+        {
+            Items = items
+        };
+    }
+
+    public async Task<ValidarCuarentenasResponse> ValidarCuarentenasAsync(string idEntrada, string idUsuario)
+    {
+        _logger.LogInformation("Validando cuarentenas para entrada: {IdEntrada}, usuario: {IdUsuario}", 
+            idEntrada, idUsuario);
+        
+        return await _context.ValidarCuarentenasAsync(idEntrada, idUsuario);
     }
 }
 

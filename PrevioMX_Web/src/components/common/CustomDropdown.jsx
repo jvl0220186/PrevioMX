@@ -7,7 +7,9 @@ const CustomDropdown = ({
     label = 'Seleccionar',
     searchPlaceholder = 'Buscar',
     onSelect,
-    initialSelection
+    initialSelection,
+    disabled = false,
+    fullWidth = false
 }) => {
     const [isOpen, setIsOpen] = useState(false)
     const [searchTerm, setSearchTerm] = useState('')
@@ -75,7 +77,14 @@ const CustomDropdown = ({
         }
     }
 
+    const getButtonLabel = () => {
+        if (selectedItems.length === 0) return label
+        if (selectedItems.length > 3) return `+${selectedItems.length} opciones seleccionadas`
+        return selectedItems.join(', ')
+    }
+
     const toggleDropdown = () => {
+        if (disabled) return
         if (!isOpen) {
             if (buttonRef.current) {
                 const rect = buttonRef.current.getBoundingClientRect()
@@ -107,14 +116,8 @@ const CustomDropdown = ({
         setIsOpen(!isOpen)
     }
 
-    const getButtonLabel = () => {
-        if (selectedItems.length === 0) return label
-        if (selectedItems.length > 3) return `+${selectedItems.length} opciones seleccionadas`
-        return selectedItems.join(', ')
-    }
-
     return (
-        <div ref={dropdownRef} className="dropdown position-relative" style={{ width: '300px' }}>
+        <div ref={dropdownRef} className="dropdown position-relative" style={fullWidth ? { width: '100%' } : { width: '300px' }}>
             <button
                 ref={buttonRef}
                 className={`btn btn-white border d-flex align-items-center justify-content-between bg-white w-100 ${isOpen ? 'custom-dropdown-active' : ''}`}
@@ -124,7 +127,8 @@ const CustomDropdown = ({
                     toggleDropdown()
                 }}
                 aria-expanded={isOpen}
-                style={{ borderRadius: '20px', height: '40px' }}
+                disabled={disabled}
+                style={{ borderRadius: '12px', height: '45px', cursor: disabled ? 'not-allowed' : 'pointer' }}
             >
                 <span className="text-truncate" style={{ maxWidth: 'calc(100% - 20px)' }}>
                     {getButtonLabel()}

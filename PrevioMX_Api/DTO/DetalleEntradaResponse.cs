@@ -50,5 +50,14 @@ public class DetalleEntradaDto
 
     [Column("series")]
     public bool? Series { get; set; }
+
+    [Column("EsOpenPO")]
+    public bool EsOpenPO { get; set; }
+
+    [Column("descripcion_clas")]
+    public string? DescripcionClas { get; set; }
+
+    [Column("MMS")]
+    public string? Mms { get; set; }
 }
 

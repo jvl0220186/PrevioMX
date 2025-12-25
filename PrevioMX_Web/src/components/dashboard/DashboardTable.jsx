@@ -7,6 +7,45 @@ import SpecialBtn from '../common/SpecialBtn'
 const DashboardTable = ({ data }) => {
   const navigate = useNavigate()
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' })
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [pendingRow, setPendingRow] = useState(null)
+
+  const proceedToCapture = (row) => {
+    // Guardar datos del row en localStorage para usarlos en CaptureView
+    localStorage.setItem('captureData', JSON.stringify({
+      reference: row.reference,
+      client: row.client,
+      provider: row.provider,
+      date: row.date,
+      bundles: row.bundles,
+      status: row.status,
+      rutaDocumento: row.rutaDocumento || ''
+    }))
+    navigate(`/capture/${row.reference}`)
+  }
+
+  const handleCapturar = (row) => {
+    // Verificar si el estatus es "Sin Documentos"
+    if (row.status && row.status.toLowerCase() === 'sin documentos') {
+      setPendingRow(row)
+      setShowConfirmModal(true)
+    } else {
+      proceedToCapture(row)
+    }
+  }
+
+  const handleConfirmCapture = () => {
+    if (pendingRow) {
+      proceedToCapture(pendingRow)
+    }
+    setShowConfirmModal(false)
+    setPendingRow(null)
+  }
+
+  const handleCancelCapture = () => {
+    setShowConfirmModal(false)
+    setPendingRow(null)
+  }
 
   const sortedData = React.useMemo(() => {
     let sortableItems = [...data]
@@ -71,6 +110,7 @@ const DashboardTable = ({ data }) => {
     { key: 'reference', label: 'Número de Referencia' },
     { key: 'client', label: 'Cliente' },
     { key: 'provider', label: 'Proveedor' },
+    { key: 'tipoEnvio', label: 'Tipo Envío' },
     { key: 'date', label: 'Fecha de Llegada' },
     { key: 'bundles', label: 'Bultos' },
     { key: 'status', label: 'Estatus' },
@@ -79,56 +119,109 @@ const DashboardTable = ({ data }) => {
   ]
 
   return (
-    <div className="dashboard-card h-100">
-      <div className="table-responsive custom-scrollbar dashboard-table-container flex-grow-1" style={{ overflowY: 'auto' }}>
-        <table className="table table-hover table-borderless align-middle dashboard-table">
-          <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
-            <tr>
-              {headers.map((header) => (
-                <th
-                  key={header.key}
-                  scope="col"
-                  onClick={() => header.sortable !== false && requestSort(header.key)}
-                  style={{ cursor: header.sortable !== false ? 'pointer' : 'default' }}
-                >
-                  <div className="d-flex align-items-center justify-content-between w-100">
-                    <span>{header.label}</span>
-                    {header.sortable !== false && getSortIcon(header.key)}
-                  </div>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {sortedData.map((row, index) => (
-              <tr key={index} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                <td className="fw-bold">{renderCell(row.reference)}</td>
-                <td>{renderCell(row.client)}</td>
-                <td>{renderCell(row.provider)}</td>
-                <td>{renderCell(row.date)}</td>
-                <td>{renderCell(row.bundles.toString())}</td>
-                <td>{getStatusBadge(row.status)}</td>
-                <td>
-                  {row.ai && (
-                    <button className="btn btn-sm" style={{ background: '#E9E8E2', borderRadius: '8px', padding: '4px 8px' }}>
-                      <i className="bi bi-robot text-primary"></i> IA
-                    </button>
-                  )}
-                  {!row.ai && <span className="text-muted">—</span>}
-                </td>
-                <td>
-                  <SpecialBtn
-                    className="text-nowrap"
-                    onClick={() => navigate(`/capture/${row.reference}`)}
-                    label="Iniciar Captura"
-                  />
-                </td>
+    <>
+      <div className="dashboard-card h-100">
+        <div className="table-responsive custom-scrollbar dashboard-table-container flex-grow-1" style={{ overflowY: 'auto' }}>
+          <table className="table table-hover table-borderless align-middle dashboard-table">
+            <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
+              <tr>
+                {headers.map((header) => (
+                  <th
+                    key={header.key}
+                    scope="col"
+                    onClick={() => header.sortable !== false && requestSort(header.key)}
+                    style={{ cursor: header.sortable !== false ? 'pointer' : 'default' }}
+                  >
+                    <div className="d-flex align-items-center justify-content-between w-100">
+                      <span>{header.label}</span>
+                      {header.sortable !== false && getSortIcon(header.key)}
+                    </div>
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {sortedData.map((row, index) => (
+                <tr key={index} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                  <td className="fw-bold">{renderCell(row.reference)}</td>
+                  <td>{renderCell(row.client)}</td>
+                  <td>{renderCell(row.provider)}</td>
+                  <td>{renderCell(row.tipoEnvio || '-')}</td>
+                  <td>{renderCell(row.date)}</td>
+                  <td>{renderCell(row.bundles.toString())}</td>
+                  <td>{getStatusBadge(row.status)}</td>
+                  <td>
+                    {row.ai && (
+                      <button className="btn btn-sm" style={{ background: '#E9E8E2', borderRadius: '8px', padding: '4px 8px' }}>
+                        <i className="bi bi-robot text-primary"></i> IA
+                      </button>
+                    )}
+                    {!row.ai && <span className="text-muted">—</span>}
+                  </td>
+                  <td>
+                    <SpecialBtn
+                      className="text-nowrap"
+                      onClick={() => handleCapturar(row)}
+                      label="Iniciar Captura"
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+
+      {/* Modal de confirmación para Sin Documentos */}
+      {showConfirmModal && (
+        <div 
+          className="modal fade show d-block" 
+          tabIndex="-1" 
+          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+          onClick={handleCancelCapture}
+        >
+          <div className="modal-dialog modal-dialog-centered" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-content" style={{ borderRadius: '16px', border: 'none' }}>
+              <div className="modal-header border-0 pb-0">
+                <h5 className="modal-title d-flex align-items-center gap-2">
+                  <i className="bi bi-exclamation-triangle-fill text-warning" style={{ fontSize: '1.5rem' }}></i>
+                  Mercancía Sin Documentos
+                </h5>
+                <button 
+                  type="button" 
+                  className="btn-close" 
+                  onClick={handleCancelCapture}
+                  style={{ cursor: 'pointer' }}
+                ></button>
+              </div>
+              <div className="modal-body py-4">
+                <p className="mb-0" style={{ fontSize: '1rem', color: '#555' }}>
+                  La mercancía de la referencia <strong>{pendingRow?.reference}</strong> no cuenta con documentos adjuntos.
+                </p>
+                <p className="mt-2 mb-0 text-muted" style={{ fontSize: '0.9rem' }}>
+                  ¿Desea continuar con la captura de todas formas?
+                </p>
+              </div>
+              <div className="modal-footer border-0 pt-0">
+                <button 
+                  type="button" 
+                  className="btn btn-outline-secondary" 
+                  onClick={handleCancelCapture}
+                  style={{ borderRadius: '12px', padding: '8px 20px', cursor: 'pointer' }}
+                >
+                  Cancelar
+                </button>
+                <SpecialBtn
+                  onClick={handleConfirmCapture}
+                  label="Sí, Continuar"
+                  iconLeft={<i className="bi bi-check-lg"></i>}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 
@@ -137,6 +230,7 @@ DashboardTable.propTypes = {
     reference: PropTypes.string.isRequired,
     client: PropTypes.string.isRequired,
     provider: PropTypes.string.isRequired,
+    tipoEnvio: PropTypes.string,
     date: PropTypes.string.isRequired,
     bundles: PropTypes.number.isRequired,
     status: PropTypes.string.isRequired,

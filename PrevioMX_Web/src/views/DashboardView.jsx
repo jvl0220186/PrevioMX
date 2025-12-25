@@ -15,12 +15,19 @@ const DashboardView = () => {
   const [filteredData, setFilteredData] = useState([])
   const [selectedClients, setSelectedClients] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
+  const [selectedStatus, setSelectedStatus] = useState('TOTAL') // Filtro por KPI
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true)
-        const response = await previoService.getPendientes()
+        
+        // Obtener equipo del usuario logueado
+        const userStr = localStorage.getItem('user')
+        const user = userStr ? JSON.parse(userStr) : {}
+        const equipo = user.equipo || ''
+        
+        const response = await previoService.getPendientes(equipo)
 
         const mappedData = (response.items || []).map(item => {
           let dateStr = item.fechaEntrada
@@ -36,9 +43,11 @@ const DashboardView = () => {
             reference: item.idEntrada,
             client: item.cliente,
             provider: item.proveedor,
+            tipoEnvio: item.tipoEnvio || '',
             date: dateStr,
             bundles: item.bultos,
             status: item.estatus,
+            rutaDocumento: item.rutaDocumento || '',
             ai: false
           }
         })
@@ -67,26 +76,34 @@ const DashboardView = () => {
   const pendingCount = totalCount - documentoListoCount
 
   const stats = [
-    { label: 'SIN DOCUMENTOS', count: sinDocumentosCount, variant: 'oc-light-card' },
-    { label: 'PROCESANDO DOCUMENTOS', count: procesandoCount, variant: 'oc-light-card' },
-    { label: 'DOCUMENTO LISTO', count: documentoListoCount, variant: 'oc-light-card' },
-    { label: 'TOTAL', count: totalCount, variant: 'oc-light-card', border: true },
+    { label: 'SIN DOCUMENTOS', count: sinDocumentosCount, variant: 'oc-light-card', statusFilter: 'Sin Documentos' },
+    { label: 'PROCESANDO DOCUMENTOS', count: procesandoCount, variant: 'oc-light-card', statusFilter: 'Procesando Documentos' },
+    { label: 'DOCUMENTO LISTO', count: documentoListoCount, variant: 'oc-light-card', statusFilter: 'Documento Listo' },
+    { label: 'TOTAL', count: totalCount, variant: 'oc-light-card', border: true, statusFilter: 'TOTAL' },
   ]
+
+  const handleStatusFilter = (status) => {
+    setSelectedStatus(status)
+  }
 
   const uniqueClients = [...new Set(tableData.map(item => item.client))]
 
   useEffect(() => {
-    applyFilters(selectedClients, searchTerm)
-  }, [tableData, selectedClients, searchTerm])
+    applyFilters(selectedClients, searchTerm, selectedStatus)
+  }, [tableData, selectedClients, searchTerm, selectedStatus])
 
 
-  const applyFilters = (clients, search) => {
+  const applyFilters = (clients, search, status) => {
     let data = tableData
+
+    // Filtro por estatus (KPI)
+    if (status && status !== 'TOTAL') {
+      data = data.filter(item => item.status === status)
+    }
 
     if (clients.length > 0) {
       data = data.filter(item => clients.includes(item.client))
     }
-
 
     if (search.trim() !== '') {
       const searchLower = search.toLowerCase()
@@ -141,6 +158,8 @@ const DashboardView = () => {
                 count={stat.count}
                 variant={stat.variant}
                 border={stat.border}
+                active={selectedStatus === stat.statusFilter}
+                onClick={() => handleStatusFilter(stat.statusFilter)}
               />
             </div>
           ))}

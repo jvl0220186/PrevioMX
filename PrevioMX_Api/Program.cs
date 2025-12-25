@@ -8,6 +8,22 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configurar CORS para permitir peticiones del frontend
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins(
+                "http://localhost:5173",    // Vite dev server
+                "http://localhost:3000",    // Alternativa común
+                "http://localhost:5000"     // Otra alternativa
+            )
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
+    });
+});
+
 // Add services to the container.
 builder.Services.AddControllers();
 
@@ -139,6 +155,7 @@ builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICatalogosService, CatalogosService>();
 builder.Services.AddScoped<IVisualizationService, VisualizationService>();
+builder.Services.AddScoped<IClasificacionService, ClasificacionService>();
 
 // Configurar Swagger con soporte para JWT
 builder.Services.AddEndpointsApiExplorer();
@@ -187,6 +204,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// IMPORTANTE: UseCors debe ir antes de Authentication
+app.UseCors("AllowFrontend");
 
 // IMPORTANTE: UseAuthentication debe ir antes de UseAuthorization
 app.UseAuthentication();

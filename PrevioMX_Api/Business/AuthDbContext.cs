@@ -138,7 +138,7 @@ public class AuthDbContext : DbContext
     /// <summary>
     /// Ejecuta el stored procedure CSP_PMX_ObtenerPendientes para obtener pendientes
     /// </summary>
-    public async Task<List<PendienteDto>> GetPendientesAsync()
+    public async Task<List<PendienteDto>> GetPendientesAsync(string equipo)
     {
         var connection = Database.GetDbConnection();
         await connection.OpenAsync();
@@ -146,8 +146,13 @@ public class AuthDbContext : DbContext
         try
         {
             using var command = connection.CreateCommand();
-            command.CommandText = "EXEC CSP_PMX_ObtenerPendientes";
+            command.CommandText = "EXEC CSP_PMX_ObtenerPendientes @EQUIPO = @EQUIPO";
             command.CommandType = System.Data.CommandType.Text;
+
+            var parameter = command.CreateParameter();
+            parameter.ParameterName = "@EQUIPO";
+            parameter.Value = equipo;
+            command.Parameters.Add(parameter);
 
             using var reader = await command.ExecuteReaderAsync();
             var results = new List<PendienteDto>();
@@ -224,7 +229,10 @@ public class AuthDbContext : DbContext
                     PrecioUnitario = reader["precio_unitario"] != DBNull.Value ? Convert.ToDouble(reader["precio_unitario"]) : null,
                     Comentarios = reader["comentarios"]?.ToString(),
                     Clasificado = reader["clasificado"] != DBNull.Value ? Convert.ToBoolean(reader["clasificado"]) : null,
-                    Series = reader["series"] != DBNull.Value ? Convert.ToBoolean(reader["series"]) : null
+                    Series = reader["series"] != DBNull.Value ? Convert.ToBoolean(reader["series"]) : null,
+                    EsOpenPO = reader["EsOpenPO"] != DBNull.Value && Convert.ToBoolean(reader["EsOpenPO"]),
+                    DescripcionClas = reader["descripcion_clas"]?.ToString(),
+                    Mms = reader["MMS"]?.ToString()
                 };
 
                 results.Add(item);
@@ -282,5 +290,352 @@ public class AuthDbContext : DbContext
             await connection.CloseAsync();
         }
     }
-}
 
+    /// <summary>
+    /// Ejecuta el stored procedure CSP_PMX_ValidarClasificacion para validar la clasificación de un producto
+    /// </summary>
+    public async Task<ValidarClasificacionResponse?> GetValidarClasificacionAsync(string idEntrada, string idProducto)
+    {
+        var connection = Database.GetDbConnection();
+        await connection.OpenAsync();
+
+        try
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = "EXEC CSP_PMX_ValidarClasificacion @ID_ENTRADA = @ID_ENTRADA, @ID_PRODUCTO = @ID_PRODUCTO";
+            command.CommandType = System.Data.CommandType.Text;
+
+            var parameterEntrada = command.CreateParameter();
+            parameterEntrada.ParameterName = "@ID_ENTRADA";
+            parameterEntrada.Value = idEntrada;
+            command.Parameters.Add(parameterEntrada);
+
+            var parameterProducto = command.CreateParameter();
+            parameterProducto.ParameterName = "@ID_PRODUCTO";
+            parameterProducto.Value = idProducto;
+            command.Parameters.Add(parameterProducto);
+
+            using var reader = await command.ExecuteReaderAsync();
+
+            if (await reader.ReadAsync())
+            {
+                return new ValidarClasificacionResponse
+                {
+                    Clasificacion = reader["clasificacion"]?.ToString() ?? string.Empty,
+                    Descripcion = reader["descripcion"]?.ToString() ?? string.Empty,
+                    IsSpum = reader["is_spum"] != DBNull.Value && Convert.ToBoolean(reader["is_spum"]),
+                    SpUm = reader["sp_um"]?.ToString() ?? string.Empty,
+                    IsSppo = reader["is_sppo"] != DBNull.Value && Convert.ToBoolean(reader["is_sppo"]),
+                    SpPo = reader["sp_po"]?.ToString() ?? string.Empty,
+                    IsSpmms = reader["is_spmms"] != DBNull.Value && Convert.ToBoolean(reader["is_spmms"]),
+                    SpMms = reader["sp_mms"]?.ToString() ?? string.Empty
+                };
+            }
+
+            return null;
+        }
+        finally
+        {
+            await connection.CloseAsync();
+        }
+    }
+
+    /// <summary>
+    /// Ejecuta el stored procedure csp_PMX_RegistrarPartida para registrar una partida
+    /// </summary>
+    public async Task<RegistrarPartidaResponse?> RegistrarPartidaAsync(RegistrarPartidaRequest request)
+    {
+        var connection = Database.GetDbConnection();
+        await connection.OpenAsync();
+
+        try
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = @"EXEC csp_PMX_RegistrarPartida 
+                @idbulto = @idbulto, 
+                @Referencia = @Referencia, 
+                @id_producto = @id_producto, 
+                @UM = @UM, 
+                @cantidad = @cantidad, 
+                @sub_cantidad = @sub_cantidad, 
+                @pais_origen = @pais_origen, 
+                @Comentarios = @Comentarios, 
+                @Usuario = @Usuario, 
+                @oc_compra = @oc_compra,
+                @mms = @mms";
+            command.CommandType = System.Data.CommandType.Text;
+
+            var paramIdBulto = command.CreateParameter();
+            paramIdBulto.ParameterName = "@idbulto";
+            paramIdBulto.Value = request.IdBulto;
+            command.Parameters.Add(paramIdBulto);
+
+            var paramReferencia = command.CreateParameter();
+            paramReferencia.ParameterName = "@Referencia";
+            paramReferencia.Value = request.Referencia;
+            command.Parameters.Add(paramReferencia);
+
+            var paramIdProducto = command.CreateParameter();
+            paramIdProducto.ParameterName = "@id_producto";
+            paramIdProducto.Value = request.IdProducto;
+            command.Parameters.Add(paramIdProducto);
+
+            var paramUM = command.CreateParameter();
+            paramUM.ParameterName = "@UM";
+            paramUM.Value = request.UM;
+            command.Parameters.Add(paramUM);
+
+            var paramCantidad = command.CreateParameter();
+            paramCantidad.ParameterName = "@cantidad";
+            paramCantidad.Value = request.Cantidad;
+            command.Parameters.Add(paramCantidad);
+
+            var paramSubCantidad = command.CreateParameter();
+            paramSubCantidad.ParameterName = "@sub_cantidad";
+            paramSubCantidad.Value = request.SubCantidad;
+            command.Parameters.Add(paramSubCantidad);
+
+            var paramPaisOrigen = command.CreateParameter();
+            paramPaisOrigen.ParameterName = "@pais_origen";
+            paramPaisOrigen.Value = request.PaisOrigen;
+            command.Parameters.Add(paramPaisOrigen);
+
+            var paramComentarios = command.CreateParameter();
+            paramComentarios.ParameterName = "@Comentarios";
+            paramComentarios.Value = request.Comentarios;
+            command.Parameters.Add(paramComentarios);
+
+            var paramUsuario = command.CreateParameter();
+            paramUsuario.ParameterName = "@Usuario";
+            paramUsuario.Value = request.Usuario;
+            command.Parameters.Add(paramUsuario);
+
+            var paramOcCompra = command.CreateParameter();
+            paramOcCompra.ParameterName = "@oc_compra";
+            paramOcCompra.Value = request.OcCompra;
+            command.Parameters.Add(paramOcCompra);
+
+            var paramMms = command.CreateParameter();
+            paramMms.ParameterName = "@mms";
+            paramMms.Value = request.Mms;
+            command.Parameters.Add(paramMms);
+
+            using var reader = await command.ExecuteReaderAsync();
+
+            if (await reader.ReadAsync())
+            {
+                return new RegistrarPartidaResponse
+                {
+                    Estatus = reader["estatus"] != DBNull.Value && Convert.ToBoolean(reader["estatus"]),
+                    Msg = reader["msg"]?.ToString() ?? string.Empty
+                };
+            }
+
+            return null;
+        }
+        finally
+        {
+            await connection.CloseAsync();
+        }
+    }
+
+    /// <summary>
+    /// Ejecuta el stored procedure CSP_PMX_DetallePOs para obtener el detalle de POs de una entrada
+    /// </summary>
+    public async Task<List<DetallePODto>> GetDetallePOsAsync(string idEntrada)
+    {
+        var connection = Database.GetDbConnection();
+        await connection.OpenAsync();
+
+        try
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = "EXEC CSP_PMX_DetallePOs @ID_ENTRADA = @ID_ENTRADA";
+            command.CommandType = System.Data.CommandType.Text;
+
+            var parameter = command.CreateParameter();
+            parameter.ParameterName = "@ID_ENTRADA";
+            parameter.Value = idEntrada;
+            command.Parameters.Add(parameter);
+
+            using var reader = await command.ExecuteReaderAsync();
+            var results = new List<DetallePODto>();
+
+            while (await reader.ReadAsync())
+            {
+                var item = new DetallePODto
+                {
+                    Po = reader["po"]?.ToString() ?? string.Empty,
+                    Bultos = reader["bultos"] != DBNull.Value ? Convert.ToInt32(reader["bultos"]) : 0,
+                    IdProducto = reader["id_producto"]?.ToString() ?? string.Empty,
+                    Cantidad = reader["cantidad"] != DBNull.Value ? Convert.ToDecimal(reader["cantidad"]) : 0,
+                    Descripcion = reader["descripcion"]?.ToString() ?? string.Empty,
+                    PaisOrigen = reader["pais_origen"]?.ToString() ?? string.Empty,
+                    Um = reader["um"]?.ToString() ?? string.Empty
+                };
+
+                results.Add(item);
+            }
+
+            return results;
+        }
+        finally
+        {
+            await connection.CloseAsync();
+        }
+    }
+
+    /// <summary>
+    /// Ejecuta el stored procedure csp_PMX_ActualizarPartida para actualizar una partida existente
+    /// </summary>
+    public async Task<RegistrarPartidaResponse?> ActualizarPartidaAsync(ActualizarPartidaRequest request)
+    {
+        var connection = Database.GetDbConnection();
+        await connection.OpenAsync();
+
+        try
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = @"EXEC csp_PMX_ActualizarPartida 
+                @id = @id,
+                @idbulto = @idbulto, 
+                @Referencia = @Referencia, 
+                @id_producto = @id_producto, 
+                @UM = @UM, 
+                @cantidad = @cantidad, 
+                @sub_cantidad = @sub_cantidad, 
+                @pais_origen = @pais_origen, 
+                @Comentarios = @Comentarios, 
+                @Usuario = @Usuario, 
+                @oc_compra = @oc_compra,
+                @mms = @mms";
+            command.CommandType = System.Data.CommandType.Text;
+
+            var paramId = command.CreateParameter();
+            paramId.ParameterName = "@id";
+            paramId.Value = request.Id;
+            command.Parameters.Add(paramId);
+
+            var paramIdBulto = command.CreateParameter();
+            paramIdBulto.ParameterName = "@idbulto";
+            paramIdBulto.Value = request.IdBulto;
+            command.Parameters.Add(paramIdBulto);
+
+            var paramReferencia = command.CreateParameter();
+            paramReferencia.ParameterName = "@Referencia";
+            paramReferencia.Value = request.Referencia;
+            command.Parameters.Add(paramReferencia);
+
+            var paramIdProducto = command.CreateParameter();
+            paramIdProducto.ParameterName = "@id_producto";
+            paramIdProducto.Value = request.IdProducto;
+            command.Parameters.Add(paramIdProducto);
+
+            var paramUM = command.CreateParameter();
+            paramUM.ParameterName = "@UM";
+            paramUM.Value = request.UM;
+            command.Parameters.Add(paramUM);
+
+            var paramCantidad = command.CreateParameter();
+            paramCantidad.ParameterName = "@cantidad";
+            paramCantidad.Value = request.Cantidad;
+            command.Parameters.Add(paramCantidad);
+
+            var paramSubCantidad = command.CreateParameter();
+            paramSubCantidad.ParameterName = "@sub_cantidad";
+            paramSubCantidad.Value = request.SubCantidad;
+            command.Parameters.Add(paramSubCantidad);
+
+            var paramPaisOrigen = command.CreateParameter();
+            paramPaisOrigen.ParameterName = "@pais_origen";
+            paramPaisOrigen.Value = request.PaisOrigen;
+            command.Parameters.Add(paramPaisOrigen);
+
+            var paramComentarios = command.CreateParameter();
+            paramComentarios.ParameterName = "@Comentarios";
+            paramComentarios.Value = request.Comentarios;
+            command.Parameters.Add(paramComentarios);
+
+            var paramUsuario = command.CreateParameter();
+            paramUsuario.ParameterName = "@Usuario";
+            paramUsuario.Value = request.Usuario;
+            command.Parameters.Add(paramUsuario);
+
+            var paramOcCompra = command.CreateParameter();
+            paramOcCompra.ParameterName = "@oc_compra";
+            paramOcCompra.Value = request.OcCompra;
+            command.Parameters.Add(paramOcCompra);
+
+            var paramMms = command.CreateParameter();
+            paramMms.ParameterName = "@mms";
+            paramMms.Value = request.Mms;
+            command.Parameters.Add(paramMms);
+
+            using var reader = await command.ExecuteReaderAsync();
+
+            if (await reader.ReadAsync())
+            {
+                return new RegistrarPartidaResponse
+                {
+                    Estatus = reader["estatus"] != DBNull.Value && Convert.ToBoolean(reader["estatus"]),
+                    Msg = reader["msg"]?.ToString() ?? string.Empty
+                };
+            }
+
+            return null;
+        }
+        finally
+        {
+            await connection.CloseAsync();
+        }
+    }
+
+    /// <summary>
+    /// Ejecuta el stored procedure CSP_PMX_ValidarCuarentenas para validar cuarentenas de una entrada
+    /// </summary>
+    public async Task<ValidarCuarentenasResponse> ValidarCuarentenasAsync(string idEntrada, string idUsuario)
+    {
+        var connection = Database.GetDbConnection();
+        await connection.OpenAsync();
+
+        try
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = "EXEC CSP_PMX_ValidarCuarentenas @ID_ENTRADA = @ID_ENTRADA, @ID_USUARIO = @ID_USUARIO";
+            command.CommandType = System.Data.CommandType.Text;
+
+            var parameterEntrada = command.CreateParameter();
+            parameterEntrada.ParameterName = "@ID_ENTRADA";
+            parameterEntrada.Value = idEntrada;
+            command.Parameters.Add(parameterEntrada);
+
+            var parameterUsuario = command.CreateParameter();
+            parameterUsuario.ParameterName = "@ID_USUARIO";
+            parameterUsuario.Value = idUsuario;
+            command.Parameters.Add(parameterUsuario);
+
+            using var reader = await command.ExecuteReaderAsync();
+            var results = new List<ValidarCuarentenasItemDto>();
+
+            while (await reader.ReadAsync())
+            {
+                var item = new ValidarCuarentenasItemDto
+                {
+                    Exito = reader["EXITO"] != DBNull.Value && Convert.ToBoolean(reader["EXITO"]),
+                    Mensaje = reader["MENSAJE"]?.ToString() ?? string.Empty
+                };
+                results.Add(item);
+            }
+
+            return new ValidarCuarentenasResponse
+            {
+                Success = results.Count > 0 && results.All(x => x.Exito),
+                Items = results
+            };
+        }
+        finally
+        {
+            await connection.CloseAsync();
+        }
+    }
+}

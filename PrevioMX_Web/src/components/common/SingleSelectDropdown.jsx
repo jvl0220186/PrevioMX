@@ -7,7 +7,8 @@ const SingleSelectDropdown = ({
     label = 'Seleccionar',
     searchPlaceholder = 'Buscar',
     onSelect,
-    initialSelection = ''
+    initialSelection = '',
+    disabled = false
 }) => {
     const [isOpen, setIsOpen] = useState(false)
     const [searchTerm, setSearchTerm] = useState('')
@@ -63,6 +64,8 @@ const SingleSelectDropdown = ({
     }
 
     const toggleDropdown = () => {
+        if (disabled) return
+        
         if (!isOpen) {
             if (buttonRef.current) {
                 const rect = buttonRef.current.getBoundingClientRect()
@@ -98,14 +101,20 @@ const SingleSelectDropdown = ({
         <div ref={dropdownRef} className="dropdown position-relative w-100">
             <button
                 ref={buttonRef}
-                className={`btn btn-white border d-flex align-items-center justify-content-between bg-white w-100 ${isOpen ? 'custom-dropdown-active' : ''}`}
+                className={`btn btn-white border d-flex align-items-center justify-content-between w-100 ${isOpen ? 'custom-dropdown-active' : ''} ${disabled ? 'bg-light' : 'bg-white'}`}
                 type="button"
                 onClick={(e) => {
                     e.stopPropagation()
                     toggleDropdown()
                 }}
                 aria-expanded={isOpen}
-                style={{ borderRadius: '12px', height: '45px' }}
+                disabled={disabled}
+                style={{ 
+                    borderRadius: '12px', 
+                    height: '45px',
+                    cursor: disabled ? 'not-allowed' : 'pointer',
+                    opacity: disabled ? 0.7 : 1
+                }}
             >
                 <span className="text-truncate" style={{ maxWidth: 'calc(100% - 20px)' }}>
                     {selectedItem || label}
