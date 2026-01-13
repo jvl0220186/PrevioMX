@@ -250,5 +250,83 @@ public class VisualizationController : ControllerBase
             return StatusCode(500, new { message = "Error al validar cuarentenas", error = ex.Message });
         }
     }
+
+    /// <summary>
+    /// Valida la marca de un producto contra la registrada en el sistema
+    /// </summary>
+    /// <param name="request">Datos de validación de marca</param>
+    /// <returns>Resultado de la validación</returns>
+    [HttpPost("validar-marca")]
+    [ProducesResponseType(typeof(ValidarMarcaDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(500)]
+    public async Task<ActionResult<ValidarMarcaDto>> ValidarMarca([FromBody] ValidarMarcaRequest request)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var result = await _visualizationService.ValidarMarcaAsync(
+                request.Referencia, 
+                request.IdProducto, 
+                request.Marca);
+            
+            if (result == null)
+            {
+                return NotFound(new { message = "No se pudo validar la marca" });
+            }
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al validar marca para referencia: {Referencia}, producto: {IdProducto}", 
+                request.Referencia, request.IdProducto);
+            return StatusCode(500, new { message = "Error al validar la marca", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Valida el modelo de un producto contra el registrado en el sistema
+    /// </summary>
+    /// <param name="request">Datos de validación de modelo</param>
+    /// <returns>Resultado de la validación</returns>
+    [HttpPost("validar-modelo")]
+    [ProducesResponseType(typeof(ValidarModeloDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(500)]
+    public async Task<ActionResult<ValidarModeloDto>> ValidarModelo([FromBody] ValidarModeloRequest request)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var result = await _visualizationService.ValidarModeloAsync(
+                request.Referencia, 
+                request.IdProducto, 
+                request.Modelo);
+            
+            if (result == null)
+            {
+                return NotFound(new { message = "No se pudo validar el modelo" });
+            }
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al validar modelo para referencia: {Referencia}, producto: {IdProducto}", 
+                request.Referencia, request.IdProducto);
+            return StatusCode(500, new { message = "Error al validar el modelo", error = ex.Message });
+        }
+    }
 }
 

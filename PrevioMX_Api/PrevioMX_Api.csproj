@@ -1,10 +1,20 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Remove="appsettings.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
@@ -16,10 +26,10 @@
 
   <ItemGroup>
     <Reference Include="onecore.security.encryptvr">
-      <HintPath>..\..\..\DLLs\onecore.security.encryptvr.dll</HintPath>
+      <HintPath>..\..\..\DLL\onecore.security.encryptvr.dll</HintPath>
     </Reference>
     <Reference Include="onecore.security.services">
-      <HintPath>..\..\..\DLLs\onecore.security.services.dll</HintPath>
+      <HintPath>..\..\..\Apostol\Dev\ApostolWeb\ApostolWeb\onecore.security.services.dll</HintPath>
     </Reference>
   </ItemGroup>
 

@@ -638,4 +638,142 @@ public class AuthDbContext : DbContext
             await connection.CloseAsync();
         }
     }
+
+    /// <summary>
+    /// Ejecuta el stored procedure SP_FEA_ValidarTokenTeamleader_Result para validar el token de un teamleader
+    /// </summary>
+    public async Task<ValidarTokenTeamleaderDto?> ValidarTokenTeamleaderAsync(string usuario, string token)
+    {
+        var connection = Database.GetDbConnection();
+        await connection.OpenAsync();
+
+        try
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = "EXEC SP_FEA_ValidarTokenTeamleader_Result @usuario = @usuario, @token = @token";
+            command.CommandType = System.Data.CommandType.Text;
+
+            var paramUsuario = command.CreateParameter();
+            paramUsuario.ParameterName = "@usuario";
+            paramUsuario.Value = usuario ?? (object)DBNull.Value;
+            command.Parameters.Add(paramUsuario);
+
+            var paramToken = command.CreateParameter();
+            paramToken.ParameterName = "@token";
+            paramToken.Value = token ?? (object)DBNull.Value;
+            command.Parameters.Add(paramToken);
+
+            using var reader = await command.ExecuteReaderAsync();
+
+            if (await reader.ReadAsync())
+            {
+                return new ValidarTokenTeamleaderDto
+                {
+                    Correcto = reader["Correcto"] != DBNull.Value ? (bool?)Convert.ToBoolean(reader["Correcto"]) : null,
+                    Mensaje = reader["Mensaje"]?.ToString() ?? string.Empty,
+                    UsuarioAprobo = reader["UsuarioAprobo"]?.ToString() ?? string.Empty
+                };
+            }
+
+            return null;
+        }
+        finally
+        {
+            await connection.CloseAsync();
+        }
+    }
+
+    /// <summary>
+    /// Ejecuta el stored procedure csp_PMX_ValidaMarca para validar la marca de un producto
+    /// </summary>
+    public async Task<ValidarMarcaDto?> ValidarMarcaAsync(string referencia, string idProducto, string marcaRegistro)
+    {
+        var connection = Database.GetDbConnection();
+        await connection.OpenAsync();
+
+        try
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = "EXEC csp_PMX_ValidaMarca @Referencia = @Referencia, @id_producto = @id_producto, @marca_registro = @marca_registro";
+            command.CommandType = System.Data.CommandType.Text;
+
+            var paramReferencia = command.CreateParameter();
+            paramReferencia.ParameterName = "@Referencia";
+            paramReferencia.Value = referencia;
+            command.Parameters.Add(paramReferencia);
+
+            var paramIdProducto = command.CreateParameter();
+            paramIdProducto.ParameterName = "@id_producto";
+            paramIdProducto.Value = idProducto;
+            command.Parameters.Add(paramIdProducto);
+
+            var paramMarcaRegistro = command.CreateParameter();
+            paramMarcaRegistro.ParameterName = "@marca_registro";
+            paramMarcaRegistro.Value = marcaRegistro;
+            command.Parameters.Add(paramMarcaRegistro);
+
+            using var reader = await command.ExecuteReaderAsync();
+
+            if (await reader.ReadAsync())
+            {
+                return new ValidarMarcaDto
+                {
+                    Valido = reader["Valido"] != DBNull.Value && Convert.ToBoolean(reader["Valido"])
+                };
+            }
+
+            return null;
+        }
+        finally
+        {
+            await connection.CloseAsync();
+        }
+    }
+
+    /// <summary>
+    /// Ejecuta el stored procedure csp_PMX_ValidaModelo para validar el modelo de un producto
+    /// </summary>
+    public async Task<ValidarModeloDto?> ValidarModeloAsync(string referencia, string idProducto, string modeloRegistro)
+    {
+        var connection = Database.GetDbConnection();
+        await connection.OpenAsync();
+
+        try
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = "EXEC csp_PMX_ValidaModelo @Referencia = @Referencia, @id_producto = @id_producto, @modelo_registro = @modelo_registro";
+            command.CommandType = System.Data.CommandType.Text;
+
+            var paramReferencia = command.CreateParameter();
+            paramReferencia.ParameterName = "@Referencia";
+            paramReferencia.Value = referencia;
+            command.Parameters.Add(paramReferencia);
+
+            var paramIdProducto = command.CreateParameter();
+            paramIdProducto.ParameterName = "@id_producto";
+            paramIdProducto.Value = idProducto;
+            command.Parameters.Add(paramIdProducto);
+
+            var paramModeloRegistro = command.CreateParameter();
+            paramModeloRegistro.ParameterName = "@modelo_registro";
+            paramModeloRegistro.Value = modeloRegistro;
+            command.Parameters.Add(paramModeloRegistro);
+
+            using var reader = await command.ExecuteReaderAsync();
+
+            if (await reader.ReadAsync())
+            {
+                return new ValidarModeloDto
+                {
+                    Valido = reader["Valido"] != DBNull.Value && Convert.ToBoolean(reader["Valido"])
+                };
+            }
+
+            return null;
+        }
+        finally
+        {
+            await connection.CloseAsync();
+        }
+    }
 }

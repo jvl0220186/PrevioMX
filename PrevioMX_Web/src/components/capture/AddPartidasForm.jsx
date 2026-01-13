@@ -90,6 +90,7 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
         clasificacion: '',
         quantity: '',
         unit: '',
+        subCantidad: '', // Sub cantidad (requerida cuando unit === 'JGO')
         country: '',
         brand: '',
         model: '',
@@ -120,6 +121,10 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
     const [savingPartida, setSavingPartida] = useState(false)
     const [toast, setToast] = useState({ show: false, message: '', type: 'warning' })
     const [isProductoClasificado, setIsProductoClasificado] = useState(false)
+    const [marcaValida, setMarcaValida] = useState(true) // true por defecto, solo valida si hay clasificación
+    const [modeloValido, setModeloValido] = useState(true) // true por defecto, solo valida si hay clasificación
+    const [validandoMarca, setValidandoMarca] = useState(false)
+    const [validandoModelo, setValidandoModelo] = useState(false)
     const [isBultoLocked, setIsBultoLocked] = useState(false)
     const [partidasCount, setPartidasCount] = useState(0)
     const [isMultibulto, setIsMultibulto] = useState(false) // Modo multibulto
@@ -176,6 +181,7 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                 clasificacion: editingPartida.clasificacion || '',
                 quantity: editingPartida.cantidad || '',
                 unit: editingPartida.um || '',
+                subCantidad: editingPartida.subCantidad || '',
                 country: editingPartida.paisOrigen || '',
                 brand: '',
                 model: '',
@@ -203,6 +209,10 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
             if (editingPartida.clasificacion && /^\d{10}$/.test(editingPartida.clasificacion)) {
                 setIsProductoClasificado(true)
             }
+            
+            // Resetear validaciones al cargar partida en edición
+            setMarcaValida(true)
+            setModeloValido(true)
         }
     }, [editingPartida])
 
@@ -242,7 +252,13 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
             ? selectedBultos.length > 0 
             : formData.bulto && String(formData.bulto).trim() !== ''
         
-        const basicValid = basicFieldsValid && bultoValid
+        // Validar subCantidad si la unidad es JGO
+        const isJGO = formData.unit === 'JGO'
+        const subCantidadValid = isJGO 
+            ? formData.subCantidad && String(formData.subCantidad).trim() !== ''
+            : true
+        
+        const basicValid = basicFieldsValid && bultoValid && subCantidadValid
         
         // Si requiere MMS, validar que cantidad === número de series
         let mmsValid = true
@@ -251,14 +267,24 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
             mmsValid = qty > 0 && mmsEntries.length === qty
         }
         
-        setIsFormValid(basicValid && mmsValid)
-    }, [formData, spInfo.isSpmms, mmsEntries, isMultibulto, selectedBultos])
+        // Validar que marca y modelo sean válidos si el producto tiene clasificación
+        const validacionesValidas = marcaValida && modeloValido
+        
+        setIsFormValid(basicValid && mmsValid && validacionesValidas)
+    }, [formData, spInfo.isSpmms, mmsEntries, isMultibulto, selectedBultos, marcaValida, modeloValido])
 
     const handleChange = (field, value) => {
-        setFormData(prev => ({
-            ...prev,
-            [field]: value
-        }))
+        setFormData(prev => {
+            const newData = {
+                ...prev,
+                [field]: value
+            }
+            // Si se cambia la unidad y no es JGO, limpiar subCantidad
+            if (field === 'unit' && value !== 'JGO') {
+                newData.subCantidad = ''
+            }
+            return newData
+        })
     }
 
     // Manejar selección de PO (OpenPO)
@@ -272,6 +298,7 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
             description: '',
             quantity: '',
             unit: '',
+            subCantidad: '',
             country: ''
         }))
         setIsProductoClasificado(false)
@@ -413,6 +440,8 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
             setIsProductoClasificado(isValidClasificacion)
             
             if (!isValidClasificacion) {
+                setMarcaValida(true) // Resetear validaciones cuando no hay clasificación
+                setModeloValido(true)
                 setToast({
                     show: true,
                     message: '⚠️ Producto nuevo detectado. Este producto requerirá fotografías.',
@@ -521,10 +550,13 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                     description: '',
                     clasificacion: '',
                     unit: '',
+                    subCantidad: '',
                     country: ''
                 }))
                 resetSpInfo()
                 setIsProductoClasificado(false)
+                setMarcaValida(true) // Resetear validaciones cuando no hay clasificación
+                setModeloValido(true)
                 setToast({
                     show: true,
                     message: '⚠️ Producto nuevo detectado. Este producto requerirá fotografías para su clasificación.',
@@ -583,6 +615,8 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
             console.error('Error al obtener clasificación:', error)
             setIsProductoClasificado(false)
             resetSpInfo()
+            setMarcaValida(true) // Resetear validaciones cuando hay error
+            setModeloValido(true)
             setToast({
                 show: true,
                 message: '⚠️ Producto nuevo detectado. Este producto requerirá fotografías para su clasificación.',
@@ -637,6 +671,82 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
         if (e.key === 'Enter') {
             e.preventDefault()
             addMmsEntry()
+        }
+    }
+
+    // Validar marca al perder el foco
+    const handleBrandBlur = async () => {
+        // Solo validar si el producto tiene clasificación y hay marca capturada
+        if (!isProductoClasificado || !formData.brand || !formData.brand.trim() || !idEntrada || !formData.partNumber) {
+            setMarcaValida(true) // Resetear a válido si no se debe validar
+            return
+        }
+
+        try {
+            setValidandoMarca(true)
+            const response = await previoService.validarMarca(
+                idEntrada,
+                formData.partNumber,
+                formData.brand.trim()
+            )
+            
+            // Verificar si la validación falló (valido en minúsculas según respuesta del API)
+            const esValido = response.valido === true || response.Valido === true
+            
+            if (!esValido) {
+                setMarcaValida(false)
+                setToast({
+                    show: true,
+                    message: '⚠️ La marca capturada no coincide con la marca registrada en el catálogo',
+                    type: 'error'
+                })
+            } else {
+                setMarcaValida(true)
+            }
+        } catch (error) {
+            console.error('Error al validar marca:', error)
+            // En caso de error, no bloquear (asumir válido)
+            setMarcaValida(true)
+        } finally {
+            setValidandoMarca(false)
+        }
+    }
+
+    // Validar modelo al perder el foco
+    const handleModelBlur = async () => {
+        // Solo validar si el producto tiene clasificación y hay modelo capturado
+        if (!isProductoClasificado || !formData.model || !formData.model.trim() || !idEntrada || !formData.partNumber) {
+            setModeloValido(true) // Resetear a válido si no se debe validar
+            return
+        }
+
+        try {
+            setValidandoModelo(true)
+            const response = await previoService.validarModelo(
+                idEntrada,
+                formData.partNumber,
+                formData.model.trim()
+            )
+            
+            // Verificar si la validación falló (valido en minúsculas según respuesta del API)
+            const esValido = response.valido === true || response.Valido === true
+            
+            if (!esValido) {
+                setModeloValido(false)
+                setToast({
+                    show: true,
+                    message: '⚠️ El modelo capturado no coincide con el modelo registrado en el catálogo',
+                    type: 'error'
+                })
+            } else {
+                setModeloValido(true)
+            }
+        } catch (error) {
+            console.error('Error al validar modelo:', error)
+            // En caso de error, no bloquear (asumir válido)
+            setModeloValido(true)
+        } finally {
+            setValidandoModelo(false)
         }
     }
 
@@ -727,6 +837,7 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
             clasificacion: '',
             quantity: '',
             unit: '',
+            subCantidad: '',
             country: '',
             brand: '',
             model: '',
@@ -739,6 +850,8 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
         resetSpInfo()
         setMmsEntries([])
         setManualPartNumberEnabled(false) // Resetear modo manual en OpenPO
+        setMarcaValida(true) // Resetear validaciones
+        setModeloValido(true)
         // En OpenPO no hacemos focus en partNumber ya que se selecciona del dropdown
         if (!esOpenPO) {
             setTimeout(() => partNumberRef.current?.focus(), 100)
@@ -810,7 +923,7 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                     idProducto: formData.partNumber,
                     um: formData.unit,
                     cantidad: String(formData.quantity),
-                    subCantidad: '',
+                    subCantidad: formData.unit === 'JGO' ? String(formData.subCantidad || '') : '',
                     paisOrigen: formData.country,
                     comentarios: buildComentarios(),
                     usuario: usuario,
@@ -873,7 +986,7 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                     idProducto: formData.partNumber,
                     um: formData.unit,
                     cantidad: String(formData.quantity),
-                    subCantidad: '',
+                    subCantidad: formData.unit === 'JGO' ? String(formData.subCantidad || '') : '',
                     paisOrigen: formData.country,
                     comentarios: buildComentarios(),
                     usuario: usuario,
@@ -1184,7 +1297,7 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                                             className="btn btn-sm btn-outline-info"
                                             onClick={() => {
                                                 setManualPartNumberEnabled(false)
-                                                setFormData(prev => ({ ...prev, partNumber: '', description: '', quantity: '', unit: '', country: '' }))
+                                                setFormData(prev => ({ ...prev, partNumber: '', description: '', quantity: '', unit: '', subCantidad: '', country: '' }))
                                                 resetSpInfo()
                                                 setIsProductoClasificado(false)
                                             }}
@@ -1219,6 +1332,8 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                                         handleChange('partNumber', e.target.value.toUpperCase())
                                         setIsProductoClasificado(false)
                                         resetSpInfo()
+                                        setMarcaValida(true) // Resetear validaciones
+                                        setModeloValido(true)
                                     }}
                                     onBlur={handlePartNumberBlur}
                                     onKeyDown={handlePartNumberKeyDown}
@@ -1292,7 +1407,7 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                                     onChange={(e) => handleChange('quantity', e.target.value)}
                                 />
                                 {formData.quantity && (
-                                    <div className="form-text text-danger mt-1 fw-bold" style={{ fontSize: '0.8rem', textTransform: 'uppercase' }}>
+                                    <div className="form-text text-muted mt-1 fw-bold" style={{ fontSize: '0.8rem', textTransform: 'uppercase' }}>
                                         <i className="bi bi-chat-quote me-1"></i>
                                         {numeroALetras(formData.quantity)}
                                     </div>
@@ -1322,6 +1437,21 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                                 )}
                             </div>
                         </div>
+
+                        {/* Sub Cantidad - Solo visible cuando la unidad es JGO */}
+                        {formData.unit === 'JGO' && (
+                            <div className="row mb-3">
+                                <div className="col-md-6">
+                                    <label className="form-label fw-bold">Sub Cantidad *</label>
+                                    <input
+                                        type="number"
+                                        className="form-control oc-input"
+                                        value={formData.subCantidad}
+                                        onChange={(e) => handleChange('subCantidad', e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                        )}
 
                         {/* País de Origen */}
                         <div className="mb-3">
@@ -1389,26 +1519,92 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
 
                             <div className="row g-2">
                                 <div className="col-md-12">
-                                    <input
-                                        ref={brandRef}
-                                        type="text"
-                                        className="form-control oc-input mb-2"
-                                        placeholder="Marca"
-                                        value={formData.brand}
-                                        onChange={(e) => handleChange('brand', e.target.value.toUpperCase())}
-                                        onKeyDown={handleBrandKeyDown}
-                                    />
+                                    <div className="position-relative">
+                                        <input
+                                            ref={brandRef}
+                                            type="text"
+                                            className={`form-control oc-input mb-2 ${isProductoClasificado && !marcaValida ? 'is-invalid' : ''} ${isProductoClasificado && marcaValida && formData.brand ? 'is-valid' : ''}`}
+                                            placeholder="Marca"
+                                            value={formData.brand}
+                                            onChange={(e) => {
+                                                handleChange('brand', e.target.value.toUpperCase())
+                                                // Resetear validación al cambiar
+                                                if (!marcaValida) {
+                                                    setMarcaValida(true)
+                                                }
+                                            }}
+                                            onBlur={handleBrandBlur}
+                                            onKeyDown={handleBrandKeyDown}
+                                            disabled={validandoMarca}
+                                        />
+                                        {validandoMarca && (
+                                            <div className="position-absolute" style={{ right: '10px', top: '50%', transform: 'translateY(-50%)' }}>
+                                                <div className="spinner-border spinner-border-sm text-secondary" role="status">
+                                                    <span className="visually-hidden">Validando...</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                        {isProductoClasificado && marcaValida && formData.brand && !validandoMarca && (
+                                            <div className="position-absolute" style={{ right: '10px', top: '50%', transform: 'translateY(-50%)' }}>
+                                                <i className="bi bi-check-circle-fill text-success" style={{ fontSize: '18px' }}></i>
+                                            </div>
+                                        )}
+                                        {isProductoClasificado && !marcaValida && !validandoMarca && (
+                                            <div className="position-absolute" style={{ right: '10px', top: '50%', transform: 'translateY(-50%)' }}>
+                                                <i className="bi bi-x-circle-fill text-danger" style={{ fontSize: '18px' }}></i>
+                                            </div>
+                                        )}
+                                    </div>
+                                    {isProductoClasificado && !marcaValida && formData.brand && (
+                                        <div className="form-text text-danger mt-1">
+                                            <i className="bi bi-exclamation-triangle me-1"></i>
+                                            La marca capturada no coincide con la marca registrada en el catálogo
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="col-md-6">
-                                    <input
-                                        ref={modelRef}
-                                        type="text"
-                                        className="form-control oc-input"
-                                        placeholder="Modelo"
-                                        value={formData.model}
-                                        onChange={(e) => handleChange('model', e.target.value.toUpperCase())}
-                                        onKeyDown={handleModelKeyDown}
-                                    />
+                                    <div className="position-relative">
+                                        <input
+                                            ref={modelRef}
+                                            type="text"
+                                            className={`form-control oc-input ${isProductoClasificado && !modeloValido ? 'is-invalid' : ''} ${isProductoClasificado && modeloValido && formData.model ? 'is-valid' : ''}`}
+                                            placeholder="Modelo"
+                                            value={formData.model}
+                                            onChange={(e) => {
+                                                handleChange('model', e.target.value.toUpperCase())
+                                                // Resetear validación al cambiar
+                                                if (!modeloValido) {
+                                                    setModeloValido(true)
+                                                }
+                                            }}
+                                            onBlur={handleModelBlur}
+                                            onKeyDown={handleModelKeyDown}
+                                            disabled={validandoModelo}
+                                        />
+                                        {validandoModelo && (
+                                            <div className="position-absolute" style={{ right: '10px', top: '50%', transform: 'translateY(-50%)' }}>
+                                                <div className="spinner-border spinner-border-sm text-secondary" role="status">
+                                                    <span className="visually-hidden">Validando...</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                        {isProductoClasificado && modeloValido && formData.model && !validandoModelo && (
+                                            <div className="position-absolute" style={{ right: '10px', top: '50%', transform: 'translateY(-50%)' }}>
+                                                <i className="bi bi-check-circle-fill text-success" style={{ fontSize: '18px' }}></i>
+                                            </div>
+                                        )}
+                                        {isProductoClasificado && !modeloValido && !validandoModelo && (
+                                            <div className="position-absolute" style={{ right: '10px', top: '50%', transform: 'translateY(-50%)' }}>
+                                                <i className="bi bi-x-circle-fill text-danger" style={{ fontSize: '18px' }}></i>
+                                            </div>
+                                        )}
+                                    </div>
+                                    {isProductoClasificado && !modeloValido && formData.model && (
+                                        <div className="form-text text-danger mt-1">
+                                            <i className="bi bi-exclamation-triangle me-1"></i>
+                                            El modelo capturado no coincide con el modelo registrado en el catálogo
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="col-md-6">
                                     {(() => {

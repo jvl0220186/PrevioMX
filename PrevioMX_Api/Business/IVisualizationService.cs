@@ -11,5 +11,7 @@ public interface IVisualizationService
     Task<RegistrarPartidaResponse?> ActualizarPartidaAsync(ActualizarPartidaRequest request);
     Task<DetallePOsResponse> GetDetallePOsAsync(string idEntrada);
     Task<ValidarCuarentenasResponse> ValidarCuarentenasAsync(string idEntrada, string idUsuario);
+    Task<ValidarMarcaDto?> ValidarMarcaAsync(string referencia, string idProducto, string marcaRegistro);
+    Task<ValidarModeloDto?> ValidarModeloAsync(string referencia, string idProducto, string modeloRegistro);
 }
 

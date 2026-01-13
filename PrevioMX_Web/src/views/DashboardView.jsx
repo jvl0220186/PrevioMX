@@ -48,6 +48,7 @@ const DashboardView = () => {
             bundles: item.bultos,
             status: item.estatus,
             rutaDocumento: item.rutaDocumento || '',
+            bodega: item.bodega || '',
             ai: false
           }
         })

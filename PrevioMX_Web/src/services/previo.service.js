@@ -162,6 +162,46 @@ const previoService = {
     } catch (error) {
       throw error.response?.data || error.message
     }
+  },
+
+  /**
+   * Valida una marca capturada contra el catálogo
+   * @param {string} referencia - Referencia de la entrada
+   * @param {string} idProducto - Número de parte del producto
+   * @param {string} marca - Marca capturada
+   * @returns {Promise<{Valido: boolean}>} Resultado de la validación
+   */
+  async validarMarca(referencia, idProducto, marca) {
+    try {
+      const response = await apiClient.post('/api/Visualization/validar-marca', {
+        referencia,
+        idProducto,
+        marca
+      })
+      return response.data
+    } catch (error) {
+      throw error.response?.data || error.message
+    }
+  },
+
+  /**
+   * Valida un modelo capturado contra el catálogo
+   * @param {string} referencia - Referencia de la entrada
+   * @param {string} idProducto - Número de parte del producto
+   * @param {string} modelo - Modelo capturado
+   * @returns {Promise<{Valido: boolean}>} Resultado de la validación
+   */
+  async validarModelo(referencia, idProducto, modelo) {
+    try {
+      const response = await apiClient.post('/api/Visualization/validar-modelo', {
+        referencia,
+        idProducto,
+        modelo
+      })
+      return response.data
+    } catch (error) {
+      throw error.response?.data || error.message
+    }
   }
 }
 

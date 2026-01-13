@@ -71,5 +71,21 @@ public class VisualizationService : IVisualizationService
         
         return await _context.ValidarCuarentenasAsync(idEntrada, idUsuario);
     }
+
+    public async Task<ValidarMarcaDto?> ValidarMarcaAsync(string referencia, string idProducto, string marcaRegistro)
+    {
+        _logger.LogInformation("Validando marca para referencia: {Referencia}, producto: {IdProducto}, marca: {Marca}", 
+            referencia, idProducto, marcaRegistro);
+        
+        return await _context.ValidarMarcaAsync(referencia, idProducto, marcaRegistro);
+    }
+
+    public async Task<ValidarModeloDto?> ValidarModeloAsync(string referencia, string idProducto, string modeloRegistro)
+    {
+        _logger.LogInformation("Validando modelo para referencia: {Referencia}, producto: {IdProducto}, modelo: {Modelo}", 
+            referencia, idProducto, modeloRegistro);
+        
+        return await _context.ValidarModeloAsync(referencia, idProducto, modeloRegistro);
+    }
 }
 

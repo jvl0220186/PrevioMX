@@ -10,7 +10,7 @@ const getBaseUrl = () => {
   
   // En desarrollo local, usar el puerto del API .NET
   if (isDevelopment) {
-    return 'http://localhost:8888'
+    return 'https://localhost:5001'
   }
   
   return 'https://zelma-disturbed-robbyn.ngrok-free.dev'

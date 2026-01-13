@@ -108,6 +108,7 @@ const DashboardTable = ({ data }) => {
 
   const headers = [
     { key: 'reference', label: 'Número de Referencia' },
+    { key: 'bodega', label: 'Bodega' },
     { key: 'client', label: 'Cliente' },
     { key: 'provider', label: 'Proveedor' },
     { key: 'tipoEnvio', label: 'Tipo Envío' },
@@ -144,6 +145,7 @@ const DashboardTable = ({ data }) => {
               {sortedData.map((row, index) => (
                 <tr key={index} style={{ borderBottom: '1px solid #f0f0f0' }}>
                   <td className="fw-bold">{renderCell(row.reference)}</td>
+                  <td>{renderCell(row.bodega || '-')}</td>
                   <td>{renderCell(row.client)}</td>
                   <td>{renderCell(row.provider)}</td>
                   <td>{renderCell(row.tipoEnvio || '-')}</td>
@@ -233,6 +235,7 @@ DashboardTable.propTypes = {
     tipoEnvio: PropTypes.string,
     date: PropTypes.string.isRequired,
     bundles: PropTypes.number.isRequired,
+    bodega: PropTypes.string,
     status: PropTypes.string.isRequired,
     ai: PropTypes.bool
   })).isRequired

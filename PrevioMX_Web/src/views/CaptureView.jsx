@@ -133,8 +133,18 @@ const CaptureView = () => {
                     urlDocumento: prev.urlDocumento || detalle.rutaDocumento || detalle.urlDocumento || ''
                 }))
 
-                const units = Array.isArray(unitsRes) ? unitsRes : (unitsRes.items || [])
-                const countries = Array.isArray(countriesRes) ? countriesRes : (countriesRes.items || [])
+                const unitsRaw = Array.isArray(unitsRes) ? unitsRes : (unitsRes.items || [])
+                const countriesRaw = Array.isArray(countriesRes) ? countriesRes : (countriesRes.items || [])
+                
+                // Transformar catálogos: concatenar cValue + " " + cText en cText
+                const units = unitsRaw.map(item => ({
+                    ...item,
+                    cText: (item.cValue && item.cText) ? `${item.cValue} ${item.cText}` : item.cText
+                }))
+                const countries = countriesRaw.map(item => ({
+                    ...item,
+                    cText: (item.cValue && item.cText) ? `${item.cValue} ${item.cText}` : item.cText
+                }))
 
                 const detalleItems = Array.isArray(detalle) ? detalle : (detalle.items || [])
                 const uniqueBultos = [...new Set(detalleItems.map(item => item.idBulto).filter(id => id))]
