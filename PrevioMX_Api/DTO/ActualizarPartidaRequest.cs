@@ -13,6 +13,7 @@ public class ActualizarPartidaRequest
     public string Comentarios { get; set; } = string.Empty;
     public string Usuario { get; set; } = string.Empty;
     public string OcCompra { get; set; } = string.Empty;
+    public string NoParteFisico { get; set; } = string.Empty;
     public string Mms { get; set; } = string.Empty;
 }
 

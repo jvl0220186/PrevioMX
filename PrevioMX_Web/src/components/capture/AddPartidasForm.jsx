@@ -110,7 +110,8 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
         isSppo: false,
         spPo: '',
         isSpmms: false,
-        spMms: ''
+        spMms: '',
+        spCantidades: ''
     })
 
     // Lista de series capturadas (MMS entries)
@@ -129,6 +130,21 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
     const [partidasCount, setPartidasCount] = useState(0)
     const [isMultibulto, setIsMultibulto] = useState(false) // Modo multibulto
     const [selectedBultos, setSelectedBultos] = useState([]) // Bultos seleccionados en modo multibulto
+    const [tokenModal, setTokenModal] = useState({
+        show: false,
+        type: '', // 'field' | 'conflict'
+        field: '', // 'unit' | 'country' | 'quantity'
+        label: '',
+        pendingValue: '',
+        useOpenPO: false,
+        prevValue: ''
+    })
+    const [tokenInput, setTokenInput] = useState('')
+    const [validandoToken, setValidandoToken] = useState(false)
+    const [cantidadPrev, setCantidadPrev] = useState('')
+    const [cantidadTokenAutorizada, setCantidadTokenAutorizada] = useState('')
+    const [unidadTokenAutorizada, setUnidadTokenAutorizada] = useState('')
+    const [paisTokenAutorizado, setPaisTokenAutorizado] = useState('')
     
     // Estados para OpenPO
     const [selectedPOProducts, setSelectedPOProducts] = useState([])
@@ -242,6 +258,57 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
     const unitOptions = catalogUnidades.map(c => c.cText)
     const countryOptions = catalogPaises.map(c => c.cText)
 
+    const getUsuarioLogueado = () => {
+        const userStr = localStorage.getItem('user')
+        const user = userStr ? JSON.parse(userStr) : {}
+        return user.idUsuario || user.usuario || 'unknown'
+    }
+
+    const requiereTokenParaUnidad = (value) => {
+        return spInfo.isSpum && spInfo.spUm && value && value !== spInfo.spUm
+    }
+
+    const requiereTokenParaPais = (value) => {
+        return spInfo.isSppo && spInfo.spPo && value && value !== spInfo.spPo
+    }
+
+    const parseSpCantidades = () => {
+        if (!spInfo.spCantidades) return []
+        return String(spInfo.spCantidades)
+            .split(',')
+            .map(item => item.trim())
+            .filter(Boolean)
+    }
+
+    const cantidadCoincide = (value) => {
+        const num = parseFloat(value)
+        if (isNaN(num)) return false
+        return parseSpCantidades().some(item => {
+            const n = parseFloat(item)
+            return !isNaN(n) && n === num
+        })
+    }
+
+    const requiereTokenParaCantidad = (value) => {
+        if (!value || !String(value).trim()) return false
+        const sugeridas = parseSpCantidades()
+        if (sugeridas.length === 0) return false
+        return !cantidadCoincide(value)
+    }
+
+    const abrirTokenModal = ({ type, field = '', label = '', pendingValue = '', useOpenPO = false, prevValue = '' }) => {
+        setTokenModal({
+            show: true,
+            type,
+            field,
+            label,
+            pendingValue,
+            useOpenPO,
+            prevValue
+        })
+        setTokenInput('')
+    }
+
     // Validación del formulario
     useEffect(() => {
         const requiredFields = ['partNumber', 'description', 'quantity', 'unit', 'country']
@@ -270,8 +337,32 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
         // Validar que marca y modelo sean válidos si el producto tiene clasificación
         const validacionesValidas = marcaValida && modeloValido
         
-        setIsFormValid(basicValid && mmsValid && validacionesValidas)
-    }, [formData, spInfo.isSpmms, mmsEntries, isMultibulto, selectedBultos, marcaValida, modeloValido])
+        const tokenUnidadValida = !requiereTokenParaUnidad(formData.unit) ||
+            (unidadTokenAutorizada && unidadTokenAutorizada === formData.unit)
+        const tokenPaisValido = !requiereTokenParaPais(formData.country) ||
+            (paisTokenAutorizado && paisTokenAutorizado === formData.country)
+        const tokenCantidadValida = !requiereTokenParaCantidad(formData.quantity) || (
+            cantidadTokenAutorizada &&
+            parseFloat(cantidadTokenAutorizada) === parseFloat(formData.quantity)
+        )
+        const tokenValid = tokenUnidadValida && tokenPaisValido && tokenCantidadValida
+        
+        setIsFormValid(basicValid && mmsValid && validacionesValidas && tokenValid)
+    }, [
+        formData,
+        spInfo.isSpmms,
+        spInfo.spUm,
+        spInfo.spPo,
+        spInfo.spCantidades,
+        mmsEntries,
+        isMultibulto,
+        selectedBultos,
+        marcaValida,
+        modeloValido,
+        unidadTokenAutorizada,
+        paisTokenAutorizado,
+        cantidadTokenAutorizada
+    ])
 
     const handleChange = (field, value) => {
         setFormData(prev => {
@@ -360,7 +451,8 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                     isSppo: !!openPOPais,
                     spPo: openPOPais,
                     isSpmms: false,
-                    spMms: ''
+                    spMms: '',
+                    spCantidades: ''
                 })
                 setToast({
                     show: true,
@@ -411,7 +503,8 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                         isSppo: result.isSppo || false,
                         spPo: result.spPo || '',
                         isSpmms: result.isSpmms || false,
-                        spMms: result.spMms || ''
+                        spMms: result.spMms || '',
+                        spCantidades: result.sp_cantidades || result.spCantidades || ''
                     }
                 })
             } else {
@@ -431,7 +524,8 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                     isSppo: result.isSppo || !!openPOPais,
                     spPo: result.spPo || openPOPais,
                     isSpmms: result.isSpmms || false,
-                    spMms: result.spMms || ''
+                    spMms: result.spMms || '',
+                    spCantidades: result.sp_cantidades || result.spCantidades || ''
                 })
             }
             
@@ -469,7 +563,8 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                 isSppo: !!openPOPais,
                 spPo: openPOPais,
                 isSpmms: false,
-                spMms: ''
+                spMms: '',
+                spCantidades: ''
             })
         } finally {
             setLoadingClasificacion(false)
@@ -478,8 +573,29 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
     }
     
     // Resolver conflicto eligiendo OpenPO o Standard Pack
-    const resolveConflict = (useOpenPO) => {
+    const resolveConflict = (useOpenPO, skipToken = false) => {
         const { conflicts, pendingSpInfo } = conflictModal
+        
+        if (!skipToken && useOpenPO) {
+            const requiereToken = conflicts.some(conflict => {
+                if (conflict.field === 'unit') {
+                    return pendingSpInfo?.isSpum && pendingSpInfo?.spUm && conflict.openPOValue !== pendingSpInfo.spUm
+                }
+                if (conflict.field === 'country') {
+                    return pendingSpInfo?.isSppo && pendingSpInfo?.spPo && conflict.openPOValue !== pendingSpInfo.spPo
+                }
+                return false
+            })
+
+            if (requiereToken) {
+                abrirTokenModal({
+                    type: 'conflict',
+                    label: 'OpenPO',
+                    useOpenPO: true
+                })
+                return
+            }
+        }
         
         let newUnit = formData.unit
         let newCountry = formData.country
@@ -514,6 +630,120 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
             message: useOpenPO ? '✅ Se usaron los valores del OpenPO' : '✅ Se usaron los valores del Standard Pack',
             type: 'success'
         })
+    }
+
+    const handleUnitSelect = (val) => {
+        const value = getValue(val, catalogUnidades)
+        if (requiereTokenParaUnidad(value)) {
+            abrirTokenModal({
+                type: 'field',
+                field: 'unit',
+                label: 'Unidad de Medida',
+                pendingValue: value
+            })
+            return
+        }
+        handleChange('unit', value)
+    }
+
+    const handleCountrySelect = (val) => {
+        const value = getValue(val, catalogPaises)
+        if (requiereTokenParaPais(value)) {
+            abrirTokenModal({
+                type: 'field',
+                field: 'country',
+                label: 'País de Origen',
+                pendingValue: value
+            })
+            return
+        }
+        handleChange('country', value)
+    }
+
+    const handleQuantityBlur = () => {
+        if (!requiereTokenParaCantidad(formData.quantity)) {
+            setCantidadTokenAutorizada('')
+            return
+        }
+
+        if (
+            cantidadTokenAutorizada &&
+            parseFloat(cantidadTokenAutorizada) === parseFloat(formData.quantity)
+        ) {
+            return
+        }
+
+        abrirTokenModal({
+            type: 'field',
+            field: 'quantity',
+            label: 'Cantidad Recibida',
+            pendingValue: formData.quantity,
+            prevValue: cantidadPrev
+        })
+    }
+
+    const handleTokenConfirm = async () => {
+        if (!tokenInput || !tokenInput.trim()) {
+            setToast({
+                show: true,
+                message: '⚠️ Ingrese el token para continuar.',
+                type: 'warning'
+            })
+            return
+        }
+
+        try {
+            setValidandoToken(true)
+            const response = await previoService.validarTokenTeamLeader(getUsuarioLogueado(), tokenInput.trim())
+            const correcto = response?.correcto === true
+
+            if (!correcto) {
+                setToast({
+                    show: true,
+                    message: `❌ ${response?.mensaje || 'Token inválido'}`,
+                    type: 'error'
+                })
+                return
+            }
+
+            if (tokenModal.type === 'field') {
+                handleChange(tokenModal.field, tokenModal.pendingValue)
+                if (tokenModal.field === 'quantity') {
+                    setCantidadTokenAutorizada(tokenModal.pendingValue)
+                } else if (tokenModal.field === 'unit') {
+                    setUnidadTokenAutorizada(tokenModal.pendingValue)
+                } else if (tokenModal.field === 'country') {
+                    setPaisTokenAutorizado(tokenModal.pendingValue)
+                }
+            } else if (tokenModal.type === 'conflict') {
+                resolveConflict(tokenModal.useOpenPO, true)
+            }
+
+            setTokenModal({
+                show: false,
+                type: '',
+                field: '',
+                label: '',
+                pendingValue: '',
+                useOpenPO: false,
+                prevValue: ''
+            })
+            setTokenInput('')
+
+            setToast({
+                show: true,
+                message: `✅ ${response?.mensaje || 'Token validado correctamente'}${response?.usuarioAprobo ? ` (${response.usuarioAprobo})` : ''}`,
+                type: 'success'
+            })
+        } catch (error) {
+            setToast({
+                show: true,
+                message: `❌ ${error?.mensaje || error?.message || error}`,
+                type: 'error'
+            })
+        } finally {
+            setValidandoToken(false)
+        }
     }
 
     const validatePartNumber = async () => {
@@ -583,7 +813,8 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                 isSppo: result.isSppo || false,
                 spPo: result.spPo || '',
                 isSpmms: result.isSpmms || false,
-                spMms: result.spMms || ''
+                spMms: result.spMms || '',
+                spCantidades: result.sp_cantidades || result.spCantidades || ''
             })
 
             // Validar clasificación
@@ -636,9 +867,13 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
             isSppo: false,
             spPo: '',
             isSpmms: false,
-            spMms: ''
+            spMms: '',
+            spCantidades: ''
         })
         setMmsEntries([])
+        setUnidadTokenAutorizada('')
+        setPaisTokenAutorizado('')
+        setCantidadTokenAutorizada('')
     }
 
     const handlePartNumberBlur = () => {
@@ -928,7 +1163,8 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                     comentarios: buildComentarios(),
                     usuario: usuario,
                     ocCompra: formData.ocCompra || '',
-                    mms: buildMmsString()
+                    mms: buildMmsString(),
+                    noParteFisico: formData.physicalPartNumber || ''
                 }
 
                 try {
@@ -991,7 +1227,8 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                     comentarios: buildComentarios(),
                     usuario: usuario,
                     ocCompra: formData.ocCompra || '',
-                    mms: buildMmsString() // marca1|modelo1|serie1~marca2|modelo2|serie2
+                    mms: buildMmsString(), // marca1|modelo1|serie1~marca2|modelo2|serie2
+                    noParteFisico: formData.physicalPartNumber || ''
                 }
 
                 try {
@@ -1398,13 +1635,22 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                         {/* Cantidad y Unidad */}
                         <div className="row mb-3">
                             <div className="col-md-6">
-                                <label className="form-label fw-bold">Cantidad Recibida *</label>
+                                <label className="form-label fw-bold">
+                                    Cantidad Recibida *
+                                    {spInfo.spCantidades && (
+                                        <span className="badge bg-success ms-2" style={{ fontSize: '0.7rem' }}>
+                                            <i className="bi bi-box-seam me-1"></i>SP
+                                        </span>
+                                    )}
+                                </label>
                                 <input
                                     ref={quantityRef}
                                     type="number"
                                     className="form-control oc-input"
                                     value={formData.quantity}
                                     onChange={(e) => handleChange('quantity', e.target.value)}
+                                    onFocus={() => setCantidadPrev(formData.quantity)}
+                                    onBlur={handleQuantityBlur}
                                 />
                                 {formData.quantity && (
                                     <div className="form-text text-muted mt-1 fw-bold" style={{ fontSize: '0.8rem', textTransform: 'uppercase' }}>
@@ -1426,7 +1672,7 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                                 <SingleSelectDropdown
                                     options={unitOptions}
                                     label="Seleccione una unidad"
-                                    onSelect={(val) => handleChange('unit', getValue(val, catalogUnidades))}
+                                    onSelect={handleUnitSelect}
                                     initialSelection={getLabel(formData.unit, catalogUnidades)}
                                 />
                                 </div>
@@ -1467,7 +1713,7 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                             <SingleSelectDropdown
                                 options={countryOptions}
                                 label="Seleccione un país"
-                                onSelect={(val) => handleChange('country', getValue(val, catalogPaises))}
+                                onSelect={handleCountrySelect}
                                 initialSelection={getLabel(formData.country, catalogPaises)}
                             />
                             </div>
@@ -1718,6 +1964,81 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                 type={toast.type}
                 onClose={closeToast}
             />
+
+            {/* Modal de validación de token */}
+            {tokenModal.show && (
+                <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} tabIndex="-1">
+                    <div className="modal-dialog modal-dialog-centered">
+                        <div className="modal-content" style={{ borderRadius: '16px' }}>
+                            <div className="modal-header border-0 pb-0">
+                                <h5 className="modal-title fw-bold">
+                                    <i className="bi bi-shield-lock text-warning me-2"></i>
+                                    Validación requerida
+                                </h5>
+                            </div>
+                            <div className="modal-body">
+                                <p className="text-muted mb-3">
+                                    {tokenModal.type === 'field'
+                                        ? `El valor seleccionado para ${tokenModal.label} es diferente al sugerido por Standard Pack.`
+                                        : 'Los valores seleccionados son diferentes al Standard Pack.'}
+                                </p>
+                                <label className="form-label fw-bold">Token *</label>
+                                <input
+                                    type="password"
+                                    className="form-control oc-input"
+                                    value={tokenInput}
+                                    onChange={(e) => {
+                                        const value = e.target.value.replace(/\D/g, '').slice(0, 4)
+                                        setTokenInput(value)
+                                    }}
+                                    inputMode="numeric"
+                                    pattern="\d{4}"
+                                    maxLength={4}
+                                    disabled={validandoToken}
+                                />
+                                <div className="form-text text-muted mt-2">
+                                    <i className="bi bi-info-circle me-1"></i>
+                                    Ingrese el token de Team Leader para continuar.
+                                </div>
+                            </div>
+                            <div className="modal-footer border-0 pt-0">
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-secondary"
+                                    onClick={() => {
+                                        setTokenModal({
+                                            show: false,
+                                            type: '',
+                                            field: '',
+                                            label: '',
+                                            pendingValue: '',
+                                            useOpenPO: false,
+                                            prevValue: ''
+                                        })
+                                        if (tokenModal.field === 'quantity') {
+                                            handleChange('quantity', tokenModal.prevValue || '')
+                                        }
+                                        setTokenInput('')
+                                    }}
+                                    disabled={validandoToken}
+                                    style={{ cursor: 'pointer' }}
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-warning"
+                                    onClick={handleTokenConfirm}
+                                    disabled={validandoToken}
+                                    style={{ cursor: validandoToken ? 'not-allowed' : 'pointer' }}
+                                >
+                                    {validandoToken ? 'Validando...' : 'Validar Token'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
             
             {/* Modal de conflicto OpenPO vs Standard Pack */}
             {conflictModal.show && (

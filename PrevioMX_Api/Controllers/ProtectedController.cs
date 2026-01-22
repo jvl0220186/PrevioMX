@@ -42,7 +42,7 @@ public class ProtectedController : ControllerBase
     /// <summary>
     /// Valida el token de un Team Leader
     /// </summary>
-    [HttpPost("ValidaTokenTeamLeader")]
+    [HttpPost("valida-token-teamleader")]
     public async Task<IActionResult> ValidaTokenTeamLeader([FromBody] ValidarTokenTeamleaderRequest request)
     {
         if (!ModelState.IsValid)

@@ -13,7 +13,7 @@ const getBaseUrl = () => {
     return 'https://localhost:5001'
   }
   
-  return 'https://zelma-disturbed-robbyn.ngrok-free.dev'
+  return 'http://192.168.6.185/PrevioMX/Api'
 }
 
 const baseUrl = getBaseUrl()

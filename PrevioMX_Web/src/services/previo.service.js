@@ -31,6 +31,24 @@ const previoService = {
   },
 
   /**
+   * Valida un token de Team Leader
+   * @param {string} usuario - Nombre corto del usuario logueado
+   * @param {string} token - Token capturado
+   * @returns {Promise<{correcto: boolean, mensaje: string, usuarioAprobo: string}>} Resultado de la validación
+   */
+  async validarTokenTeamLeader(usuario, token) {
+    try {
+      const response = await apiClient.post('/api/Protected/valida-token-teamleader', {
+        usuario,
+        token
+      })
+      return response.data
+    } catch (error) {
+      throw error.response?.data || error.message
+    }
+  },
+
+  /**
    * Obtiene la lista de pendientes de visualización por equipo
    * @param {string} equipo - Nombre del equipo
    * @returns {Promise<import('../models/api.models').PendientesResponse>} Lista de pendientes

@@ -136,14 +136,14 @@ const CaptureView = () => {
                 const unitsRaw = Array.isArray(unitsRes) ? unitsRes : (unitsRes.items || [])
                 const countriesRaw = Array.isArray(countriesRes) ? countriesRes : (countriesRes.items || [])
                 
-                // Transformar catálogos: concatenar cValue + " " + cText en cText
+                // Transformar catálogos: concatenar "[" + cValue + "] " + cText en cText
                 const units = unitsRaw.map(item => ({
                     ...item,
-                    cText: (item.cValue && item.cText) ? `${item.cValue} ${item.cText}` : item.cText
+                    cText: (item.cValue && item.cText) ? `[${item.cValue}] ${item.cText}` : item.cText
                 }))
                 const countries = countriesRaw.map(item => ({
                     ...item,
-                    cText: (item.cValue && item.cText) ? `${item.cValue} ${item.cText}` : item.cText
+                    cText: (item.cValue && item.cText) ? `[${item.cValue}] ${item.cText}` : item.cText
                 }))
 
                 const detalleItems = Array.isArray(detalle) ? detalle : (detalle.items || [])

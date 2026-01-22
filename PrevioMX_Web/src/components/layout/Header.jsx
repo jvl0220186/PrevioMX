@@ -1,6 +1,11 @@
 
 import './Header.css'
 
+const getAppBasePath = () => {
+  const base = import.meta.env.BASE_URL || '/'
+  return base.endsWith('/') ? base : `${base}/`
+}
+
 const Header = ({
   pendingCount = 0,
   title = "Sistema de Captura de Previos",
@@ -11,7 +16,7 @@ const Header = ({
 }) => {
   const handleLogout = () => {
     localStorage.clear()
-    window.location.href = '/'
+    window.location.href = getAppBasePath()
   }
 
   return (

@@ -5,7 +5,7 @@ import './styles/App.css'
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/PrevioMX/App">
       <AuthProvider>
         <AppRoutes />
       </AuthProvider>

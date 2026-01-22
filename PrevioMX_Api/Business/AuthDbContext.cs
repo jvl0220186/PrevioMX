@@ -328,7 +328,8 @@ public class AuthDbContext : DbContext
                     IsSppo = reader["is_sppo"] != DBNull.Value && Convert.ToBoolean(reader["is_sppo"]),
                     SpPo = reader["sp_po"]?.ToString() ?? string.Empty,
                     IsSpmms = reader["is_spmms"] != DBNull.Value && Convert.ToBoolean(reader["is_spmms"]),
-                    SpMms = reader["sp_mms"]?.ToString() ?? string.Empty
+                    SpMms = reader["sp_mms"]?.ToString() ?? string.Empty,
+                    SpCantidades = reader["sp_cantidades"]?.ToString() ?? string.Empty
                 };
             }
 
@@ -362,6 +363,7 @@ public class AuthDbContext : DbContext
                 @Comentarios = @Comentarios, 
                 @Usuario = @Usuario, 
                 @oc_compra = @oc_compra,
+                @noparte_fisico = @noparte_fisico,
                 @mms = @mms";
             command.CommandType = System.Data.CommandType.Text;
 
@@ -414,6 +416,11 @@ public class AuthDbContext : DbContext
             paramOcCompra.ParameterName = "@oc_compra";
             paramOcCompra.Value = request.OcCompra;
             command.Parameters.Add(paramOcCompra);
+
+            var paramNoParteFisico = command.CreateParameter();
+            paramNoParteFisico.ParameterName = "@noparte_fisico";
+            paramNoParteFisico.Value = request.NoParteFisico;
+            command.Parameters.Add(paramNoParteFisico);
 
             var paramMms = command.CreateParameter();
             paramMms.ParameterName = "@mms";
@@ -508,6 +515,7 @@ public class AuthDbContext : DbContext
                 @Comentarios = @Comentarios, 
                 @Usuario = @Usuario, 
                 @oc_compra = @oc_compra,
+                @noparte_fisico = @noparte_fisico,
                 @mms = @mms";
             command.CommandType = System.Data.CommandType.Text;
 
@@ -565,6 +573,11 @@ public class AuthDbContext : DbContext
             paramOcCompra.ParameterName = "@oc_compra";
             paramOcCompra.Value = request.OcCompra;
             command.Parameters.Add(paramOcCompra);
+
+            var paramNoParteFisico = command.CreateParameter();
+            paramNoParteFisico.ParameterName = "@noparte_fisico";
+            paramNoParteFisico.Value = request.NoParteFisico;
+            command.Parameters.Add(paramNoParteFisico);
 
             var paramMms = command.CreateParameter();
             paramMms.ParameterName = "@mms";

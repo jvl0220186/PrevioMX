@@ -1,15 +1,26 @@
 import axios from 'axios'
 import { API_CONFIG } from '../config/api.config'
 
+const getAppBasePath = () => {
+  const base = import.meta.env.BASE_URL || '/'
+  return base.endsWith('/') ? base : `${base}/`
+}
+
 // Función para redirigir al login
 const redirectToLogin = () => {
   localStorage.removeItem('token')
   localStorage.removeItem('user')
   localStorage.removeItem('captureData')
+  const basePath = getAppBasePath()
   // Evitar múltiples redirecciones
-  if (window.location.pathname !== '/') {
-    window.location.href = '/'
+  if (window.location.pathname !== basePath) {
+    window.location.href = basePath
   }
+}
+
+const isTokenTeamLeaderValidation = (config) => {
+  const url = config?.url || ''
+  return url.includes('/api/Protected/valida-token-teamleader')
 }
 
 // Verificar si el token parece expirado (decodificar JWT básico)
@@ -70,6 +81,9 @@ apiClient.interceptors.response.use(
     // Error 401 - No autorizado
     if (error.response?.status === 401) {
       console.warn('Error 401 - Sesión expirada')
+      if (isTokenTeamLeaderValidation(error.config)) {
+        return Promise.reject(error)
+      }
       redirectToLogin()
       return Promise.reject(error)
     }
@@ -77,6 +91,9 @@ apiClient.interceptors.response.use(
     // Error 403 - Prohibido
     if (error.response?.status === 403) {
       console.warn('Error 403 - Acceso prohibido')
+      if (isTokenTeamLeaderValidation(error.config)) {
+        return Promise.reject(error)
+      }
       redirectToLogin()
       return Promise.reject(error)
     }

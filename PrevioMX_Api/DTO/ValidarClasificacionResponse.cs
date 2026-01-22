@@ -27,4 +27,7 @@ public class ValidarClasificacionResponse
 
     [Column("sp_mms")]
     public string SpMms { get; set; } = string.Empty;
+
+    [Column("sp_cantidades")]
+    public string SpCantidades { get; set; } = string.Empty;
 }
