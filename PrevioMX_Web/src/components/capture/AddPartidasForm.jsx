@@ -145,6 +145,8 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
     const [cantidadTokenAutorizada, setCantidadTokenAutorizada] = useState('')
     const [unidadTokenAutorizada, setUnidadTokenAutorizada] = useState('')
     const [paisTokenAutorizado, setPaisTokenAutorizado] = useState('')
+    const [unitDropdownVersion, setUnitDropdownVersion] = useState(0)
+    const [countryDropdownVersion, setCountryDropdownVersion] = useState(0)
     
     // Estados para OpenPO
     const [selectedPOProducts, setSelectedPOProducts] = useState([])
@@ -261,7 +263,7 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
     const getUsuarioLogueado = () => {
         const userStr = localStorage.getItem('user')
         const user = userStr ? JSON.parse(userStr) : {}
-        return user.idUsuario || user.usuario || 'unknown'
+        return user.usuario || 'unknown'
     }
 
     const requiereTokenParaUnidad = (value) => {
@@ -334,9 +336,6 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
             mmsValid = qty > 0 && mmsEntries.length === qty
         }
         
-        // Validar que marca y modelo sean válidos si el producto tiene clasificación
-        const validacionesValidas = marcaValida && modeloValido
-        
         const tokenUnidadValida = !requiereTokenParaUnidad(formData.unit) ||
             (unidadTokenAutorizada && unidadTokenAutorizada === formData.unit)
         const tokenPaisValido = !requiereTokenParaPais(formData.country) ||
@@ -347,18 +346,18 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
         )
         const tokenValid = tokenUnidadValida && tokenPaisValido && tokenCantidadValida
         
-        setIsFormValid(basicValid && mmsValid && validacionesValidas && tokenValid)
+        setIsFormValid(basicValid && mmsValid && tokenValid)
     }, [
         formData,
         spInfo.isSpmms,
+        spInfo.isSpum,
+        spInfo.isSppo,
         spInfo.spUm,
         spInfo.spPo,
         spInfo.spCantidades,
         mmsEntries,
         isMultibulto,
         selectedBultos,
-        marcaValida,
-        modeloValido,
         unidadTokenAutorizada,
         paisTokenAutorizado,
         cantidadTokenAutorizada
@@ -639,7 +638,8 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                 type: 'field',
                 field: 'unit',
                 label: 'Unidad de Medida',
-                pendingValue: value
+                pendingValue: value,
+                prevValue: formData.unit
             })
             return
         }
@@ -653,7 +653,8 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                 type: 'field',
                 field: 'country',
                 label: 'País de Origen',
-                pendingValue: value
+                pendingValue: value,
+                prevValue: formData.country
             })
             return
         }
@@ -891,14 +892,16 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
     const handleBrandKeyDown = (e) => {
         if (e.key === 'Enter') {
             e.preventDefault()
-            modelRef.current?.focus()
+            e.currentTarget.blur()
+            setTimeout(() => modelRef.current?.focus(), 0)
         }
     }
 
     const handleModelKeyDown = (e) => {
         if (e.key === 'Enter') {
             e.preventDefault()
-            seriesRef.current?.focus()
+            e.currentTarget.blur()
+            setTimeout(() => seriesRef.current?.focus(), 0)
         }
     }
 
@@ -990,6 +993,21 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
         const brand = formData.brand.trim()
         const model = formData.model.trim()
         const qty = parseInt(formData.quantity) || 0
+        const validacionPendiente = isProductoClasificado && (
+            validandoMarca ||
+            validandoModelo ||
+            !marcaValida ||
+            !modeloValido
+        )
+
+        if (validacionPendiente) {
+            setToast({
+                show: true,
+                message: '⚠️ Valide marca y modelo antes de agregar la serie.',
+                type: 'warning'
+            })
+            return
+        }
 
         if (!series) {
             setToast({
@@ -1670,6 +1688,7 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                                 </label>
                                 <div style={getSuccessStyle(spInfo.isSpum)}>
                                 <SingleSelectDropdown
+                                    key={`unit-${unitDropdownVersion}`}
                                     options={unitOptions}
                                     label="Seleccione una unidad"
                                     onSelect={handleUnitSelect}
@@ -1715,6 +1734,7 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                                 label="Seleccione un país"
                                 onSelect={handleCountrySelect}
                                 initialSelection={getLabel(formData.country, catalogPaises)}
+                                    key={`country-${countryDropdownVersion}`}
                             />
                             </div>
                             {spInfo.isSppo && (
@@ -1856,25 +1876,35 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                                     {(() => {
                                         const qty = parseInt(formData.quantity) || 0
                                         const isMaxReached = qty > 0 && mmsEntries.length >= qty
+                                        const validacionPendiente = isProductoClasificado && (
+                                            validandoMarca ||
+                                            validandoModelo ||
+                                            !marcaValida ||
+                                            !modeloValido
+                                        )
+                                        const disableAddMms = isMaxReached || validacionPendiente
+                                        const buttonTitle = isMaxReached
+                                            ? 'Máximo de series alcanzado'
+                                            : (validacionPendiente ? 'Valide marca y modelo' : 'Agregar serie (Enter)')
                                         return (
                                             <div className="input-group">
                                                 <input
                                                     ref={seriesRef}
                                                     type="text"
-                                                    className={`form-control oc-input ${isMaxReached ? 'bg-light' : ''}`}
+                                                    className={`form-control oc-input ${disableAddMms ? 'bg-light' : ''}`}
                                                     placeholder={isMaxReached ? 'Máximo alcanzado' : 'Serie'}
                                                     value={formData.series}
                                                     onChange={(e) => handleChange('series', e.target.value.toUpperCase())}
                                                     onKeyDown={handleSeriesKeyDown}
-                                                    disabled={isMaxReached}
+                                                    disabled={disableAddMms}
                                                 />
                                                 <button
                                                     type="button"
-                                                    className={`btn ${isMaxReached ? 'btn-secondary' : 'btn-outline-success'}`}
+                                                    className={`btn ${disableAddMms ? 'btn-secondary' : 'btn-outline-success'}`}
                                                     onClick={addMmsEntry}
-                                                    title={isMaxReached ? 'Máximo de series alcanzado' : 'Agregar serie (Enter)'}
-                                                    style={{ cursor: isMaxReached ? 'not-allowed' : 'pointer' }}
-                                                    disabled={isMaxReached}
+                                                    title={buttonTitle}
+                                                    style={{ cursor: disableAddMms ? 'not-allowed' : 'pointer' }}
+                                                    disabled={disableAddMms}
                                                 >
                                                     <i className={`bi ${isMaxReached ? 'bi-check-lg' : 'bi-plus-lg'}`}></i>
                                                 </button>
@@ -2017,6 +2047,12 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                                         })
                                         if (tokenModal.field === 'quantity') {
                                             handleChange('quantity', tokenModal.prevValue || '')
+                                        } else if (tokenModal.field === 'unit') {
+                                            handleChange('unit', tokenModal.prevValue || '')
+                                            setUnitDropdownVersion(prev => prev + 1)
+                                        } else if (tokenModal.field === 'country') {
+                                            handleChange('country', tokenModal.prevValue || '')
+                                            setCountryDropdownVersion(prev => prev + 1)
                                         }
                                         setTokenInput('')
                                     }}
