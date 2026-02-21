@@ -136,6 +136,24 @@ public class AuthDbContext : DbContext
     }
 
     /// <summary>
+    /// Recuepración de proveedores paginados usando el stored procedure csp_PMX_ProveedoresListarPaginado
+    /// </summary>
+    /// <param name="request">Datos del filtro páginado</param>
+    /// <returns></returns>
+    public async Task<List<CatalogoPaginadoDto>> GetCatalogoProveedoresPaginadoAsync(CatalogoPagiandoRequest request)
+    {
+        var paramFiltro = new SqlParameter("@Filtro", request.Filtro);
+        var paramPageNumber = new SqlParameter("@PageNumber", request.PageNumber);
+        var paramPageSize = new SqlParameter("@PageSize", request.PageSize);
+
+        var result = await Database
+            .SqlQueryRaw<CatalogoPaginadoDto>("EXEC csp_PMX_ProveedoresListarPaginado @Filtro, @PageNumber, @PageSize", paramFiltro, paramPageNumber, paramPageSize)
+            .ToListAsync();
+
+        return result;
+    }
+
+    /// <summary>
     /// Ejecuta el stored procedure CSP_PMX_ObtenerPendientes para obtener pendientes
     /// </summary>
     public async Task<List<PendienteDto>> GetPendientesAsync(string equipo)
@@ -159,6 +177,18 @@ public class AuthDbContext : DbContext
 
             while (await reader.ReadAsync())
             {
+                string docs = reader["ruta_documento"]?.ToString() ?? "";
+                List<PendienteDocumentosResponseDto> documentos = new List<PendienteDocumentosResponseDto>();
+                var docsArray = docs.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
+                if (docsArray.Length > 0)
+                {
+                    documentos = docsArray.Select(d => new PendienteDocumentosResponseDto
+                    {
+                        Documento = UrlFileServices.ExtracFileNameFromUrl(d),
+                        RutaDocumento = d
+                    }).ToList();
+                }
+
                 var item = new PendienteDto
                 {
                     IdEntrada = reader["id_entrada"]?.ToString() ?? string.Empty,
@@ -175,7 +205,8 @@ public class AuthDbContext : DbContext
                     Estatus = reader["estatus"]?.ToString() ?? string.Empty,
                     TipoCaptura = reader["tipo_captura"]?.ToString() ?? string.Empty,
                     FechaDocumento = reader["fecha_documento"] != DBNull.Value ? Convert.ToDateTime(reader["fecha_documento"]) : null,
-                    RutaDocumento = reader["ruta_documento"]?.ToString(),
+                    //RutaDocumento = reader["ruta_documento"]?.ToString(),
+                    Documentos = documentos,
                     EsOpenpo = reader["es_openpo"] != DBNull.Value && Convert.ToBoolean(reader["es_openpo"])
                 };
 
@@ -249,7 +280,7 @@ public class AuthDbContext : DbContext
     /// <summary>
     /// Ejecuta el stored procedure CSP_PMX_ValidarCierrePrevio para validar el cierre de previo
     /// </summary>
-    public async Task<ValidarCierrePrevioResponse?> GetValidarCierrePrevioAsync(string idEntrada, string idUsuario)
+    public async Task<ValidarCierrePrevioResponse?> GetValidarCierrePrevioAsync(string idEntrada, string idUsuario, bool discrepancia)
     {
         var connection = Database.GetDbConnection();
         await connection.OpenAsync();
@@ -257,7 +288,7 @@ public class AuthDbContext : DbContext
         try
         {
             using var command = connection.CreateCommand();
-            command.CommandText = "EXEC CSP_PMX_ValidarCierrePrevio @ID_ENTRADA = @ID_ENTRADA, @ID_USUARIO = @ID_USUARIO";
+            command.CommandText = "EXEC CSP_PMX_ValidarCierrePrevio @ID_ENTRADA = @ID_ENTRADA, @ID_USUARIO = @ID_USUARIO, @DISCREPANCIA = @DISCREPANCIA";
             command.CommandType = System.Data.CommandType.Text;
 
             var parameterEntrada = command.CreateParameter();
@@ -269,6 +300,11 @@ public class AuthDbContext : DbContext
             parameterUsuario.ParameterName = "@ID_USUARIO";
             parameterUsuario.Value = idUsuario;
             command.Parameters.Add(parameterUsuario);
+
+            var parameterDiscrepancia = command.CreateParameter();
+            parameterDiscrepancia.ParameterName = "@DISCREPANCIA";
+            parameterDiscrepancia.Value = discrepancia;
+            command.Parameters.Add(parameterDiscrepancia);
 
             using var reader = await command.ExecuteReaderAsync();
 
@@ -355,6 +391,7 @@ public class AuthDbContext : DbContext
             command.CommandText = @"EXEC csp_PMX_RegistrarPartida 
                 @idbulto = @idbulto, 
                 @Referencia = @Referencia, 
+                @id_proveedor = @id_proveedor, 
                 @id_producto = @id_producto, 
                 @UM = @UM, 
                 @cantidad = @cantidad, 
@@ -376,6 +413,11 @@ public class AuthDbContext : DbContext
             paramReferencia.ParameterName = "@Referencia";
             paramReferencia.Value = request.Referencia;
             command.Parameters.Add(paramReferencia);
+
+            var paramIdProveedor = command.CreateParameter();
+            paramIdProveedor.ParameterName = "@id_proveedor";
+            paramIdProveedor.Value = request.IdProveedor;
+            command.Parameters.Add(paramIdProveedor);
 
             var paramIdProducto = command.CreateParameter();
             paramIdProducto.ParameterName = "@id_producto";
@@ -507,6 +549,7 @@ public class AuthDbContext : DbContext
                 @id = @id,
                 @idbulto = @idbulto, 
                 @Referencia = @Referencia, 
+                @id_proveedor = @id_proveedor,
                 @id_producto = @id_producto, 
                 @UM = @UM, 
                 @cantidad = @cantidad, 
@@ -533,6 +576,11 @@ public class AuthDbContext : DbContext
             paramReferencia.ParameterName = "@Referencia";
             paramReferencia.Value = request.Referencia;
             command.Parameters.Add(paramReferencia);
+
+            var paramIdProveedor = command.CreateParameter();
+            paramIdProveedor.ParameterName = "@id_proveedor";
+            paramIdProveedor.Value = request.IdProveedor;
+            command.Parameters.Add(paramIdProveedor);
 
             var paramIdProducto = command.CreateParameter();
             paramIdProducto.ParameterName = "@id_producto";
@@ -779,6 +827,108 @@ public class AuthDbContext : DbContext
                 return new ValidarModeloDto
                 {
                     Valido = reader["Valido"] != DBNull.Value && Convert.ToBoolean(reader["Valido"])
+                };
+            }
+
+            return null;
+        }
+        finally
+        {
+            await connection.CloseAsync();
+        }
+    }
+
+    /// <summary>
+    /// Ejecuta el stored procedure csp_PMX_EliminarPartida para eliminar una partida
+    /// </summary>
+    public async Task<RegistrarPartidaResponse?> EliminarPartidaAsync(EliminarPartidaRequest request)
+    {
+        var connection = Database.GetDbConnection();
+        await connection.OpenAsync();
+
+        try
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = @"EXEC csp_PMX_EliminarPartida 
+                @idbulto = @idbulto, 
+                @Referencia = @Referencia, 
+                @id_producto = @id_producto";
+            command.CommandType = System.Data.CommandType.Text;
+
+            var paramIdBulto = command.CreateParameter();
+            paramIdBulto.ParameterName = "@idbulto";
+            paramIdBulto.Value = request.IdBulto;
+            command.Parameters.Add(paramIdBulto);
+
+            var paramReferencia = command.CreateParameter();
+            paramReferencia.ParameterName = "@Referencia";
+            paramReferencia.Value = request.Referencia;
+            command.Parameters.Add(paramReferencia);
+
+            var paramIdProducto = command.CreateParameter();
+            paramIdProducto.ParameterName = "@id_producto";
+            paramIdProducto.Value = request.IdProducto;
+            command.Parameters.Add(paramIdProducto);
+
+            using var reader = await command.ExecuteReaderAsync();
+
+            if (await reader.ReadAsync())
+            {
+                return new RegistrarPartidaResponse
+                {
+                    Estatus = reader["estatus"] != DBNull.Value && Convert.ToBoolean(reader["estatus"]),
+                    Msg = reader["msg"]?.ToString() ?? string.Empty
+                };
+            }
+
+            return null;
+        }
+        finally
+        {
+            await connection.CloseAsync();
+        }
+    }
+
+    /// <summary>
+    /// Ejecuta el stored procedure csp_PMX_AgregarOpenPO para agregar un Open PO
+    /// </summary>
+    public async Task<RegistrarPartidaResponse?> AgregarOpenPOAsync(AgregarOpenPORequest request)
+    {
+        var connection = Database.GetDbConnection();
+        await connection.OpenAsync();
+
+        try
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = @"EXEC csp_PMX_AgregarOpenPO 
+                @Referencia = @Referencia, 
+                @po = @po, 
+                @packing = @packing";
+            command.CommandType = System.Data.CommandType.Text;
+
+            var paramReferencia = command.CreateParameter();
+            paramReferencia.ParameterName = "@Referencia";
+            paramReferencia.Value = request.Referencia;
+            command.Parameters.Add(paramReferencia);
+
+            var paramPo = command.CreateParameter();
+            paramPo.ParameterName = "@po";
+            paramPo.Value = request.Po;
+            command.Parameters.Add(paramPo);
+
+            var paramPacking = command.CreateParameter();
+            paramPacking.ParameterName = "@packing";
+            paramPacking.Value = request.Packing;
+            command.Parameters.Add(paramPacking);
+
+            using var reader = await command.ExecuteReaderAsync();
+
+            if (await reader.ReadAsync())
+            {
+                return new RegistrarPartidaResponse
+                {
+                    Estatus = reader["estatus"] != DBNull.Value && Convert.ToBoolean(reader["estatus"]),
+                    Msg = reader["msg"]?.ToString() ?? string.Empty
                 };
             }
 

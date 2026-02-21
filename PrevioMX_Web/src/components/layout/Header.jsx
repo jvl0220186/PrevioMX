@@ -12,7 +12,9 @@ const Header = ({
   subtitle = "Previos MX",
   showBack = false,
   onBack,
-  actions
+  actions,
+  idCliente = '',
+  client = ''
 }) => {
   const handleLogout = () => {
     localStorage.clear()
@@ -36,6 +38,11 @@ const Header = ({
           <div className="header-title-container">
             <h1 className="header-title">{title}</h1>
             <span className="header-subtitle">{subtitle}</span>
+            {(idCliente || client) && (
+              <span className="header-client-info text-muted" style={{ display: 'block', fontSize: '0.9rem', marginTop: '2px' }}>
+                Cliente: {idCliente && <span className="me-1">[{idCliente}]</span>}{client || '-'}
+              </span>
+            )}
           </div>
         </div>
 

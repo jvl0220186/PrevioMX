@@ -3,36 +3,56 @@
   "WorkspaceRootPath": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\controllers\\visualizationcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:controllers\\visualizationcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\controllers\\catalogoscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:controllers\\catalogoscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\controllers\\clasificacioncontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:controllers\\clasificacioncontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\business\\catalogosservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:business\\catalogosservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\business\\icatalogosservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:business\\icatalogosservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\dto\\catalogosresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:dto\\catalogosresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\business\\authdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:business\\authdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
-      "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+      "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\controllers\\visualizationcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:controllers\\visualizationcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\controllers\\protectedcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:controllers\\protectedcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\business\\visualizationservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:business\\visualizationservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\dto\\validartokenteamleaderdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:dto\\validartokenteamleaderdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\business\\ivisualizationservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:business\\ivisualizationservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\previomx_api.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
-      "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:previomx_api.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+      "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\dto\\agregaropenporequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:dto\\agregaropenporequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\dto\\validartokenteamleaderrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:dto\\validartokenteamleaderrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\dto\\pendientesresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:dto\\pendientesresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\dto\\pendientedocumentosresponsedto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:dto\\pendientedocumentosresponsedto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\dto\\eliminarpartidarequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:dto\\eliminarpartidarequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -42,7 +62,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 7,
+          "SelectedChildIndex": 10,
           "Children": [
             {
               "$type": "Bookmark",
@@ -74,102 +94,166 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "VisualizationController.cs",
-              "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Controllers\\VisualizationController.cs",
-              "RelativeDocumentMoniker": "Controllers\\VisualizationController.cs",
-              "ToolTip": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Controllers\\VisualizationController.cs",
-              "RelativeToolTip": "Controllers\\VisualizationController.cs",
-              "ViewState": "AgIAAH0AAAAAAAAAAAAcwIgAAABlAAAAAAAAAA==",
+              "DocumentIndex": 3,
+              "Title": "ICatalogosService.cs",
+              "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Business\\ICatalogosService.cs",
+              "RelativeDocumentMoniker": "Business\\ICatalogosService.cs",
+              "ToolTip": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Business\\ICatalogosService.cs",
+              "RelativeToolTip": "Business\\ICatalogosService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAqwAgAAABHAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-13T01:44:26.386Z",
+              "WhenOpened": "2026-02-20T21:34:10.9Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 4,
-              "Title": "ProtectedController.cs",
-              "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Controllers\\ProtectedController.cs",
-              "RelativeDocumentMoniker": "Controllers\\ProtectedController.cs",
-              "ToolTip": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Controllers\\ProtectedController.cs",
-              "RelativeToolTip": "Controllers\\ProtectedController.cs",
-              "ViewState": "AgIAACEAAAAAAAAAAAAIwEUAAAAfAAAAAAAAAA==",
+              "Title": "CatalogosResponse.cs",
+              "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\DTO\\CatalogosResponse.cs",
+              "RelativeDocumentMoniker": "DTO\\CatalogosResponse.cs",
+              "ToolTip": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\DTO\\CatalogosResponse.cs",
+              "RelativeToolTip": "DTO\\CatalogosResponse.cs",
+              "ViewState": "AgIAAAEAAAAAAAAAAADgvxIAAAANAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-13T00:41:56.521Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "ValidarTokenTeamleaderDto.cs",
-              "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\DTO\\ValidarTokenTeamleaderDto.cs",
-              "RelativeDocumentMoniker": "DTO\\ValidarTokenTeamleaderDto.cs",
-              "ToolTip": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\DTO\\ValidarTokenTeamleaderDto.cs",
-              "RelativeToolTip": "DTO\\ValidarTokenTeamleaderDto.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAmAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-13T00:24:42.24Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "PrevioMX_Api.csproj",
-              "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\PrevioMX_Api.csproj",
-              "RelativeDocumentMoniker": "PrevioMX_Api.csproj",
-              "ToolTip": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\PrevioMX_Api.csproj",
-              "RelativeToolTip": "PrevioMX_Api.csproj",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAOAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2026-01-09T19:42:51.03Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "Program.cs",
-              "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Program.cs",
-              "RelativeDocumentMoniker": "Program.cs",
-              "ToolTip": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Program.cs",
-              "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAAIEAAAAAAAAAAAAAABwAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T17:40:21.346Z",
+              "WhenOpened": "2026-02-20T21:13:38.639Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "appsettings.json",
-              "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\appsettings.json",
-              "RelativeDocumentMoniker": "appsettings.json",
-              "ToolTip": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\appsettings.json",
-              "RelativeToolTip": "appsettings.json",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAdAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-01-09T19:39:06.806Z"
+              "DocumentIndex": 2,
+              "Title": "CatalogosService.cs",
+              "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Business\\CatalogosService.cs",
+              "RelativeDocumentMoniker": "Business\\CatalogosService.cs",
+              "ToolTip": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Business\\CatalogosService.cs",
+              "RelativeToolTip": "Business\\CatalogosService.cs",
+              "ViewState": "AgIAAA8AAAAAAAAAAAAgwBsAAABVAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-20T21:03:35.217Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 0,
+              "Title": "CatalogosController.cs",
+              "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Controllers\\CatalogosController.cs",
+              "RelativeDocumentMoniker": "Controllers\\CatalogosController.cs",
+              "ToolTip": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Controllers\\CatalogosController.cs",
+              "RelativeToolTip": "Controllers\\CatalogosController.cs",
+              "ViewState": "AgIAAA8AAAAAAAAAAAAywDUAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-20T21:03:18.518Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "ClasificacionController.cs",
+              "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Controllers\\ClasificacionController.cs",
+              "RelativeDocumentMoniker": "Controllers\\ClasificacionController.cs",
+              "ToolTip": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Controllers\\ClasificacionController.cs",
+              "RelativeToolTip": "Controllers\\ClasificacionController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAADgAAABEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-18T18:58:58.564Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "AgregarOpenPORequest.cs",
+              "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\DTO\\AgregarOpenPORequest.cs",
+              "RelativeDocumentMoniker": "DTO\\AgregarOpenPORequest.cs",
+              "ToolTip": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\DTO\\AgregarOpenPORequest.cs",
+              "RelativeToolTip": "DTO\\AgregarOpenPORequest.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAqwAgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-18T01:44:23.221Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "IVisualizationService.cs",
+              "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Business\\IVisualizationService.cs",
+              "RelativeDocumentMoniker": "Business\\IVisualizationService.cs",
+              "ToolTip": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Business\\IVisualizationService.cs",
+              "RelativeToolTip": "Business\\IVisualizationService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAqwA0AAAAdAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-12T21:01:16.128Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "EliminarPartidaRequest.cs",
+              "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\DTO\\EliminarPartidaRequest.cs",
+              "RelativeDocumentMoniker": "DTO\\EliminarPartidaRequest.cs",
+              "ToolTip": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\DTO\\EliminarPartidaRequest.cs",
+              "RelativeToolTip": "DTO\\EliminarPartidaRequest.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-12T20:59:18.71Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "PendientesResponse.cs",
+              "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\DTO\\PendientesResponse.cs",
+              "RelativeDocumentMoniker": "DTO\\PendientesResponse.cs",
+              "ToolTip": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\DTO\\PendientesResponse.cs",
+              "RelativeToolTip": "DTO\\PendientesResponse.cs",
+              "ViewState": "AgIAAB8AAAAAAAAAAAAYwDYAAAAwAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-12T01:18:19.311Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
               "Title": "AuthDbContext.cs",
               "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Business\\AuthDbContext.cs",
               "RelativeDocumentMoniker": "Business\\AuthDbContext.cs",
               "ToolTip": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Business\\AuthDbContext.cs",
               "RelativeToolTip": "Business\\AuthDbContext.cs",
-              "ViewState": "AgIAACgBAAAAAAAAAAAywHIBAAAxAAAAAAAAAA==",
+              "ViewState": "AgIAAGoAAAAAAAAAAAApwJUAAAAsAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T20:15:33.807Z",
+              "WhenOpened": "2026-02-12T01:17:40.986Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "ValidarTokenTeamleaderRequest.cs",
-              "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\DTO\\ValidarTokenTeamleaderRequest.cs",
-              "RelativeDocumentMoniker": "DTO\\ValidarTokenTeamleaderRequest.cs",
-              "ToolTip": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\DTO\\ValidarTokenTeamleaderRequest.cs",
-              "RelativeToolTip": "DTO\\ValidarTokenTeamleaderRequest.cs",
-              "ViewState": "AgIAAAQAAAAAAAAAAKBhwAkAAAAAAAAAAAAAAA==",
+              "DocumentIndex": 11,
+              "Title": "PendienteDocumentosResponseDto.cs",
+              "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\DTO\\PendienteDocumentosResponseDto.cs",
+              "RelativeDocumentMoniker": "DTO\\PendienteDocumentosResponseDto.cs",
+              "ToolTip": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\DTO\\PendienteDocumentosResponseDto.cs",
+              "RelativeToolTip": "DTO\\PendienteDocumentosResponseDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAA9AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-13T00:42:53.183Z"
+              "WhenOpened": "2026-02-12T01:16:22.59Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "VisualizationService.cs",
+              "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Business\\VisualizationService.cs",
+              "RelativeDocumentMoniker": "Business\\VisualizationService.cs",
+              "ToolTip": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Business\\VisualizationService.cs",
+              "RelativeToolTip": "Business\\VisualizationService.cs",
+              "ViewState": "AgIAACQAAAAAAAAAAAAwwDoAAAA1AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-12T00:29:44.754Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "VisualizationController.cs",
+              "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Controllers\\VisualizationController.cs",
+              "RelativeDocumentMoniker": "Controllers\\VisualizationController.cs",
+              "ToolTip": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Controllers\\VisualizationController.cs",
+              "RelativeToolTip": "Controllers\\VisualizationController.cs",
+              "ViewState": "AgIAAE8AAAAAAAAAAAAwwMMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-13T01:44:26.386Z",
+              "EditorCaption": ""
             }
           ]
         }

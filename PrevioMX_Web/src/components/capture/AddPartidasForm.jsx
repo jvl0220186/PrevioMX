@@ -80,7 +80,7 @@ const numeroALetras = (num) => {
     return resultado.trim().replace(/\s+/g, ' ')
 }
 
-const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [], catalogPaises = [], bultosAvailable = [], idEntrada = '', esOpenPO = false, openPOData = [], editingPartida = null }) => {
+const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [], catalogPaises = [], bultosAvailable = [], idEntrada = '', idProveedor = '', esOpenPO = false, openPOData = [], capturedProductIds = [], editingPartida = null, onPOAdded, onRequestOcrForPartNumber, ocrPartNumberToApply, onConsumeOcrPartNumber }) => {
     const [formData, setFormData] = useState({
         id: '', // ID de la partida (para edición)
         bulto: '',
@@ -147,6 +147,20 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
     const [paisTokenAutorizado, setPaisTokenAutorizado] = useState('')
     const [unitDropdownVersion, setUnitDropdownVersion] = useState(0)
     const [countryDropdownVersion, setCountryDropdownVersion] = useState(0)
+
+    // Aplicar texto OCR al número de parte cuando el usuario seleccionó una región en el PDF
+    useEffect(() => {
+        if (ocrPartNumberToApply != null && ocrPartNumberToApply !== '' && onConsumeOcrPartNumber) {
+            const value = String(ocrPartNumberToApply).trim().toUpperCase()
+            setFormData(prev => ({ ...prev, partNumber: value }))
+            setIsProductoClasificado(false)
+            resetSpInfo()
+            setMarcaValida(true)
+            setModeloValido(true)
+            onConsumeOcrPartNumber()
+            setTimeout(() => partNumberRef.current?.focus(), 100)
+        }
+    }, [ocrPartNumberToApply])
     
     // Estados para OpenPO
     const [selectedPOProducts, setSelectedPOProducts] = useState([])
@@ -158,6 +172,10 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
     })
     const [manualPartNumberEnabled, setManualPartNumberEnabled] = useState(false) // Habilitar captura manual en OpenPO
     const [availablePOData, setAvailablePOData] = useState([]) // Copia local de openPOData que se actualiza al registrar partidas
+    const [showAgregarPOModal, setShowAgregarPOModal] = useState(false)
+    const [agregarPOForm, setAgregarPOForm] = useState({ po: '', packing: '' })
+    const [agregarPOLoading, setAgregarPOLoading] = useState(false)
+    const [usedProductIdsInSession, setUsedProductIdsInSession] = useState(() => new Set())
     
     // Inicializar availablePOData cuando cambia openPOData
     useEffect(() => {
@@ -243,8 +261,19 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
 
     const bultosOptions = bultosAvailable.length > 0 ? bultosAvailable : []
     
-    // Opciones de PO (valores únicos) - usando availablePOData
-    const poOptions = esOpenPO ? [...new Set(availablePOData.map(item => item.po))] : []
+    // Productos ya usados (capturados en partidas previas + guardados en esta sesión)
+    const capturedSet = React.useMemo(() => new Set(capturedProductIds || []), [capturedProductIds])
+    const isProductoUsado = (idProducto) => !!(idProducto && (capturedSet.has(idProducto) || usedProductIdsInSession.has(idProducto)))
+    const poHasUsedProducts = (po) => availablePOData.some(item => item.po === po && isProductoUsado(item.idProducto))
+    const PO_SUFFIX_DISTINTIVO = ' ✓'
+    const getPoDisplayLabel = (po) => {
+        if (!po) return ''
+        return poHasUsedProducts(po) ? `${po}${PO_SUFFIX_DISTINTIVO}` : po
+    }
+    const parsePoFromDisplay = (displayValue) => (displayValue || '').endsWith(PO_SUFFIX_DISTINTIVO) ? displayValue.slice(0, -PO_SUFFIX_DISTINTIVO.length).trim() : (displayValue || '').trim()
+    
+    // Opciones de PO (valores únicos) con distintivo si tiene productos ya usados
+    const poOptions = esOpenPO ? [...new Set(availablePOData.map(item => item.po))].map(po => getPoDisplayLabel(po)) : []
 
     const getLabel = (value, catalog) => {
         if (!value) return ''
@@ -311,9 +340,12 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
         setTokenInput('')
     }
 
-    // Validación del formulario
+    // Validación del formulario (descripción obligatoria solo si el producto está clasificado)
     useEffect(() => {
-        const requiredFields = ['partNumber', 'description', 'quantity', 'unit', 'country']
+        const requiredFields = ['partNumber', 'quantity', 'unit', 'country']
+        if (isProductoClasificado) {
+            requiredFields.push('description')
+        }
         const basicFieldsValid = requiredFields.every(field => formData[field] && String(formData[field]).trim() !== '')
         
         // Validar bulto según modo
@@ -329,9 +361,9 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
         
         const basicValid = basicFieldsValid && bultoValid && subCantidadValid
         
-        // Si requiere MMS, validar que cantidad === número de series
+        // Si requiere MMS, validar que cantidad === número de series (solo cuando el producto está clasificado)
         let mmsValid = true
-        if (spInfo.isSpmms && basicValid) {
+        if (spInfo.isSpmms && basicValid && isProductoClasificado) {
             const qty = parseInt(formData.quantity) || 0
             mmsValid = qty > 0 && mmsEntries.length === qty
         }
@@ -360,7 +392,8 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
         selectedBultos,
         unidadTokenAutorizada,
         paisTokenAutorizado,
-        cantidadTokenAutorizada
+        cantidadTokenAutorizada,
+        isProductoClasificado
     ])
 
     const handleChange = (field, value) => {
@@ -377,8 +410,9 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
         })
     }
 
-    // Manejar selección de PO (OpenPO)
-    const handlePOSelect = (po) => {
+    // Manejar selección de PO (OpenPO) - value puede venir con sufijo " ✓ Usada"
+    const handlePOSelect = (value) => {
+        const po = parsePoFromDisplay(value)
         setFormData(prev => ({
             ...prev,
             selectedPO: po,
@@ -397,6 +431,47 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
         // Filtrar productos del PO seleccionado (usando availablePOData)
         const products = availablePOData.filter(item => item.po === po)
         setSelectedPOProducts(products)
+    }
+
+    const PRODUCTO_SUFFIX_DISTINTIVO = ' ✓'
+    const getProductoDisplayLabel = (p) => {
+        const base = `${p.idProducto} - ${p.descripcion?.substring(0, 30) || ''}...`
+        return isProductoUsado(p.idProducto) ? `${base}${PRODUCTO_SUFFIX_DISTINTIVO}` : base
+    }
+    const parseIdProductoFromDisplay = (displayValue) => (displayValue || '').split(' - ')[0]?.trim() || ''
+
+    const handleAgregarPOSubmit = async () => {
+        const po = agregarPOForm.po?.trim() || ''
+        const packing = agregarPOForm.packing?.trim() || ''
+        if (!po) {
+            setToast({ show: true, message: 'Ingrese la Orden de Compra (PO).', type: 'warning' })
+            return
+        }
+        if (!idEntrada) {
+            setToast({ show: true, message: 'No hay referencia de entrada.', type: 'error' })
+            return
+        }
+        try {
+            setAgregarPOLoading(true)
+            const response = await previoService.agregarOpenPO({
+                referencia: idEntrada,
+                po,
+                packing
+            })
+            if (response?.estatus) {
+                setShowAgregarPOModal(false)
+                setAgregarPOForm({ po: '', packing: '' })
+                setToast({ show: true, message: response.msg || 'PO agregado correctamente.', type: 'success' })
+                if (typeof onPOAdded === 'function') onPOAdded()
+            } else {
+                setToast({ show: true, message: response?.msg || 'No se pudo agregar el PO.', type: 'error' })
+            }
+        } catch (err) {
+            const msg = err?.message || err?.msg || 'Error al agregar el PO.'
+            setToast({ show: true, message: msg, type: 'error' })
+        } finally {
+            setAgregarPOLoading(false)
+        }
     }
 
     // Manejar selección de Producto desde PO (OpenPO)
@@ -434,7 +509,7 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
         
         try {
             setLoadingClasificacion(true)
-            const result = await previoService.getClasificacion(idEntrada, partNumber)
+            const result = await previoService.validarPost({ idEntrada, idProducto: partNumber })
             
             // Verificar si la respuesta tiene información útil
             const hasClasificacion = result.clasificacion && result.clasificacion.trim() !== ''
@@ -587,6 +662,7 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
             })
 
             if (requiereToken) {
+                setConflictModal(prev => ({ ...prev, show: false }))
                 abrirTokenModal({
                     type: 'conflict',
                     label: 'OpenPO',
@@ -766,7 +842,7 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
             setIsProductoClasificado(false)
             resetSpInfo()
             
-            const result = await previoService.getClasificacion(idEntrada, partNumber)
+            const result = await previoService.validarPost({ idEntrada, idProducto: partNumber })
             
             // Verificar si la respuesta tiene información útil
             const hasClasificacion = result.clasificacion && result.clasificacion.trim() !== ''
@@ -1119,9 +1195,14 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
         handleChange('bulto', '')
     }
     
-    // Construye el campo de comentarios incluyendo el número de parte físico si existe
+    // Construye el campo de comentarios incluyendo el número de parte físico si existe.
+    // Si el producto no está clasificado y la descripción está vacía, se envía "REVISION" por defecto.
     const buildComentarios = () => {
         const parts = []
+        
+        if (!isProductoClasificado && (!formData.description || !formData.description.trim())) {
+            parts.push('REVISION')
+        }
         
         if (formData.physicalPartNumber && formData.physicalPartNumber.trim()) {
             parts.push(`[NP Físico: ${formData.physicalPartNumber.trim()}]`)
@@ -1144,8 +1225,8 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
     }
 
     const handleSubmit = async () => {
-        // Validación adicional para MMS
-        if (spInfo.isSpmms) {
+        // Validación adicional para MMS (solo cuando el producto está clasificado)
+        if (spInfo.isSpmms && isProductoClasificado) {
             const qty = parseInt(formData.quantity) || 0
             if (mmsEntries.length !== qty) {
                 setToast({
@@ -1170,9 +1251,10 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
             // Si estamos editando, usar el endpoint de actualización
             if (isEditing) {
                 const updateRequest = {
-                    id: parseInt(formData.id) || 0, // El API espera un número
+                    id: parseInt(formData.id) || 0,
                     idBulto: formData.bulto,
                     referencia: idEntrada,
+                    idProveedor: idProveedor || '',
                     idProducto: formData.partNumber,
                     um: formData.unit,
                     cantidad: String(formData.quantity),
@@ -1181,8 +1263,8 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                     comentarios: buildComentarios(),
                     usuario: usuario,
                     ocCompra: formData.ocCompra || '',
-                    mms: buildMmsString(),
-                    noParteFisico: formData.physicalPartNumber || ''
+                    noParteFisico: formData.physicalPartNumber || '',
+                    mms: buildMmsString()
                 }
 
                 try {
@@ -1233,10 +1315,11 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
 
             // Registrar partida en cada bulto
             for (const bulto of bultosToProcess) {
-                // Preparar el request para el API
+                // Preparar el request para el API (modelo actualizado)
                 const request = {
                     idBulto: bulto,
                     referencia: idEntrada,
+                    idProveedor: idProveedor || '',
                     idProducto: formData.partNumber,
                     um: formData.unit,
                     cantidad: String(formData.quantity),
@@ -1245,8 +1328,8 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                     comentarios: buildComentarios(),
                     usuario: usuario,
                     ocCompra: formData.ocCompra || '',
-                    mms: buildMmsString(), // marca1|modelo1|serie1~marca2|modelo2|serie2
-                    noParteFisico: formData.physicalPartNumber || ''
+                    noParteFisico: formData.physicalPartNumber || '',
+                    mms: buildMmsString()
                 }
 
                 try {
@@ -1275,30 +1358,10 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                     message: message,
                     type: 'success'
                 })
-                
-                // Si es OpenPO y no es captura manual, descontar el producto del listado
+
+                // Marcar producto como usado en sesión para el distintivo (OpenPO)
                 if (esOpenPO && !manualPartNumberEnabled && formData.partNumber) {
-                    const savedPartNumber = formData.partNumber
-                    const savedPO = formData.selectedPO
-                    
-                    // Eliminar el producto de availablePOData
-                    setAvailablePOData(prev => {
-                        const updated = prev.filter(p => p.idProducto !== savedPartNumber)
-                        
-                        // Verificar si el PO aún tiene productos
-                        const remainingProductsInPO = updated.filter(p => p.po === savedPO)
-                        
-                        // Si el PO ya no tiene productos, limpiar la selección
-                        if (remainingProductsInPO.length === 0) {
-                            setFormData(f => ({ ...f, selectedPO: '', ocCompra: '' }))
-                            setSelectedPOProducts([])
-                        } else {
-                            // Actualizar la lista de productos del PO seleccionado
-                            setSelectedPOProducts(remainingProductsInPO)
-                        }
-                        
-                        return updated
-                    })
+                    setUsedProductIdsInSession(prev => new Set(prev).add(formData.partNumber))
                 }
 
                 // Limpiar formulario y poner foco en número de parte
@@ -1477,24 +1540,39 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
 
                 {isBultoLocked && (
                     <>
-                        {/* Selectores de OpenPO - solo si hay POs disponibles */}
-                        {esOpenPO && poOptions.length > 0 && (
+                        {/* Selectores de OpenPO */}
+                        {esOpenPO && (
                             <>
-                                {/* Selector de PO */}
+                                {/* Selector de PO + botón Agregar PO */}
                                 <div className="mb-3">
-                                    <label className="form-label fw-bold">
-                                        <i className="bi bi-file-text me-1"></i>
-                                        Orden de Compra (PO) *
-                                        <span className="badge bg-info ms-2" style={{ fontSize: '0.7rem' }}>
-                                            OpenPO
-                                        </span>
-                                    </label>
-                                    <SingleSelectDropdown
-                                        options={poOptions}
-                                        label="Seleccione un PO"
-                                        onSelect={handlePOSelect}
-                                        initialSelection={formData.selectedPO}
-                                    />
+                                    <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                                        <label className="form-label fw-bold mb-0">
+                                            <i className="bi bi-file-text me-1"></i>
+                                            Orden de Compra (PO) *
+                                            <span className="badge bg-info ms-2" style={{ fontSize: '0.7rem' }}>
+                                                OpenPO
+                                            </span>
+                                        </label>
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm oc-primary-btn-2"
+                                            onClick={() => {
+                                                setAgregarPOForm({ po: '', packing: '' })
+                                                setShowAgregarPOModal(true)
+                                            }}
+                                            style={{ cursor: 'pointer' }}
+                                        >
+                                            <i className="bi bi-plus-lg me-1"></i>Agregar PO
+                                        </button>
+                                    </div>
+                                    {poOptions.length > 0 && (
+                                        <SingleSelectDropdown
+                                            options={poOptions}
+                                            label="Seleccione un PO"
+                                            onSelect={handlePOSelect}
+                                            initialSelection={getPoDisplayLabel(formData.selectedPO)}
+                                        />
+                                    )}
                                 </div>
 
                                 {/* Selector de Producto del PO */}
@@ -1507,14 +1585,13 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                                         <div className="d-flex gap-2">
                                             <div className="flex-grow-1">
                                                 <SingleSelectDropdown
-                                                    options={selectedPOProducts.map(p => `${p.idProducto} - ${p.descripcion?.substring(0, 30) || ''}...`)}
+                                                    options={selectedPOProducts.map(p => getProductoDisplayLabel(p))}
                                                     label="Seleccione un producto"
                                                     onSelect={(val) => {
-                                                        // Extraer idProducto del valor seleccionado
-                                                        const idProducto = val.split(' - ')[0]
+                                                        const idProducto = parseIdProductoFromDisplay(val)
                                                         handlePOProductSelect(idProducto)
                                                     }}
-                                                    initialSelection={formData.partNumber ? `${formData.partNumber} - ${formData.description?.substring(0, 30) || ''}...` : ''}
+                                                    initialSelection={formData.partNumber ? getProductoDisplayLabel(selectedPOProducts.find(p => p.idProducto === formData.partNumber) || { idProducto: formData.partNumber, descripcion: formData.description }) : ''}
                                                 />
                                             </div>
                                             <button
@@ -1577,7 +1654,8 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                         {/* Número de Parte */}
                         <div className="mb-3">
                             <label className="form-label fw-bold">Número de Parte *</label>
-                            <div className="position-relative">
+                            <div className="d-flex gap-2 align-items-center">
+                                <div className="position-relative flex-grow-1">
                             <input
                                     ref={partNumberRef}
                                 type="text"
@@ -1606,6 +1684,20 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                                     <div className="position-absolute" style={{ right: '10px', top: '50%', transform: 'translateY(-50%)' }}>
                                         <i className="bi bi-check-circle-fill text-success" style={{ fontSize: '18px' }}></i>
                                     </div>
+                                )}
+                                </div>
+                                {onRequestOcrForPartNumber && (
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline-primary"
+                                        onClick={onRequestOcrForPartNumber}
+                                        disabled={loadingClasificacion || (esOpenPO && poOptions.length > 0 && !manualPartNumberEnabled && !!formData.partNumber)}
+                                        title="Seleccionar región en el PDF para número de parte (OCR)"
+                                        aria-label="Seleccionar región en el PDF para número de parte"
+                                        style={{ height: '45px', width: '45px', borderRadius: '12px', padding: 0, flexShrink: 0 }}
+                                    >
+                                        <i className="bi bi-crop" style={{ fontSize: '1.2rem' }} aria-hidden="true"></i>
+                                    </button>
                                 )}
                             </div>
                             {formData.clasificacion && (
@@ -1638,9 +1730,9 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                             )}
                         </div>
 
-                        {/* Descripción */}
+                        {/* Descripción (obligatoria solo si el producto está clasificado) */}
                         <div className="mb-3">
-                            <label className="form-label fw-bold">Descripción *</label>
+                            <label className="form-label fw-bold">Descripción {isProductoClasificado ? '*' : '(opcional)'}</label>
                             <textarea
                                 className="form-control oc-input"
                                 rows="3"
@@ -1775,11 +1867,16 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                             </div>
 
                             {spInfo.isSpmms && (
-                                <div className="alert alert-warning py-2 mb-2" style={{ fontSize: '0.85rem' }}>
+                                <div className={`alert py-2 mb-2 ${isProductoClasificado ? 'alert-warning' : 'alert-info'}`} style={{ fontSize: '0.85rem' }}>
                                     <i className="bi bi-info-circle me-2"></i>
-                                    Este producto requiere MMS. Capture {formData.quantity || '?'} serie(s).
-                                    <br />
-                                    <small className="text-muted">Marca → Enter → Modelo → Enter → Serie → Enter (guarda)</small>
+                                    {isProductoClasificado
+                                        ? <>Este producto requiere MMS. Capture {formData.quantity || '?'} serie(s).</>
+                                        : <>MMS opcional (producto no clasificado).</>
+                                    }
+                                    {isProductoClasificado && (
+                                        <><br />
+                                        <small className="text-muted">Marca → Enter → Modelo → Enter → Serie → Enter (guarda)</small></>
+                                    )}
                                 </div>
                             )}
 
@@ -1987,6 +2084,88 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                     </>
                 )}
             </div>
+
+            {/* Modal Agregar PO */}
+            {showAgregarPOModal && (
+                <div
+                    className="modal fade show d-block"
+                    tabIndex="-1"
+                    style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+                    onClick={() => !agregarPOLoading && setShowAgregarPOModal(false)}
+                >
+                    <div className="modal-dialog modal-dialog-centered" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-content" style={{ borderRadius: '16px', border: 'none' }}>
+                            <div className="modal-header border-0 pb-0">
+                                <h5 className="modal-title d-flex align-items-center gap-2">
+                                    <i className="bi bi-plus-circle text-primary" style={{ fontSize: '1.5rem' }}></i>
+                                    Agregar PO
+                                </h5>
+                                <button
+                                    type="button"
+                                    className="btn-close"
+                                    onClick={() => !agregarPOLoading && setShowAgregarPOModal(false)}
+                                    disabled={agregarPOLoading}
+                                    style={{ cursor: agregarPOLoading ? 'not-allowed' : 'pointer' }}
+                                />
+                            </div>
+                            <div className="modal-body py-4">
+                                <div className="mb-3">
+                                    <label className="form-label fw-bold">Orden de Compra (PO) *</label>
+                                    <input
+                                        type="text"
+                                        className="form-control oc-input"
+                                        placeholder="Ingrese el PO"
+                                        value={agregarPOForm.po}
+                                        onChange={(e) => setAgregarPOForm(prev => ({ ...prev, po: e.target.value }))}
+                                        disabled={agregarPOLoading}
+                                    />
+                                </div>
+                                <div className="mb-0">
+                                    <label className="form-label fw-bold">Packing</label>
+                                    <input
+                                        type="text"
+                                        className="form-control oc-input"
+                                        placeholder="Ingrese el packing"
+                                        value={agregarPOForm.packing}
+                                        onChange={(e) => setAgregarPOForm(prev => ({ ...prev, packing: e.target.value }))}
+                                        disabled={agregarPOLoading}
+                                    />
+                                </div>
+                            </div>
+                            <div className="modal-footer border-0 pt-0">
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-secondary"
+                                    onClick={() => !agregarPOLoading && setShowAgregarPOModal(false)}
+                                    disabled={agregarPOLoading}
+                                    style={{ borderRadius: '12px', padding: '8px 20px', cursor: agregarPOLoading ? 'not-allowed' : 'pointer' }}
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn oc-primary-btn-2"
+                                    onClick={handleAgregarPOSubmit}
+                                    disabled={agregarPOLoading}
+                                    style={{ borderRadius: '12px', padding: '8px 20px', cursor: agregarPOLoading ? 'not-allowed' : 'pointer' }}
+                                >
+                                    {agregarPOLoading ? (
+                                        <>
+                                            <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                            Agregando...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i className="bi bi-plus-lg me-1"></i>
+                                            Agregar
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <Toast 
                 show={toast.show}

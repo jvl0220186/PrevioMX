@@ -33,9 +33,9 @@ public class VisualizationService : IVisualizationService
         };
     }
 
-    public async Task<ValidarCierrePrevioResponse?> GetValidarCierrePrevioAsync(string idEntrada, string idUsuario)
+    public async Task<ValidarCierrePrevioResponse?> GetValidarCierrePrevioAsync(string idEntrada, string idUsuario, bool discrepancia)
     {
-        return await _context.GetValidarCierrePrevioAsync(idEntrada, idUsuario);
+        return await _context.GetValidarCierrePrevioAsync(idEntrada, idUsuario, discrepancia);
     }
 
     public async Task<RegistrarPartidaResponse?> RegistrarPartidaAsync(RegistrarPartidaRequest request)
@@ -86,6 +86,22 @@ public class VisualizationService : IVisualizationService
             referencia, idProducto, modeloRegistro);
         
         return await _context.ValidarModeloAsync(referencia, idProducto, modeloRegistro);
+    }
+
+    public async Task<RegistrarPartidaResponse?> EliminarPartidaAsync(EliminarPartidaRequest request)
+    {
+        _logger.LogInformation("Eliminando partida para bulto: {IdBulto}, referencia: {Referencia}, producto: {IdProducto}", 
+            request.IdBulto, request.Referencia, request.IdProducto);
+        
+        return await _context.EliminarPartidaAsync(request);
+    }
+
+    public async Task<RegistrarPartidaResponse?> AgregarOpenPOAsync(AgregarOpenPORequest request)
+    {
+        _logger.LogInformation("Agregando Open PO - Referencia: {Referencia}, PO: {Po}, Packing: {Packing}", 
+            request.Referencia, request.Po, request.Packing);
+        
+        return await _context.AgregarOpenPOAsync(request);
     }
 }
 

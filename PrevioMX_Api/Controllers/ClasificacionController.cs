@@ -52,22 +52,21 @@ public class ClasificacionController : ControllerBase
     }
 
     /// <summary>
-    /// Valida la clasificación de un producto para una entrada específica (GET)
+    /// Valida la clasificación de un producto para una entrada específica (alternativo)
     /// </summary>
-    /// <param name="idEntrada">ID de la entrada</param>
-    /// <param name="idProducto">ID del producto</param>
+    /// <param name="request">ID de entrada y ID de producto</param>
     /// <returns>Clasificación y descripción del producto</returns>
-    [HttpGet("{idEntrada}/{idProducto}")]
-    public async Task<ActionResult<ValidarClasificacionResponse>> ValidarClasificacionGet(string idEntrada, string idProducto)
+    [HttpPost("validar-post")]
+    public async Task<ActionResult<ValidarClasificacionResponse>> ValidarClasificacionPost([FromBody] ValidarClasificacionRequest request)
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(idEntrada) || string.IsNullOrWhiteSpace(idProducto))
+            if (string.IsNullOrWhiteSpace(request.IdEntrada) || string.IsNullOrWhiteSpace(request.IdProducto))
             {
                 return BadRequest(new { message = "IdEntrada e IdProducto son requeridos" });
             }
 
-            var result = await _clasificacionService.ValidarClasificacionAsync(idEntrada, idProducto);
+            var result = await _clasificacionService.ValidarClasificacionAsync(request.IdEntrada, request.IdProducto);
             
             if (result == null)
             {
@@ -79,7 +78,7 @@ public class ClasificacionController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error al validar clasificación para Entrada: {IdEntrada}, Producto: {IdProducto}", 
-                idEntrada, idProducto);
+                request.IdEntrada, request.IdProducto);
             return StatusCode(500, new { message = "Error al validar la clasificación", error = ex.Message });
         }
     }

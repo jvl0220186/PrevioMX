@@ -4,6 +4,7 @@ public class RegistrarPartidaRequest
 {
     public string IdBulto { get; set; } = string.Empty;
     public string Referencia { get; set; } = string.Empty;
+    public string IdProveedor { get; set; } = string.Empty;
     public string IdProducto { get; set; } = string.Empty;
     public string UM { get; set; } = string.Empty;
     public string Cantidad { get; set; } = string.Empty;

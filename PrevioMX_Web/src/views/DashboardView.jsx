@@ -41,13 +41,15 @@ const DashboardView = () => {
 
           return {
             reference: item.idEntrada,
+            idCliente: item.idCliente || '',
             client: item.cliente,
+            idProveedor: item.idProveedor || '',
             provider: item.proveedor,
             tipoEnvio: item.tipoEnvio || '',
             date: dateStr,
             bundles: item.bultos,
             status: item.estatus,
-            rutaDocumento: item.rutaDocumento || '',
+            documentos: Array.isArray(item.documentos) ? item.documentos : [],
             bodega: item.bodega || '',
             ai: false
           }

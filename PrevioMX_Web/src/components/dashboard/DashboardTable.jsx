@@ -14,12 +14,14 @@ const DashboardTable = ({ data }) => {
     // Guardar datos del row en localStorage para usarlos en CaptureView
     localStorage.setItem('captureData', JSON.stringify({
       reference: row.reference,
+      idCliente: row.idCliente || '',
       client: row.client,
+      idProveedor: row.idProveedor || '',
       provider: row.provider,
       date: row.date,
       bundles: row.bundles,
       status: row.status,
-      rutaDocumento: row.rutaDocumento || ''
+      documentos: Array.isArray(row.documentos) ? row.documentos : []
     }))
     navigate(`/capture/${row.reference}`)
   }
@@ -230,13 +232,19 @@ const DashboardTable = ({ data }) => {
 DashboardTable.propTypes = {
   data: PropTypes.arrayOf(PropTypes.shape({
     reference: PropTypes.string.isRequired,
+    idCliente: PropTypes.string,
     client: PropTypes.string.isRequired,
+    idProveedor: PropTypes.string,
     provider: PropTypes.string.isRequired,
     tipoEnvio: PropTypes.string,
     date: PropTypes.string.isRequired,
     bundles: PropTypes.number.isRequired,
     bodega: PropTypes.string,
     status: PropTypes.string.isRequired,
+    documentos: PropTypes.arrayOf(PropTypes.shape({
+      documento: PropTypes.string,
+      rutaDocumento: PropTypes.string
+    })),
     ai: PropTypes.bool
   })).isRequired
 }

@@ -14,8 +14,10 @@ const SingleSelectDropdown = ({
     const [searchTerm, setSearchTerm] = useState('')
     const [menuStyle, setMenuStyle] = useState({})
     const [selectedItem, setSelectedItem] = useState(initialSelection)
+    const [highlightedIndex, setHighlightedIndex] = useState(0)
     const buttonRef = useRef(null)
     const dropdownRef = useRef(null)
+    const listRef = useRef(null)
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -50,9 +52,21 @@ const SingleSelectDropdown = ({
         setSelectedItem(initialSelection)
     }, [initialSelection])
 
+    // Reset highlighted index when opening or when filter/results change
+    useEffect(() => {
+        if (isOpen) setHighlightedIndex(0)
+    }, [isOpen])
+
     const filteredOptions = options.filter(option =>
         option.toLowerCase().includes(searchTerm.toLowerCase())
     )
+
+    useEffect(() => {
+        setHighlightedIndex(prev => {
+            const max = Math.max(0, filteredOptions.length - 1)
+            return prev > max ? max : prev
+        })
+    }, [filteredOptions.length, searchTerm])
 
     const handleSelect = (option) => {
         setSelectedItem(option)
@@ -61,6 +75,48 @@ const SingleSelectDropdown = ({
         }
         setIsOpen(false)
         setSearchTerm('')
+    }
+
+    // Scroll highlighted item into view
+    useEffect(() => {
+        if (!isOpen || filteredOptions.length === 0 || !listRef.current) return
+        const el = listRef.current.children[highlightedIndex]
+        if (el?.scrollIntoView) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    }, [highlightedIndex, isOpen, filteredOptions.length])
+
+    const handleKeyDown = (e) => {
+        if (filteredOptions.length === 0) {
+            if (e.key === 'Escape') {
+                e.preventDefault()
+                setIsOpen(false)
+                setSearchTerm('')
+            }
+            return
+        }
+        if (e.key === 'ArrowDown') {
+            e.preventDefault()
+            setHighlightedIndex(prev => (prev < filteredOptions.length - 1 ? prev + 1 : 0))
+            return
+        }
+        if (e.key === 'ArrowUp') {
+            e.preventDefault()
+            setHighlightedIndex(prev => (prev > 0 ? prev - 1 : filteredOptions.length - 1))
+            return
+        }
+        if (e.key === 'Enter') {
+            e.preventDefault()
+            if (filteredOptions.length === 1) {
+                handleSelect(filteredOptions[0])
+            } else {
+                handleSelect(filteredOptions[highlightedIndex])
+            }
+            return
+        }
+        if (e.key === 'Escape') {
+            e.preventDefault()
+            setIsOpen(false)
+            setSearchTerm('')
+        }
     }
 
     const toggleDropdown = () => {
@@ -135,17 +191,22 @@ const SingleSelectDropdown = ({
                             value={searchTerm}
                             onClick={(e) => e.stopPropagation()}
                             onChange={(e) => setSearchTerm(e.target.value)}
+                            onKeyDown={handleKeyDown}
                             autoFocus
                             style={{ borderRadius: '8px' }}
+                            aria-label={searchPlaceholder}
                         />
                     </div>
-                    <div className="custom-dropdown-list custom-scrollbar overflow-y-auto flex-grow-1" style={{ minHeight: 0, overscrollBehavior: 'contain' }}>
+                    <div ref={listRef} className="custom-dropdown-list custom-scrollbar overflow-y-auto flex-grow-1" style={{ minHeight: 0, overscrollBehavior: 'contain' }} role="listbox">
                         {filteredOptions.map((option, index) => (
                             <div
                                 key={index}
-                                className={`custom-dropdown-item d-flex align-items-center gap-2 px-3 py-2 cursor-pointer hover-bg-light ${selectedItem === option ? 'selected' : ''}`}
+                                role="option"
+                                aria-selected={index === highlightedIndex}
+                                className={`custom-dropdown-item d-flex align-items-center gap-2 px-3 py-2 cursor-pointer hover-bg-light ${selectedItem === option ? 'selected' : ''} ${index === highlightedIndex ? 'bg-light' : ''}`}
                                 onClick={() => handleSelect(option)}
-                                style={{ cursor: 'pointer' }}
+                                onMouseEnter={() => setHighlightedIndex(index)}
+                                style={{ cursor: 'pointer', backgroundColor: index === highlightedIndex ? '#f0f7ff' : undefined }}
                             >
                                 <span className="text-truncate">{option}</span>
                             </div>

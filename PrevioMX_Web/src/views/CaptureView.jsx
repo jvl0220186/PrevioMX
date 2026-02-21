@@ -6,6 +6,8 @@ import './CaptureView.css'
 import AddPartidasForm from '../components/capture/AddPartidasForm'
 import LoadingSpinner from '../components/common/LoadingSpinner'
 import Toast from '../components/common/Toast'
+import ProveedoresCombo from '../components/common/ProveedoresCombo'
+import PdfOcrViewer from '../components/capture/PdfOcrViewer'
 import previoService from '../services/previo.service'
 
 const CaptureView = () => {
@@ -35,12 +37,22 @@ const CaptureView = () => {
 
     const storedData = getCaptureDataFromStorage()
 
+    // Lista de documentos: desde storage (documentos) o legacy (rutaDocumento único)
+    const initialDocumentos = (() => {
+        if (storedData?.documentos?.length) return storedData.documentos
+        if (storedData?.rutaDocumento) return [{ documento: 'Documento', rutaDocumento: storedData.rutaDocumento }]
+        return []
+    })()
+
     const [documentInfo, setDocumentInfo] = useState({
+        idCliente: storedData?.idCliente || '',
         client: storedData?.client || '',
+        idProveedor: storedData?.idProveedor || '',
         provider: storedData?.provider || '',
-        date: storedData?.date || '',
-        urlDocumento: storedData?.rutaDocumento || ''
+        date: storedData?.date || ''
     })
+    const [documentos, setDocumentos] = useState(initialDocumentos)
+    const [selectedDocumentIndex, setSelectedDocumentIndex] = useState(0)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [catalogs, setCatalogs] = useState({
@@ -58,6 +70,19 @@ const CaptureView = () => {
     const [esOpenPO, setEsOpenPO] = useState(false)
     const [openPOData, setOpenPOData] = useState(null) // Datos del endpoint adicional para OpenPO
     const [editingPartida, setEditingPartida] = useState(null) // Partida en edición
+    const [partidaToDelete, setPartidaToDelete] = useState(null) // Partida seleccionada para eliminar (modal)
+    const [deleting, setDeleting] = useState(false) // Cargando durante eliminación
+    const [verifiedDesgloses, setVerifiedDesgloses] = useState(false) // Check "He verificado los desgloses..." para habilitar Cerrar Previo
+    const [showCerrarPrevioModal, setShowCerrarPrevioModal] = useState(false)
+    const [discrepanciaCheck, setDiscrepanciaCheck] = useState(false) // Valor enviado en GET validar-cierre-previo
+    const [showProveedorModal, setShowProveedorModal] = useState(false)
+    const [pendingProveedor, setPendingProveedor] = useState(null) // Selección temporal en modal cambiar proveedor
+    const [ocrExtractedText, setOcrExtractedText] = useState('')
+    const [showOcrModal, setShowOcrModal] = useState(false)
+    /** Modo "OCR para número de parte": cuando el usuario pidió rellenar el input desde el PDF */
+    const [ocrTarget, setOcrTarget] = useState(null) // 'partNumber' | null
+    /** Texto OCR a aplicar al número de parte (el formulario lo consume y luego se limpia) */
+    const [ocrPartNumberToApply, setOcrPartNumberToApply] = useState(null)
 
     // Función para actualizar KPIs y partidas (sin recargar catálogos)
     const refreshPartidas = async () => {
@@ -125,12 +150,13 @@ const CaptureView = () => {
                     }
                 }
 
-                // Actualizar documentInfo: prioridad localStorage, luego API
+                // Actualizar documentInfo: prioridad localStorage, luego API (documentos se mantienen desde storage)
                 setDocumentInfo(prev => ({
+                    idCliente: prev.idCliente || detalle.idCliente || '',
                     client: prev.client || detalle.cliente || '',
+                    idProveedor: prev.idProveedor || detalle.idProveedor || '',
                     provider: prev.provider || detalle.proveedor || '',
-                    date: dateStr || '',
-                    urlDocumento: prev.urlDocumento || detalle.rutaDocumento || detalle.urlDocumento || ''
+                    date: dateStr || ''
                 }))
 
                 const unitsRaw = Array.isArray(unitsRes) ? unitsRes : (unitsRes.items || [])
@@ -193,12 +219,7 @@ const CaptureView = () => {
                     try {
                         const posResponse = await previoService.getDetallePOs(reference)
                         const posItems = Array.isArray(posResponse) ? posResponse : (posResponse.items || [])
-                        
-                        // Filtrar productos del OpenPO excluyendo los que ya están capturados
-                        const capturedProductIds = new Set(partidas.map(p => p.idProducto))
-                        const availablePOItems = posItems.filter(item => !capturedProductIds.has(item.idProducto))
-                        
-                        setOpenPOData(availablePOItems)
+                        setOpenPOData(posItems)
                     } catch (poErr) {
                         console.error('Error loading OpenPO data:', poErr)
                         setOpenPOData([])
@@ -226,23 +247,20 @@ const CaptureView = () => {
         navigate('/dashboard')
     }
 
-    const handleFinalize = async () => {
+    const handleFinalize = async (discrepancia) => {
         try {
             setFinalizing(true)
-            const response = await previoService.validarCierrePrevio(reference)
+            setShowCerrarPrevioModal(false)
+            const response = await previoService.validarCierrePrevio(reference, discrepancia)
             
             if (response.estatus) {
-                // Éxito: mostrar toast y redireccionar después de 5 segundos
+                // Éxito: mostrar toast y redireccionar de inmediato
                 setToast({
                     show: true,
-                    message: `✅ ${response.msg || 'Captura finalizada correctamente'}. Será redireccionado en 5 segundos...`,
+                    message: `✅ ${response.msg || 'Captura finalizada correctamente'}`,
                     type: 'success'
                 })
-                
-                // Redireccionar después de 5 segundos
-                setTimeout(() => {
-                    navigate('/dashboard')
-                }, 5000)
+                navigate('/dashboard')
             } else {
                 // Error: mostrar toast, no redireccionar
                 setToast({
@@ -267,6 +285,40 @@ const CaptureView = () => {
         setToast(prev => ({ ...prev, show: false }))
     }
 
+    const openDeleteModal = (partida, e) => {
+        if (e) e.stopPropagation()
+        setPartidaToDelete(partida)
+    }
+
+    const closeDeleteModal = () => {
+        if (!deleting) setPartidaToDelete(null)
+    }
+
+    const handleConfirmDelete = async () => {
+        if (!partidaToDelete) return
+        try {
+            setDeleting(true)
+            const response = await previoService.eliminarPartida({
+                idBulto: partidaToDelete.idBulto || '',
+                referencia: reference,
+                idProducto: partidaToDelete.idProducto || ''
+            })
+            if (response?.estatus) {
+                setPartidaToDelete(null)
+                await refreshPartidas()
+                setToast({ show: true, message: response.msg || 'Partida eliminada correctamente', type: 'success' })
+            } else {
+                setToast({ show: true, message: response?.msg || 'No se pudo eliminar la partida', type: 'error' })
+            }
+        } catch (err) {
+            console.error('Error al eliminar partida:', err)
+            const msg = err?.message || err?.msg || 'Error al eliminar la partida'
+            setToast({ show: true, message: msg, type: 'error' })
+        } finally {
+            setDeleting(false)
+        }
+    }
+
     const handleAddPartida = () => {
         setShowAddPartidas(true)
     }
@@ -278,6 +330,16 @@ const CaptureView = () => {
     const handleSavePartida = (data) => {
         console.log('Saving partida:', data)
         setShowAddPartidas(false)
+    }
+
+    const handlePOAdded = async () => {
+        try {
+            const posResponse = await previoService.getDetallePOs(reference)
+            const posItems = Array.isArray(posResponse) ? posResponse : (posResponse.items || [])
+            setOpenPOData(posItems)
+        } catch (poErr) {
+            console.error('Error recargando lista de POs:', poErr)
+        }
     }
 
     if (loading) {
@@ -302,23 +364,17 @@ const CaptureView = () => {
             <Header
                 title={reference}
                 subtitle="Captura de Packing List"
+                idCliente={documentInfo.idCliente}
+                client={documentInfo.client}
                 showBack={true}
                 onBack={handleBack}
-                actions={
-                    <SpecialBtn 
-                        onClick={handleFinalize} 
-                        iconLeft={finalizing ? <span className="spinner-border spinner-border-sm me-1"></span> : <i className="bi bi-check2"></i>} 
-                        label={finalizing ? "Validando..." : "Cerrar Previo"}
-                        disabled={finalizing}
-                    />
-                }
             />
 
             <div className="capture-container">
                 <div className="pdf-section">
-                    {documentInfo.urlDocumento ? (
+                    {documentos.length > 0 ? (
                         <>
-                            {/* Barra de herramientas del PDF */}
+                            {/* Barra de herramientas del PDF con selector de documento */}
                             <div 
                                 className="pdf-toolbar d-flex align-items-center justify-content-between px-3 py-2"
                                 style={{ 
@@ -327,75 +383,96 @@ const CaptureView = () => {
                                     minHeight: '45px'
                                 }}
                             >
-                                <div className="d-flex align-items-center gap-2">
-                                    <span className="text-muted" style={{ fontSize: '0.85rem' }}>
+                                <div className="d-flex align-items-center gap-2 flex-grow-1">
+                                    <span className="text-muted" style={{ fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
                                         <i className="bi bi-file-pdf me-1"></i>
                                         Documento
                                     </span>
-                                </div>
-                                <div className="d-flex align-items-center gap-1">
-                                    {/* Botones de rotación */}
-                                    <button
-                                        className="btn btn-sm btn-outline-secondary"
-                                        onClick={() => setPdfRotation(prev => (prev - 90) % 360)}
-                                        title="Girar a la izquierda"
-                                        style={{ borderRadius: '8px', cursor: 'pointer' }}
+                                    <select
+                                        value={selectedDocumentIndex}
+                                        onChange={(e) => setSelectedDocumentIndex(Number(e.target.value))}
+                                        className="form-select form-select-sm"
+                                        style={{
+                                            maxWidth: '100%',
+                                            borderRadius: '8px',
+                                            borderColor: '#e9e8e2',
+                                            fontSize: '0.85rem'
+                                        }}
+                                        title="Seleccionar documento"
                                     >
-                                        <i className="bi bi-arrow-counterclockwise"></i>
-                                    </button>
-                                    <button
-                                        className="btn btn-sm btn-outline-secondary"
-                                        onClick={() => setPdfRotation(prev => (prev + 90) % 360)}
-                                        title="Girar a la derecha"
-                                        style={{ borderRadius: '8px', cursor: 'pointer' }}
-                                    >
-                                        <i className="bi bi-arrow-clockwise"></i>
-                                    </button>
-                                    {pdfRotation !== 0 && (
-                                        <button
-                                            className="btn btn-sm btn-outline-secondary"
-                                            onClick={() => setPdfRotation(0)}
-                                            title="Restablecer rotación"
-                                            style={{ borderRadius: '8px', cursor: 'pointer' }}
-                                        >
-                                            <i className="bi bi-arrow-repeat"></i>
-                                        </button>
-                                    )}
-                                    <div className="vr mx-2"></div>
-                                    {/* Abrir en nueva pestaña */}
-                                    <button
-                                        className="btn btn-sm btn-outline-primary"
-                                        onClick={() => window.open(documentInfo.urlDocumento, '_blank')}
-                                        title="Abrir en nueva pestaña"
-                                        style={{ borderRadius: '8px', cursor: 'pointer' }}
-                                    >
-                                        <i className="bi bi-box-arrow-up-right"></i>
-                                    </button>
+                                        {documentos.map((doc, idx) => (
+                                            <option key={idx} value={idx}>
+                                                {doc.documento || `Documento ${idx + 1}`}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                             </div>
-                            {/* Contenedor del iframe con rotación */}
+                            {/* Visor PDF con OCR por región */}
                             <div 
                                 className="pdf-iframe-container"
                                 style={{ 
                                     flex: 1, 
                                     overflow: 'hidden',
                                     display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
+                                    flexDirection: 'column',
+                                    minHeight: 0
                                 }}
                             >
-                                <iframe
-                                    src={`https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(documentInfo.urlDocumento)}#zoom=page-width`}
-                                    className="pdf-iframe"
-                                    title="PDF Viewer"
-                                    style={{
-                                        transform: `rotate(${pdfRotation}deg)`,
-                                        transition: 'transform 0.3s ease',
-                                        width: pdfRotation === 90 || pdfRotation === -90 || pdfRotation === 270 || pdfRotation === -270 ? '100vh' : '100%',
-                                        height: pdfRotation === 90 || pdfRotation === -90 || pdfRotation === 270 || pdfRotation === -270 ? '100vw' : '100%',
-                                        maxWidth: '100%',
-                                        maxHeight: '100%'
+                                <PdfOcrViewer
+                                    pdfUrl={documentos[selectedDocumentIndex]?.rutaDocumento || ''}
+                                    title={documentos[selectedDocumentIndex]?.documento || 'Documento'}
+                                    rotation={pdfRotation}
+                                    forceSelectionMode={ocrTarget === 'partNumber'}
+                                    onSelectionCancelled={() => setOcrTarget(null)}
+                                    onTextExtracted={(text) => {
+                                        if (ocrTarget === 'partNumber') {
+                                            setOcrPartNumberToApply(text)
+                                            setOcrTarget(null)
+                                        } else {
+                                            setOcrExtractedText(text)
+                                            setShowOcrModal(true)
+                                        }
                                     }}
+                                    toolbarExtra={
+                                        <div className="d-flex align-items-center gap-1">
+                                            <button
+                                                className="btn btn-sm btn-outline-secondary"
+                                                onClick={() => setPdfRotation(prev => (prev - 90) % 360)}
+                                                title="Girar a la izquierda"
+                                                style={{ borderRadius: '8px', cursor: 'pointer' }}
+                                            >
+                                                <i className="bi bi-arrow-counterclockwise"></i>
+                                            </button>
+                                            <button
+                                                className="btn btn-sm btn-outline-secondary"
+                                                onClick={() => setPdfRotation(prev => (prev + 90) % 360)}
+                                                title="Girar a la derecha"
+                                                style={{ borderRadius: '8px', cursor: 'pointer' }}
+                                            >
+                                                <i className="bi bi-arrow-clockwise"></i>
+                                            </button>
+                                            {pdfRotation !== 0 && (
+                                                <button
+                                                    className="btn btn-sm btn-outline-secondary"
+                                                    onClick={() => setPdfRotation(0)}
+                                                    title="Restablecer rotación"
+                                                    style={{ borderRadius: '8px', cursor: 'pointer' }}
+                                                >
+                                                    <i className="bi bi-arrow-repeat"></i>
+                                                </button>
+                                            )}
+                                            <div className="vr mx-2"></div>
+                                            <button
+                                                className="btn btn-sm btn-outline-primary"
+                                                onClick={() => window.open(documentos[selectedDocumentIndex]?.rutaDocumento, '_blank')}
+                                                title="Abrir en nueva pestaña"
+                                                style={{ borderRadius: '8px', cursor: 'pointer' }}
+                                            >
+                                                <i className="bi bi-box-arrow-up-right"></i>
+                                            </button>
+                                        </div>
+                                    }
                                 />
                             </div>
                         </>
@@ -423,9 +500,15 @@ const CaptureView = () => {
                             catalogPaises={catalogs.countries}
                             bultosAvailable={catalogs.bultos}
                             idEntrada={reference}
+                            idProveedor={documentInfo.idProveedor}
                             esOpenPO={esOpenPO}
                             openPOData={openPOData}
+                            capturedProductIds={partidasCapturadas.map(p => p.idProducto)}
                             editingPartida={editingPartida}
+                            onPOAdded={handlePOAdded}
+                            onRequestOcrForPartNumber={() => setOcrTarget('partNumber')}
+                            ocrPartNumberToApply={ocrPartNumberToApply}
+                            onConsumeOcrPartNumber={() => setOcrPartNumberToApply(null)}
                         />
                     ) : (
                         <>
@@ -437,11 +520,31 @@ const CaptureView = () => {
 
                                 <div className="info-row">
                                     <span className="info-label">Cliente:</span>
-                                    <span className="info-value">{documentInfo.client}</span>
+                                    <span className="info-value">
+                                        {documentInfo.idCliente && <span className="text-muted me-1">[{documentInfo.idCliente}]</span>}
+                                        {documentInfo.client || '-'}
+                                    </span>
                                 </div>
                                 <div className="info-row">
                                     <span className="info-label">Proveedor:</span>
-                                    <span className="info-value">{documentInfo.provider}</span>
+                                    <div className="d-flex align-items-center justify-content-end gap-2" style={{ flex: 1, minWidth: 0 }}>
+                                        <span className="info-value">
+                                            {documentInfo.idProveedor && <span className="text-muted me-1">[{documentInfo.idProveedor}]</span>}
+                                            {documentInfo.provider || '-'}
+                                        </span>
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-outline-secondary p-1"
+                                            onClick={() => {
+                                                setPendingProveedor(documentInfo.idProveedor ? { cValue: documentInfo.idProveedor, cText: documentInfo.provider || documentInfo.idProveedor } : null)
+                                                setShowProveedorModal(true)
+                                            }}
+                                            title="Cambiar proveedor"
+                                            style={{ borderRadius: '8px' }}
+                                        >
+                                            <i className="bi bi-pencil"></i>
+                                        </button>
+                                    </div>
                                 </div>
                                 <div className="info-row">
                                     <span className="info-label">Fecha del Documento:</span>
@@ -552,6 +655,12 @@ const CaptureView = () => {
                                                                         <i className="bi bi-globe me-1"></i>
                                                                         {partida.paisOrigen || '-'}
                                                                     </span>
+                                                                    {partida.ocCompra && (
+                                                                        <span title="Orden de compra">
+                                                                            <i className="bi bi-file-text me-1"></i>
+                                                                            {partida.ocCompra}
+                                                                        </span>
+                                                                    )}
                                                                     {partida.comentarios && (
                                                                         <span title={partida.comentarios}>
                                                                             <i className="bi bi-chat-text me-1"></i>
@@ -562,7 +671,16 @@ const CaptureView = () => {
                                                                     )}
                                                                 </div>
                                                             </div>
-                                                            <div>
+                                                            <div className="d-flex align-items-center gap-2">
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn btn-sm btn-outline-danger"
+                                                                    onClick={(e) => openDeleteModal(partida, e)}
+                                                                    title="Eliminar partida"
+                                                                    style={{ borderRadius: '8px', padding: '4px 8px' }}
+                                                                >
+                                                                    <i className="bi bi-trash"></i>
+                                                                </button>
                                                                 {partida.clasificado ? (
                                                                     <i className="bi bi-check-circle-fill text-success" title="Clasificado"></i>
                                                                 ) : (
@@ -574,6 +692,30 @@ const CaptureView = () => {
                                                 </div>
                                             </div>
                                         ))
+                                    })()}
+
+                                    {/* Totales por unidad de medida (discreto, sin encabezado) */}
+                                    {(() => {
+                                        const totalesPorUm = partidasCapturadas.reduce((acc, p) => {
+                                            const um = (p.um && String(p.um).trim()) || 'Sin UM'
+                                            const qty = parseFloat(String(p.cantidad || 0).replace(/,/g, '.')) || 0
+                                            acc[um] = (acc[um] || 0) + qty
+                                            return acc
+                                        }, {})
+                                        const entries = Object.entries(totalesPorUm).sort((a, b) => a[0].localeCompare(b[0]))
+                                        if (entries.length === 0) return null
+                                        return (
+                                            <div className="mt-3 py-2 px-3 rounded text-muted" style={{ fontSize: '0.85rem', backgroundColor: 'rgba(0,0,0,0.04)' }}>
+                                                <div className="d-flex flex-wrap gap-3">
+                                                    {entries.map(([um, total]) => (
+                                                        <span key={um}>
+                                                            <span>{um}:</span>
+                                                            <span className="fw-semibold text-dark ms-1">{Number.isInteger(total) ? total : total.toFixed(2)}</span>
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )
                                     })()}
                                 </div>
                             ) : (
@@ -591,12 +733,312 @@ const CaptureView = () => {
                                     />
                                 </div>
                             )}
+
+                            {/* Panel Cerrar Previo */}
+                            <div className="card oc-light-card document-info-card capture-close-previo-card">
+                                <div className="d-flex align-items-center gap-2 mb-3">
+                                    <i className="bi bi-check2-square"></i>
+                                    <h5 className="m-0 fw-bold" style={{ fontSize: '16px' }}>Cerrar Previo</h5>
+                                </div>
+                                <div className="d-flex flex-column gap-3">
+                                    <label className="d-flex align-items-start gap-2 mb-0" style={{ cursor: 'pointer' }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={verifiedDesgloses}
+                                            onChange={(e) => setVerifiedDesgloses(e.target.checked)}
+                                            className="form-check-input mt-1"
+                                            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                                        />
+                                        <span className="form-label mb-0" style={{ fontSize: '14px', fontWeight: 500 }}>
+                                            He verificado los desgloses de bultos y cantidades totales del previo
+                                        </span>
+                                    </label>
+                                    <SpecialBtn
+                                        onClick={() => setShowCerrarPrevioModal(true)}
+                                        iconLeft={finalizing ? <span className="spinner-border spinner-border-sm me-1"></span> : <i className="bi bi-check2"></i>}
+                                        label={finalizing ? "Validando..." : "Cerrar Previo"}
+                                        disabled={!verifiedDesgloses || finalizing}
+                                    />
+                                </div>
+                            </div>
                         </>
                     )}
 
                 </div>
             </div>
-            
+
+            {/* Modal cambiar proveedor */}
+            {showProveedorModal && (
+                <div
+                    className="modal fade show d-block"
+                    tabIndex="-1"
+                    style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+                    onClick={() => setShowProveedorModal(false)}
+                >
+                    <div className="modal-dialog modal-dialog-centered" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-content" style={{ borderRadius: '16px', border: 'none' }}>
+                            <div className="modal-header border-0 pb-0">
+                                <h5 className="modal-title d-flex align-items-center gap-2">
+                                    <i className="bi bi-building text-primary" style={{ fontSize: '1.5rem' }}></i>
+                                    Cambiar proveedor
+                                </h5>
+                                <button
+                                    type="button"
+                                    className="btn-close"
+                                    onClick={() => setShowProveedorModal(false)}
+                                    style={{ cursor: 'pointer' }}
+                                />
+                            </div>
+                            <div className="modal-body py-4">
+                                <label className="form-label fw-bold mb-2">Seleccione el proveedor</label>
+                                <ProveedoresCombo
+                                    label="Seleccionar proveedor"
+                                    searchPlaceholder="Buscar por código o nombre..."
+                                    initialFilter={documentInfo.idProveedor || ''}
+                                    initialSelection={pendingProveedor ?? (documentInfo.idProveedor ? { cValue: documentInfo.idProveedor, cText: documentInfo.provider || documentInfo.idProveedor } : null)}
+                                    onSelect={(item) => setPendingProveedor(item)}
+                                    pageSize={20}
+                                />
+                            </div>
+                            <div className="modal-footer border-0 pt-0">
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-secondary"
+                                    onClick={() => setShowProveedorModal(false)}
+                                    style={{ borderRadius: '12px', padding: '8px 20px', cursor: 'pointer' }}
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn oc-primary-btn-2"
+                                    onClick={() => {
+                                        if (pendingProveedor) {
+                                            setDocumentInfo(prev => ({
+                                                ...prev,
+                                                idProveedor: pendingProveedor.cValue ?? '',
+                                                provider: pendingProveedor.cText ?? ''
+                                            }))
+                                        }
+                                        setShowProveedorModal(false)
+                                        setPendingProveedor(null)
+                                    }}
+                                    style={{ borderRadius: '12px', padding: '8px 20px', cursor: 'pointer' }}
+                                >
+                                    <i className="bi bi-check2 me-1"></i>
+                                    Aceptar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal texto extraído por OCR */}
+            {showOcrModal && (
+                <div
+                    className="modal fade show d-block"
+                    tabIndex="-1"
+                    style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+                    onClick={() => setShowOcrModal(false)}
+                >
+                    <div className="modal-dialog modal-dialog-centered modal-lg" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-content" style={{ borderRadius: '16px', border: 'none' }}>
+                            <div className="modal-header border-0 pb-0">
+                                <h5 className="modal-title d-flex align-items-center gap-2">
+                                    <i className="bi bi-text-paragraph text-primary" style={{ fontSize: '1.5rem' }}></i>
+                                    Texto extraído (OCR)
+                                </h5>
+                                <button
+                                    type="button"
+                                    className="btn-close"
+                                    onClick={() => setShowOcrModal(false)}
+                                    style={{ cursor: 'pointer' }}
+                                />
+                            </div>
+                            <div className="modal-body py-4">
+                                <textarea
+                                    readOnly
+                                    className="form-control font-monospace"
+                                    value={ocrExtractedText}
+                                    rows={12}
+                                    style={{ fontSize: '0.9rem', resize: 'vertical', minHeight: '200px' }}
+                                />
+                            </div>
+                            <div className="modal-footer border-0 pt-0">
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-secondary"
+                                    onClick={() => setShowOcrModal(false)}
+                                    style={{ borderRadius: '12px', padding: '8px 20px', cursor: 'pointer' }}
+                                >
+                                    Cerrar
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn oc-primary-btn-2"
+                                    onClick={() => {
+                                        if (ocrExtractedText) {
+                                            navigator.clipboard.writeText(ocrExtractedText).then(() => {
+                                                setToast({ show: true, message: 'Texto copiado al portapapeles', type: 'success' })
+                                            }).catch(() => {
+                                                setToast({ show: true, message: 'No se pudo copiar', type: 'error' })
+                                            })
+                                        }
+                                    }}
+                                    style={{ borderRadius: '12px', padding: '8px 20px', cursor: 'pointer' }}
+                                >
+                                    <i className="bi bi-clipboard me-1"></i>
+                                    Copiar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal confirmar cerrar previo */}
+            {showCerrarPrevioModal && (
+                <div
+                    className="modal fade show d-block"
+                    tabIndex="-1"
+                    style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+                    onClick={() => !finalizing && setShowCerrarPrevioModal(false)}
+                >
+                    <div className="modal-dialog modal-dialog-centered" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-content" style={{ borderRadius: '16px', border: 'none' }}>
+                            <div className="modal-header border-0 pb-0">
+                                <h5 className="modal-title d-flex align-items-center gap-2">
+                                    <i className="bi bi-check2-square text-primary" style={{ fontSize: '1.5rem' }}></i>
+                                    Cerrar Previo
+                                </h5>
+                                <button
+                                    type="button"
+                                    className="btn-close"
+                                    onClick={() => !finalizing && setShowCerrarPrevioModal(false)}
+                                    disabled={finalizing}
+                                    style={{ cursor: finalizing ? 'not-allowed' : 'pointer' }}
+                                />
+                            </div>
+                            <div className="modal-body py-4">
+                                <p className="mb-4" style={{ fontSize: '1rem', color: '#333' }}>
+                                    ¿Está seguro de cerrar el previo?
+                                </p>
+                                <label className="d-flex align-items-center gap-2 mb-0" style={{ cursor: 'pointer' }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={discrepanciaCheck}
+                                        onChange={(e) => setDiscrepanciaCheck(e.target.checked)}
+                                        className="form-check-input"
+                                        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                                        disabled={finalizing}
+                                    />
+                                    <span className="form-label mb-0" style={{ fontSize: '14px', fontWeight: 500 }}>
+                                        Enviar con discrepancia
+                                    </span>
+                                </label>
+                            </div>
+                            <div className="modal-footer border-0 pt-0">
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-secondary"
+                                    onClick={() => !finalizing && setShowCerrarPrevioModal(false)}
+                                    disabled={finalizing}
+                                    style={{ borderRadius: '12px', padding: '8px 20px', cursor: finalizing ? 'not-allowed' : 'pointer' }}
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn oc-primary-btn-2"
+                                    onClick={() => handleFinalize(discrepanciaCheck)}
+                                    disabled={finalizing}
+                                    style={{ borderRadius: '12px', padding: '8px 20px', cursor: finalizing ? 'not-allowed' : 'pointer' }}
+                                >
+                                    {finalizing ? (
+                                        <>
+                                            <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                            Validando...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i className="bi bi-check2 me-1"></i>
+                                            Cerrar Previo
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal confirmar eliminar partida */}
+            {partidaToDelete && (
+                <div
+                    className="modal fade show d-block"
+                    tabIndex="-1"
+                    style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+                    onClick={closeDeleteModal}
+                >
+                    <div className="modal-dialog modal-dialog-centered" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-content" style={{ borderRadius: '16px', border: 'none' }}>
+                            <div className="modal-header border-0 pb-0">
+                                <h5 className="modal-title d-flex align-items-center gap-2">
+                                    <i className="bi bi-trash text-danger" style={{ fontSize: '1.5rem' }}></i>
+                                    Eliminar partida
+                                </h5>
+                                <button
+                                    type="button"
+                                    className="btn-close"
+                                    onClick={closeDeleteModal}
+                                    disabled={deleting}
+                                    style={{ cursor: deleting ? 'not-allowed' : 'pointer' }}
+                                />
+                            </div>
+                            <div className="modal-body py-4">
+                                <p className="mb-0" style={{ fontSize: '1rem', color: '#555' }}>
+                                    ¿Eliminar la partida <strong>{partidaToDelete.idProducto}</strong> del bulto <strong>{partidaToDelete.idBulto}</strong>?
+                                </p>
+                                <p className="mt-2 mb-0 text-muted" style={{ fontSize: '0.9rem' }}>
+                                    Esta acción no se puede deshacer.
+                                </p>
+                            </div>
+                            <div className="modal-footer border-0 pt-0">
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-secondary"
+                                    onClick={closeDeleteModal}
+                                    disabled={deleting}
+                                    style={{ borderRadius: '12px', padding: '8px 20px', cursor: deleting ? 'not-allowed' : 'pointer' }}
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-danger"
+                                    onClick={handleConfirmDelete}
+                                    disabled={deleting}
+                                    style={{ borderRadius: '12px', padding: '8px 20px', cursor: deleting ? 'not-allowed' : 'pointer' }}
+                                >
+                                    {deleting ? (
+                                        <>
+                                            <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                            Eliminando...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i className="bi bi-trash me-1"></i>
+                                            Eliminar
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <Toast 
                 show={toast.show}
                 message={toast.message}

@@ -38,5 +38,25 @@ public class CatalogosController : ControllerBase
             return StatusCode(500, new { message = "Error al obtener el catálogo", error = ex.Message });
         }
     }
+
+    /// <summary>
+    /// Recuepración de catálogo paginado de proveedores, con filtro de búsqueda y paginación
+    /// </summary>
+    /// <param name="request">Filtro, pagina y datos por página</param>
+    /// <returns>Registros encontrados</returns>
+    [HttpPost("catalogo-proveedores")]
+    public async Task<ActionResult<CatalogoPaginadoResponse>> GetCatalogoProveedoresPaginados([FromBody] CatalogoPagiandoRequest request)
+    {
+        try
+        {
+            var result = await _catalogosService.GetCatalogoProveedoresPaginadosAsync(request);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener catálogo paginado de proveedores");
+            return StatusCode(500, new { message = "Error al obtener el catálogo paginado", error = ex.Message });
+        }
+    }
 }
 

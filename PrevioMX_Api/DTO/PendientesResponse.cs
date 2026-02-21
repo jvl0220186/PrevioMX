@@ -51,8 +51,9 @@ public class PendienteDto
     [Column("fecha_documento")]
     public DateTime? FechaDocumento { get; set; }
 
-    [Column("ruta_documento")]
-    public string? RutaDocumento { get; set; }
+    //[Column("ruta_documento")]
+    //public string? RutaDocumento { get; set; }
+    public List<PendienteDocumentosResponseDto> Documentos { get; set; } = new();
 
     [Column("es_openpo")]
     public bool EsOpenpo { get; set; }

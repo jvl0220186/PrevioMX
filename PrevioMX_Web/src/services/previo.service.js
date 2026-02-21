@@ -11,7 +11,24 @@ const previoService = {
    */
   async getCatalogo(catalogoId) {
     try {
-      const response = await apiClient.get(`/api/Catalogos/${catalogoId}`)
+      const response = await apiClient.get(`/api/Catalogos/${encodeURIComponent(catalogoId)}`)
+      return response.data
+    } catch (error) {
+      throw error.response?.data || error.message
+    }
+  },
+
+  /**
+   * Obtiene el catálogo de proveedores con filtro y paginación
+   * @param {Object} request - Parámetros de búsqueda
+   * @param {string} [request.filtro] - Filtro de búsqueda
+   * @param {number} [request.pageNumber] - Número de página (0-based)
+   * @param {number} [request.pageSize] - Tamaño de página
+   * @returns {Promise<import('../models/api.models').CatalogoProveedoresResponse>} Items paginados (cValue, cText) e información de paginación
+   */
+  async getCatalogoProveedores(request) {
+    try {
+      const response = await apiClient.post('/api/Catalogos/catalogo-proveedores', request)
       return response.data
     } catch (error) {
       throw error.response?.data || error.message
@@ -69,7 +86,7 @@ const previoService = {
    */
   async getDetalleEntrada(idEntrada) {
     try {
-      const response = await apiClient.get(`/api/Visualization/detalle-entrada/${idEntrada}`)
+      const response = await apiClient.get(`/api/Visualization/detalle-entrada/${encodeURIComponent(idEntrada)}`)
       return response.data
     } catch (error) {
       throw error.response?.data || error.message
@@ -79,11 +96,13 @@ const previoService = {
   /**
    * Valida si se puede cerrar un previo
    * @param {string} idEntrada - ID de la entrada
+   * @param {boolean} discrepancia - Si se envía con discrepancia
    * @returns {Promise<import('../models/api.models').ValidarCierrePrevioResponse>} Resultado de la validación
    */
-  async validarCierrePrevio(idEntrada) {
+  async validarCierrePrevio(idEntrada, discrepancia) {
     try {
-      const response = await apiClient.get(`/api/Visualization/validar-cierre-previo/${idEntrada}`)
+      const discrepanciaStr = discrepancia === true ? 'true' : 'false'
+      const response = await apiClient.get(`/api/Visualization/validar-cierre-previo/${encodeURIComponent(idEntrada)}/${discrepanciaStr}`)
       return response.data
     } catch (error) {
       throw error.response?.data || error.message
@@ -111,7 +130,23 @@ const previoService = {
    */
   async getClasificacion(idEntrada, idProducto) {
     try {
-      const response = await apiClient.get(`/api/Clasificacion/${idEntrada}/${encodeURIComponent(idProducto)}`)
+      const response = await apiClient.get(`/api/Clasificacion/${encodeURIComponent(idEntrada)}/${encodeURIComponent(idProducto)}`)
+      return response.data
+    } catch (error) {
+      throw error.response?.data || error.message
+    }
+  },
+
+  /**
+   * Valida producto vía POST (clasificación y Standard Pack)
+   * @param {Object} request - Datos para validar
+   * @param {string} request.idEntrada - ID de la entrada
+   * @param {string} request.idProducto - Número de parte del producto
+   * @returns {Promise<import('../models/api.models').ValidarPostResponse>} Clasificación, descripción y datos Standard Pack
+   */
+  async validarPost(request) {
+    try {
+      const response = await apiClient.post('/api/Clasificacion/validar-post', request)
       return response.data
     } catch (error) {
       throw error.response?.data || error.message
@@ -125,7 +160,7 @@ const previoService = {
    */
   async getDetallePOs(idEntrada) {
     try {
-      const response = await apiClient.get(`/api/Visualization/detalle-pos/${idEntrada}`)
+      const response = await apiClient.get(`/api/Visualization/detalle-pos/${encodeURIComponent(idEntrada)}`)
       return response.data
     } catch (error) {
       throw error.response?.data || error.message
@@ -134,17 +169,7 @@ const previoService = {
 
   /**
    * Registra una partida
-   * @param {Object} request - Datos de la partida
-   * @param {string} request.idBulto - ID del bulto
-   * @param {string} request.referencia - Referencia de la entrada
-   * @param {string} request.idProducto - Número de parte
-   * @param {string} request.um - Unidad de medida
-   * @param {string} request.cantidad - Cantidad
-   * @param {string} request.subCantidad - Sub cantidad
-   * @param {string} request.paisOrigen - País de origen
-   * @param {string} request.comentarios - Comentarios/Notas
-   * @param {string} request.usuario - Usuario que registra
-   * @param {string} request.ocCompra - Orden de compra
+   * @param {import('../models/api.models').RegistrarPartidaRequest} request - Datos de la partida
    * @returns {Promise<{estatus: boolean, msg: string}>} Resultado del registro
    */
   async registrarPartida(request) {
@@ -158,24 +183,46 @@ const previoService = {
 
   /**
    * Actualiza una partida existente
-   * @param {Object} request - Datos de la partida a actualizar
-   * @param {string} request.id - ID único de la partida
-   * @param {string} request.idBulto - ID del bulto
-   * @param {string} request.referencia - Referencia de la entrada
-   * @param {string} request.idProducto - Número de parte
-   * @param {string} request.um - Unidad de medida
-   * @param {string} request.cantidad - Cantidad
-   * @param {string} request.subCantidad - Sub cantidad
-   * @param {string} request.paisOrigen - País de origen
-   * @param {string} request.comentarios - Comentarios/Notas
-   * @param {string} request.usuario - Usuario que actualiza
-   * @param {string} request.ocCompra - Orden de compra
+   * @param {import('../models/api.models').ActualizarPartidaRequest} request - Datos de la partida a actualizar
    * @returns {Promise<{estatus: boolean, msg: string}>} Resultado de la actualización
    */
   async actualizarPartida(request) {
     try {
-      // TODO: Actualizar endpoint cuando sea proporcionado
       const response = await apiClient.put('/api/Visualization/actualizar-partida', request)
+      return response.data
+    } catch (error) {
+      throw error.response?.data || error.message
+    }
+  },
+
+  /**
+   * Elimina una partida
+   * @param {Object} request - Datos para identificar la partida a eliminar
+   * @param {string} request.idBulto - ID del bulto
+   * @param {string} request.referencia - Referencia de la entrada
+   * @param {string} request.idProducto - Número de parte del producto
+   * @returns {Promise<{estatus: boolean, msg: string}>} Resultado de la eliminación
+   */
+  async eliminarPartida(request) {
+    try {
+      const response = await apiClient.delete('/api/Visualization/eliminar-partida', { data: request })
+      return response.data
+    } catch (error) {
+      throw error.response?.data || error.message
+    }
+  },
+
+  /**
+   * Agrega un OpenPO a una referencia
+   * @param {Object} request - Datos para agregar OpenPO
+   * @param {string} request.referencia - Referencia de la entrada
+   * @param {string} request.po - Orden de compra (PO)
+   * @param {string} request.packing - Packing
+   * @returns {Promise<{estatus: boolean, msg: string}>} Resultado de la operación
+   */
+  async agregarOpenPO(request) {
+    try {
+      const response = await apiClient.post('/api/Visualization/agregar-openpo', request)
       return response.data
     } catch (error) {
       throw error.response?.data || error.message

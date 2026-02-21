@@ -66,19 +66,20 @@ public class VisualizationController : ControllerBase
             _logger.LogError(ex, "Error al obtener el detalle de la entrada {IdEntrada}", idEntrada);
             return StatusCode(500, new { message = "Error al obtener el detalle de la entrada", error = ex.Message });
         }
-    }   
+    }
 
     /// <summary>
     /// Valida el cierre de previo para una entrada
     /// </summary>
     /// <param name="idEntrada">ID de la entrada</param>
+    /// <param name="discrepancia">Indica si se está enviando con discrepancia</param>
     /// <returns>Resultado de la validación del cierre de previo</returns>
-    [HttpGet("validar-cierre-previo/{idEntrada}")]
+    [HttpGet("validar-cierre-previo/{idEntrada}/{discrepancia}")]
     [ProducesResponseType(typeof(ValidarCierrePrevioResponse), 200)]
     [ProducesResponseType(401)]
     [ProducesResponseType(404)]
     [ProducesResponseType(500)]
-    public async Task<ActionResult<ValidarCierrePrevioResponse>> GetValidarCierrePrevio(string idEntrada)
+    public async Task<ActionResult<ValidarCierrePrevioResponse>> GetValidarCierrePrevio(string idEntrada, bool discrepancia)
     {
         try
         {
@@ -90,7 +91,7 @@ public class VisualizationController : ControllerBase
                 return Unauthorized(new { message = "No se pudo obtener el ID del usuario del token JWT" });
             }
 
-            var response = await _visualizationService.GetValidarCierrePrevioAsync(idEntrada, idUsuario);
+            var response = await _visualizationService.GetValidarCierrePrevioAsync(idEntrada, idUsuario, discrepancia);
             
             if (response == null)
             {
@@ -190,6 +191,98 @@ public class VisualizationController : ControllerBase
             _logger.LogError(ex, "Error al actualizar partida Id: {Id}, bulto: {IdBulto}, producto: {IdProducto}", 
                 request.Id, request.IdBulto, request.IdProducto);
             return StatusCode(500, new { message = "Error al actualizar la partida", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Elimina una partida existente
+    /// </summary>
+    /// <param name="request">Datos de la partida a eliminar</param>
+    /// <returns>Resultado de la eliminación</returns>
+    [HttpDelete("eliminar-partida")]
+    [ProducesResponseType(typeof(RegistrarPartidaResponse), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(500)]
+    public async Task<ActionResult<RegistrarPartidaResponse>> EliminarPartida([FromBody] EliminarPartidaRequest request)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.IdBulto))
+            {
+                return BadRequest(new { message = "IdBulto es requerido" });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Referencia))
+            {
+                return BadRequest(new { message = "Referencia es requerida" });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.IdProducto))
+            {
+                return BadRequest(new { message = "IdProducto es requerido" });
+            }
+
+            var response = await _visualizationService.EliminarPartidaAsync(request);
+            
+            if (response == null)
+            {
+                return StatusCode(500, new { message = "No se obtuvo respuesta del procedimiento" });
+            }
+
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al eliminar partida para bulto: {IdBulto}, referencia: {Referencia}, producto: {IdProducto}", 
+                request.IdBulto, request.Referencia, request.IdProducto);
+            return StatusCode(500, new { message = "Error al eliminar la partida", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Agrega un Open PO a una referencia
+    /// </summary>
+    /// <param name="request">Datos del Open PO a agregar</param>
+    /// <returns>Resultado del registro</returns>
+    [HttpPost("agregar-openpo")]
+    [ProducesResponseType(typeof(RegistrarPartidaResponse), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(500)]
+    public async Task<ActionResult<RegistrarPartidaResponse>> AgregarOpenPO([FromBody] AgregarOpenPORequest request)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.Referencia))
+            {
+                return BadRequest(new { message = "Referencia es requerida" });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Po))
+            {
+                return BadRequest(new { message = "PO es requerido" });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Packing))
+            {
+                return BadRequest(new { message = "Paking es requerido" });
+            }
+
+            var response = await _visualizationService.AgregarOpenPOAsync(request);
+            
+            if (response == null)
+            {
+                return StatusCode(500, new { message = "No se obtuvo respuesta del procedimiento" });
+            }
+
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al agregar Open PO - Referencia: {Referencia}, PO: {Po}, Packing: {Packing}", 
+                request.Referencia, request.Po, request.Packing);
+            return StatusCode(500, new { message = "Error al agregar el Open PO", error = ex.Message });
         }
     }
 

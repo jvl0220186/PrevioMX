@@ -104,27 +104,22 @@
     ]
   },
   {
-    "ContainingType": "PrevioMX_Api.Controllers.ClasificacionController",
-    "Method": "ValidarClasificacionGet",
-    "RelativePath": "api/Clasificacion/{idEntrada}/{idProducto}",
-    "HttpMethod": "GET",
+    "ContainingType": "PrevioMX_Api.Controllers.CatalogosController",
+    "Method": "GetCatalogoProveedoresPaginados",
+    "RelativePath": "api/Catalogos/catalogo-proveedores",
+    "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "idEntrada",
-        "Type": "System.String",
-        "IsRequired": true
-      },
-      {
-        "Name": "idProducto",
-        "Type": "System.String",
+        "Name": "request",
+        "Type": "PrevioMX_Api.DTO.CatalogoPagiandoRequest",
         "IsRequired": true
       }
     ],
     "ReturnTypes": [
       {
-        "Type": "PrevioMX_Api.DTO.ValidarClasificacionResponse",
+        "Type": "PrevioMX_Api.DTO.CatalogoPaginadoResponse",
         "MediaTypes": [
           "text/plain",
           "application/json",
@@ -161,6 +156,32 @@
     ]
   },
   {
+    "ContainingType": "PrevioMX_Api.Controllers.ClasificacionController",
+    "Method": "ValidarClasificacionPost",
+    "RelativePath": "api/Clasificacion/validar-post",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "PrevioMX_Api.DTO.ValidarClasificacionRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "PrevioMX_Api.DTO.ValidarClasificacionResponse",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
     "ContainingType": "PrevioMX_Api.Controllers.ProtectedController",
     "Method": "GetProtectedData",
     "RelativePath": "api/Protected/test",
@@ -173,7 +194,7 @@
   {
     "ContainingType": "PrevioMX_Api.Controllers.ProtectedController",
     "Method": "ValidaTokenTeamLeader",
-    "RelativePath": "api/Protected/ValidaTokenTeamLeader",
+    "RelativePath": "api/Protected/valida-token-teamleader",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
@@ -197,6 +218,55 @@
       {
         "Name": "request",
         "Type": "PrevioMX_Api.DTO.ActualizarPartidaRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "PrevioMX_Api.DTO.RegistrarPartidaResponse",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      },
+      {
+        "Type": "Microsoft.AspNetCore.Mvc.ProblemDetails",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 400
+      },
+      {
+        "Type": "Microsoft.AspNetCore.Mvc.ProblemDetails",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 401
+      },
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 500
+      }
+    ]
+  },
+  {
+    "ContainingType": "PrevioMX_Api.Controllers.VisualizationController",
+    "Method": "AgregarOpenPO",
+    "RelativePath": "api/Visualization/agregar-openpo",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "PrevioMX_Api.DTO.AgregarOpenPORequest",
         "IsRequired": true
       }
     ],
@@ -317,6 +387,55 @@
   },
   {
     "ContainingType": "PrevioMX_Api.Controllers.VisualizationController",
+    "Method": "EliminarPartida",
+    "RelativePath": "api/Visualization/eliminar-partida",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "PrevioMX_Api.DTO.EliminarPartidaRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "PrevioMX_Api.DTO.RegistrarPartidaResponse",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      },
+      {
+        "Type": "Microsoft.AspNetCore.Mvc.ProblemDetails",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 400
+      },
+      {
+        "Type": "Microsoft.AspNetCore.Mvc.ProblemDetails",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 401
+      },
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 500
+      }
+    ]
+  },
+  {
+    "ContainingType": "PrevioMX_Api.Controllers.VisualizationController",
     "Method": "GetPendientes",
     "RelativePath": "api/Visualization/pendientes/{equipo}",
     "HttpMethod": "GET",
@@ -393,7 +512,7 @@
   {
     "ContainingType": "PrevioMX_Api.Controllers.VisualizationController",
     "Method": "GetValidarCierrePrevio",
-    "RelativePath": "api/Visualization/validar-cierre-previo/{idEntrada}",
+    "RelativePath": "api/Visualization/validar-cierre-previo/{idEntrada}/{discrepancia}",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -401,6 +520,11 @@
       {
         "Name": "idEntrada",
         "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "discrepancia",
+        "Type": "System.Boolean",
         "IsRequired": true
       }
     ],

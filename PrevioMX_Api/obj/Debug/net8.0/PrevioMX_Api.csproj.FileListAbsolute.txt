@@ -276,10 +276,10 @@ I:\TFS_GrupoEI\Previo MX\PrevioMX\PrevioMX_Api\obj\Debug\net8.0\staticwebassets.
 I:\TFS_GrupoEI\Previo MX\PrevioMX\PrevioMX_Api\obj\Debug\net8.0\staticwebassets.build.json.cache
 I:\TFS_GrupoEI\Previo MX\PrevioMX\PrevioMX_Api\obj\Debug\net8.0\staticwebassets.development.json
 I:\TFS_GrupoEI\Previo MX\PrevioMX\PrevioMX_Api\obj\Debug\net8.0\staticwebassets.build.endpoints.json
-I:\TFS_GrupoEI\Previo MX\PrevioMX\PrevioMX_Api\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 I:\TFS_GrupoEI\Previo MX\PrevioMX\PrevioMX_Api\obj\Debug\net8.0\PrevioMX.099A71B6.Up2Date
 I:\TFS_GrupoEI\Previo MX\PrevioMX\PrevioMX_Api\obj\Debug\net8.0\PrevioMX_Api.dll
 I:\TFS_GrupoEI\Previo MX\PrevioMX\PrevioMX_Api\obj\Debug\net8.0\refint\PrevioMX_Api.dll
 I:\TFS_GrupoEI\Previo MX\PrevioMX\PrevioMX_Api\obj\Debug\net8.0\PrevioMX_Api.pdb
 I:\TFS_GrupoEI\Previo MX\PrevioMX\PrevioMX_Api\obj\Debug\net8.0\PrevioMX_Api.genruntimeconfig.cache
 I:\TFS_GrupoEI\Previo MX\PrevioMX\PrevioMX_Api\obj\Debug\net8.0\ref\PrevioMX_Api.dll
+I:\TFS_GrupoEI\Previo MX\PrevioMX\PrevioMX_Api\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

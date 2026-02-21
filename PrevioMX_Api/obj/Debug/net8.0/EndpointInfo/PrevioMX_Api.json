@@ -190,6 +190,54 @@
         }
       }
     },
+    "/api/Catalogos/catalogo-proveedores": {
+      "post": {
+        "tags": [
+          "Catalogos"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CatalogoPagiandoRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CatalogoPagiandoRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CatalogoPagiandoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogoPaginadoResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogoPaginadoResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogoPaginadoResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Clasificacion/validar": {
       "post": {
         "tags": [
@@ -238,29 +286,30 @@
         }
       }
     },
-    "/api/Clasificacion/{idEntrada}/{idProducto}": {
-      "get": {
+    "/api/Clasificacion/validar-post": {
+      "post": {
         "tags": [
           "Clasificacion"
         ],
-        "parameters": [
-          {
-            "name": "idEntrada",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "idProducto",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidarClasificacionRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidarClasificacionRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidarClasificacionRequest"
+              }
             }
           }
-        ],
+        },
         "responses": {
           "200": {
             "description": "OK",
@@ -297,7 +346,7 @@
         }
       }
     },
-    "/api/Protected/ValidaTokenTeamLeader": {
+    "/api/Protected/valida-token-teamleader": {
       "post": {
         "tags": [
           "Protected"
@@ -429,7 +478,7 @@
         }
       }
     },
-    "/api/Visualization/validar-cierre-previo/{idEntrada}": {
+    "/api/Visualization/validar-cierre-previo/{idEntrada}/{discrepancia}": {
       "get": {
         "tags": [
           "Visualization"
@@ -441,6 +490,14 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "discrepancia",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "boolean"
             }
           }
         ],
@@ -622,6 +679,188 @@
             "application/*+json": {
               "schema": {
                 "$ref": "#/components/schemas/ActualizarPartidaRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistrarPartidaResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistrarPartidaResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistrarPartidaResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/Visualization/eliminar-partida": {
+      "delete": {
+        "tags": [
+          "Visualization"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EliminarPartidaRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EliminarPartidaRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/EliminarPartidaRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistrarPartidaResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistrarPartidaResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistrarPartidaResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/Visualization/agregar-openpo": {
+      "post": {
+        "tags": [
+          "Visualization"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgregarOpenPORequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgregarOpenPORequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgregarOpenPORequest"
               }
             }
           }
@@ -1085,6 +1324,10 @@
             "type": "string",
             "nullable": true
           },
+          "idProveedor": {
+            "type": "string",
+            "nullable": true
+          },
           "idProducto": {
             "type": "string",
             "nullable": true
@@ -1117,7 +1360,29 @@
             "type": "string",
             "nullable": true
           },
+          "noParteFisico": {
+            "type": "string",
+            "nullable": true
+          },
           "mms": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "AgregarOpenPORequest": {
+        "type": "object",
+        "properties": {
+          "referencia": {
+            "type": "string",
+            "nullable": true
+          },
+          "po": {
+            "type": "string",
+            "nullable": true
+          },
+          "packing": {
             "type": "string",
             "nullable": true
           }
@@ -1151,6 +1416,56 @@
           "cText": {
             "type": "string",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CatalogoPagiandoRequest": {
+        "type": "object",
+        "properties": {
+          "filtro": {
+            "type": "string",
+            "nullable": true
+          },
+          "pageNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CatalogoPaginadoResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CatalogoItemDto"
+            },
+            "nullable": true
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalRecords": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "more": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -1302,6 +1617,24 @@
         },
         "additionalProperties": false
       },
+      "EliminarPartidaRequest": {
+        "type": "object",
+        "properties": {
+          "idBulto": {
+            "type": "string",
+            "nullable": true
+          },
+          "referencia": {
+            "type": "string",
+            "nullable": true
+          },
+          "idProducto": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "LoginRequest": {
         "type": "object",
         "properties": {
@@ -1310,6 +1643,20 @@
             "nullable": true
           },
           "password": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PendienteDocumentosResponseDto": {
+        "type": "object",
+        "properties": {
+          "documento": {
+            "type": "string",
+            "nullable": true
+          },
+          "rutaDocumento": {
             "type": "string",
             "nullable": true
           }
@@ -1377,8 +1724,11 @@
             "format": "date-time",
             "nullable": true
           },
-          "rutaDocumento": {
-            "type": "string",
+          "documentos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PendienteDocumentosResponseDto"
+            },
             "nullable": true
           },
           "esOpenpo": {
@@ -1466,6 +1816,10 @@
             "type": "string",
             "nullable": true
           },
+          "idProveedor": {
+            "type": "string",
+            "nullable": true
+          },
           "idProducto": {
             "type": "string",
             "nullable": true
@@ -1495,6 +1849,10 @@
             "nullable": true
           },
           "ocCompra": {
+            "type": "string",
+            "nullable": true
+          },
+          "noParteFisico": {
             "type": "string",
             "nullable": true
           },
@@ -1612,6 +1970,10 @@
             "type": "boolean"
           },
           "spMms": {
+            "type": "string",
+            "nullable": true
+          },
+          "spCantidades": {
             "type": "string",
             "nullable": true
           }
