@@ -97,12 +97,70 @@ const previoService = {
    * Valida si se puede cerrar un previo
    * @param {string} idEntrada - ID de la entrada
    * @param {boolean} discrepancia - Si se envía con discrepancia
+   * @param {boolean} aplicaNom144 - Si aplica NOM 144
    * @returns {Promise<import('../models/api.models').ValidarCierrePrevioResponse>} Resultado de la validación
    */
-  async validarCierrePrevio(idEntrada, discrepancia) {
+  async validarCierrePrevio(idEntrada, discrepancia, aplicaNom144) {
     try {
       const discrepanciaStr = discrepancia === true ? 'true' : 'false'
-      const response = await apiClient.get(`/api/Visualization/validar-cierre-previo/${encodeURIComponent(idEntrada)}/${discrepanciaStr}`)
+      const aplicaNom144Str = aplicaNom144 === true ? 'true' : 'false'
+      const response = await apiClient.get(`/api/Visualization/validar-cierre-previo/${encodeURIComponent(idEntrada)}/${discrepanciaStr}/${aplicaNom144Str}`)
+      return response.data
+    } catch (error) {
+      throw error.response?.data || error.message
+    }
+  },
+
+  /**
+   * Verifica si existe un previo cerrado para la referencia
+   * @param {string} referencia - ID de la entrada / referencia
+   * @returns {Promise<import('../models/api.models').EliminarPartidaResponse>} { estatus, msg }
+   */
+  async existePrevioCerrado(referencia) {
+    try {
+      const response = await apiClient.get(`/api/Visualization/existe-previo-cerrado/${encodeURIComponent(referencia)}`)
+      return response.data
+    } catch (error) {
+      throw error.response?.data || error.message
+    }
+  },
+
+  /**
+   * Verifica si el usuario puede reabrir previo (validación con usuario y password)
+   * @param {import('../models/api.models').LoginRequest} request - { usuario, password }
+   * @returns {Promise<import('../models/api.models').PuedeReabrirPrevioResponse>} { usuario, lUsuario, puedeRegenerar }
+   */
+  async puedeReabrirPrevio(request) {
+    try {
+      const response = await apiClient.post('/api/Visualization/puede-reabrir-previo', request)
+      return response.data
+    } catch (error) {
+      throw error.response?.data || error.message
+    }
+  },
+
+  /**
+   * Reabre un previo cerrado para la referencia indicada
+   * @param {string} referencia - ID de la entrada / referencia
+   * @returns {Promise<import('../models/api.models').PendienteDto>} Mismo modelo que un ítem de la tabla de pendientes (idEntrada, documentos, estatus, etc.)
+   */
+  async reabrePrevio(referencia) {
+    try {
+      const response = await apiClient.get(`/api/Visualization/reabre-previo/${encodeURIComponent(referencia)}`)
+      return response.data
+    } catch (error) {
+      throw error.response?.data || error.message
+    }
+  },
+
+  /**
+   * Obtiene el proveedor del previo para la referencia
+   * @param {string} referencia - ID de la entrada / referencia
+   * @returns {Promise<import('../models/api.models').ProveedorPrevioResponse>} { idProveedor (string|null), proveedor (string|null), estatus, msg }
+   */
+  async proveedorPrevio(referencia) {
+    try {
+      const response = await apiClient.get(`/api/Visualization/proveedor-previo/${encodeURIComponent(referencia)}`)
       return response.data
     } catch (error) {
       throw error.response?.data || error.message

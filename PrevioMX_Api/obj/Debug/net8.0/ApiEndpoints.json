@@ -436,6 +436,55 @@
   },
   {
     "ContainingType": "PrevioMX_Api.Controllers.VisualizationController",
+    "Method": "GetExistePrevioCerrado",
+    "RelativePath": "api/Visualization/existe-previo-cerrado/{referencia}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "referencia",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "PrevioMX_Api.DTO.RegistrarPartidaResponse",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      },
+      {
+        "Type": "Microsoft.AspNetCore.Mvc.ProblemDetails",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 400
+      },
+      {
+        "Type": "Microsoft.AspNetCore.Mvc.ProblemDetails",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 401
+      },
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 500
+      }
+    ]
+  },
+  {
+    "ContainingType": "PrevioMX_Api.Controllers.VisualizationController",
     "Method": "GetPendientes",
     "RelativePath": "api/Visualization/pendientes/{equipo}",
     "HttpMethod": "GET",
@@ -457,6 +506,153 @@
           "text/json"
         ],
         "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "PrevioMX_Api.Controllers.VisualizationController",
+    "Method": "GetProveedorPrevio",
+    "RelativePath": "api/Visualization/proveedor-previo/{referencia}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "referencia",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "PrevioMX_Api.DTO.GetProveedorPrevioResponse",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      },
+      {
+        "Type": "Microsoft.AspNetCore.Mvc.ProblemDetails",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 400
+      },
+      {
+        "Type": "Microsoft.AspNetCore.Mvc.ProblemDetails",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 401
+      },
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 500
+      }
+    ]
+  },
+  {
+    "ContainingType": "PrevioMX_Api.Controllers.VisualizationController",
+    "Method": "PuedeReabrirPrevio",
+    "RelativePath": "api/Visualization/puede-reabrir-previo",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "PrevioMX_Api.DTO.LoginRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "PrevioMX_Api.DTO.ValidaReabrirPrevioResponse",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      },
+      {
+        "Type": "Microsoft.AspNetCore.Mvc.ProblemDetails",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 400
+      },
+      {
+        "Type": "Microsoft.AspNetCore.Mvc.ProblemDetails",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 401
+      },
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 500
+      }
+    ]
+  },
+  {
+    "ContainingType": "PrevioMX_Api.Controllers.VisualizationController",
+    "Method": "ReabrePrevio",
+    "RelativePath": "api/Visualization/reabre-previo/{referencia}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "referencia",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "PrevioMX_Api.DTO.PendienteDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      },
+      {
+        "Type": "Microsoft.AspNetCore.Mvc.ProblemDetails",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 400
+      },
+      {
+        "Type": "Microsoft.AspNetCore.Mvc.ProblemDetails",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 401
+      },
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 500
       }
     ]
   },
@@ -512,7 +708,7 @@
   {
     "ContainingType": "PrevioMX_Api.Controllers.VisualizationController",
     "Method": "GetValidarCierrePrevio",
-    "RelativePath": "api/Visualization/validar-cierre-previo/{idEntrada}/{discrepancia}",
+    "RelativePath": "api/Visualization/validar-cierre-previo/{idEntrada}/{discrepancia}/{aplicaNom144}",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -524,6 +720,11 @@
       },
       {
         "Name": "discrepancia",
+        "Type": "System.Boolean",
+        "IsRequired": true
+      },
+      {
+        "Name": "aplicaNom144",
         "Type": "System.Boolean",
         "IsRequired": true
       }

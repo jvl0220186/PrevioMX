@@ -73,13 +73,14 @@ public class VisualizationController : ControllerBase
     /// </summary>
     /// <param name="idEntrada">ID de la entrada</param>
     /// <param name="discrepancia">Indica si se está enviando con discrepancia</param>
+    /// <param name="aplicaNom144">Indica si aplica NOM-144</param>
     /// <returns>Resultado de la validación del cierre de previo</returns>
-    [HttpGet("validar-cierre-previo/{idEntrada}/{discrepancia}")]
+    [HttpGet("validar-cierre-previo/{idEntrada}/{discrepancia}/{aplicaNom144}")]
     [ProducesResponseType(typeof(ValidarCierrePrevioResponse), 200)]
     [ProducesResponseType(401)]
     [ProducesResponseType(404)]
     [ProducesResponseType(500)]
-    public async Task<ActionResult<ValidarCierrePrevioResponse>> GetValidarCierrePrevio(string idEntrada, bool discrepancia)
+    public async Task<ActionResult<ValidarCierrePrevioResponse>> GetValidarCierrePrevio(string idEntrada, bool discrepancia, bool aplicaNom144)
     {
         try
         {
@@ -91,7 +92,7 @@ public class VisualizationController : ControllerBase
                 return Unauthorized(new { message = "No se pudo obtener el ID del usuario del token JWT" });
             }
 
-            var response = await _visualizationService.GetValidarCierrePrevioAsync(idEntrada, idUsuario, discrepancia);
+            var response = await _visualizationService.GetValidarCierrePrevioAsync(idEntrada, idUsuario, discrepancia, aplicaNom144);
             
             if (response == null)
             {
@@ -419,6 +420,146 @@ public class VisualizationController : ControllerBase
             _logger.LogError(ex, "Error al validar modelo para referencia: {Referencia}, producto: {IdProducto}", 
                 request.Referencia, request.IdProducto);
             return StatusCode(500, new { message = "Error al validar el modelo", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Verifica si un previo existe y está cerrado
+    /// </summary>
+    /// <param name="referencia">Referencia del previo a verificar</param>
+    /// <returns>Estado del previo (cerrado o no)</returns>
+    [HttpGet("existe-previo-cerrado/{referencia}")]
+    [ProducesResponseType(typeof(RegistrarPartidaResponse), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(500)]
+    public async Task<ActionResult<RegistrarPartidaResponse>> GetExistePrevioCerrado(string referencia)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(referencia))
+            {
+                return BadRequest(new { message = "Referencia es requerida" });
+            }
+
+            var response = await _visualizationService.GetExistePrevioCerradoAsync(referencia);
+            
+            if (response == null)
+            {
+                return StatusCode(500, new { message = "No se obtuvo respuesta del procedimiento" });
+            }
+
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al verificar si el previo está cerrado - Referencia: {Referencia}", referencia);
+            return StatusCode(500, new { message = "Error al verificar si el previo está cerrado", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Obtiene el proveedor asociado a un previo por su referencia
+    /// </summary>
+    /// <param name="referencia">Referencia del previo</param>
+    /// <returns>ID del proveedor asociado al previo</returns>
+    [HttpGet("proveedor-previo/{referencia}")]
+    [ProducesResponseType(typeof(GetProveedorPrevioResponse), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(500)]
+    public async Task<ActionResult<GetProveedorPrevioResponse>> GetProveedorPrevio(string referencia)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(referencia))
+            {
+                return BadRequest(new { message = "Referencia es requerida" });
+            }
+
+            var response = await _visualizationService.GetProveedorPrevioAsync(referencia);
+            
+            if (response == null)
+            {
+                return StatusCode(500, new { message = "No se obtuvo respuesta del procedimiento" });
+            }
+
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener el proveedor del previo - Referencia: {Referencia}", referencia);
+            return StatusCode(500, new { message = "Error al obtener el proveedor del previo", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Valida las credenciales de de usuario para reabrir previo y verifica si el usuario tiene permisos para hacerlo
+    /// </summary>
+    /// <param name="request">Credenciales</param>
+    /// <returns>Resultado de la validación</returns>
+    [HttpPost("puede-reabrir-previo")]
+    [ProducesResponseType(typeof(ValidaReabrirPrevioResponse), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(500)]
+    public async Task<ActionResult<ValidaReabrirPrevioResponse>> PuedeReabrirPrevio([FromBody] LoginRequest request)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.Usuario))
+            {
+                return BadRequest(new { message = "Usuario es requerido" });
+            }
+            if (string.IsNullOrWhiteSpace(request.Password))
+            {
+                return BadRequest(new { message = "Contraseña es requerida" });
+            }
+            var response = await _visualizationService.PuedeReabrirPrevio(request.Usuario, request.Password);
+            
+            if (response == null)
+            {
+                return StatusCode(500, new { message = "No se obtuvo respuesta del procedimiento" });
+            }
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al validar si se puede reabrir el previo por credenciales");
+            return StatusCode(500, new { message = "Error al validar si se puede reabrir el previo", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Reapertura de previo para una referencia específica, solo si el previo existe, está cerrado y el usuario tiene permisos para reabrirlo
+    /// </summary>
+    /// <param name="referencia">Id entrada/referencia</param>
+    /// <returns>Datos de previo</returns>
+    [HttpGet("reabre-previo/{referencia}")]
+    [ProducesResponseType(typeof(PendienteDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(500)]
+    public async Task<ActionResult<PendienteDto>> ReabrePrevio(string referencia)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(referencia))
+            {
+                return BadRequest(new { message = "Referencia es requerida" });
+            }
+            var response = await _visualizationService.ReabrePrevio(referencia);
+            
+            if (response == null)
+            {
+                return NotFound(new { message = "No se pudo reabrir el previo, puede que no exista o no esté cerrado" });
+            }
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al reabrir el previo para referencia: {Referencia}", referencia);
+            return StatusCode(500, new { message = "Error al reabrir el previo", error = ex.Message });
         }
     }
 }

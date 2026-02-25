@@ -2,9 +2,9 @@ import React, { useState, useRef, useEffect, useCallback } from 'react'
 import * as pdfjsLib from 'pdfjs-dist'
 import Tesseract from 'tesseract.js'
 
-// Worker para PDF.js (Vite)
-const pdfjsWorker = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).href
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker
+// Worker para PDF.js: URL absoluta desde la base de la app (evita fallos en IIS con rutas profundas como /PrevioMX/capture/xxx)
+const base = (import.meta.env.BASE_URL || '/').replace(/\/*$/, '/')
+pdfjsLib.GlobalWorkerOptions.workerSrc = `${base}pdf.worker.min.mjs`
 
 const ZOOM_MIN = 0.5
 const ZOOM_MAX = 3

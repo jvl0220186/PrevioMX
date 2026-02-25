@@ -280,7 +280,7 @@ public class AuthDbContext : DbContext
     /// <summary>
     /// Ejecuta el stored procedure CSP_PMX_ValidarCierrePrevio para validar el cierre de previo
     /// </summary>
-    public async Task<ValidarCierrePrevioResponse?> GetValidarCierrePrevioAsync(string idEntrada, string idUsuario, bool discrepancia)
+    public async Task<ValidarCierrePrevioResponse?> GetValidarCierrePrevioAsync(string idEntrada, string idUsuario, bool discrepancia, bool aplicaNom144)
     {
         var connection = Database.GetDbConnection();
         await connection.OpenAsync();
@@ -288,7 +288,7 @@ public class AuthDbContext : DbContext
         try
         {
             using var command = connection.CreateCommand();
-            command.CommandText = "EXEC CSP_PMX_ValidarCierrePrevio @ID_ENTRADA = @ID_ENTRADA, @ID_USUARIO = @ID_USUARIO, @DISCREPANCIA = @DISCREPANCIA";
+            command.CommandText = "EXEC CSP_PMX_ValidarCierrePrevio @ID_ENTRADA = @ID_ENTRADA, @ID_USUARIO = @ID_USUARIO, @DISCREPANCIA = @DISCREPANCIA, @APLICA_NOM144 = @APLICA_NOM144";
             command.CommandType = System.Data.CommandType.Text;
 
             var parameterEntrada = command.CreateParameter();
@@ -305,6 +305,11 @@ public class AuthDbContext : DbContext
             parameterDiscrepancia.ParameterName = "@DISCREPANCIA";
             parameterDiscrepancia.Value = discrepancia;
             command.Parameters.Add(parameterDiscrepancia);
+
+            var parameterAplicaNom144 = command.CreateParameter();
+            parameterAplicaNom144.ParameterName = "@APLICA_NOM144";
+            parameterAplicaNom144.Value = aplicaNom144;
+            command.Parameters.Add(parameterAplicaNom144);
 
             using var reader = await command.ExecuteReaderAsync();
 
@@ -930,6 +935,205 @@ public class AuthDbContext : DbContext
                     Estatus = reader["estatus"] != DBNull.Value && Convert.ToBoolean(reader["estatus"]),
                     Msg = reader["msg"]?.ToString() ?? string.Empty
                 };
+            }
+
+            return null;
+        }
+        finally
+        {
+            await connection.CloseAsync();
+        }
+    }
+
+    /// <summary>
+    /// Ejecuta el stored procedure csp_PMX_ExistePrevioCerrado para verificar si un previo está cerrado
+    /// </summary>
+    public async Task<RegistrarPartidaResponse?> GetExistePrevioCerradoAsync(string referencia)
+    {
+        var connection = Database.GetDbConnection();
+        await connection.OpenAsync();
+
+        try
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = "EXEC csp_PMX_ExistePrevioCerrado @referencia = @referencia";
+            command.CommandType = System.Data.CommandType.Text;
+
+            var paramReferencia = command.CreateParameter();
+            paramReferencia.ParameterName = "@referencia";
+            paramReferencia.Value = referencia;
+            command.Parameters.Add(paramReferencia);
+
+            using var reader = await command.ExecuteReaderAsync();
+
+            if (await reader.ReadAsync())
+            {
+                return new RegistrarPartidaResponse
+                {
+                    Estatus = reader["estatus"] != DBNull.Value && Convert.ToBoolean(reader["estatus"]),
+                    Msg = reader["msg"]?.ToString() ?? string.Empty
+                };
+            }
+
+            return null;
+        }
+        finally
+        {
+            await connection.CloseAsync();
+        }
+    }
+
+    /// <summary>
+    /// Ejecuta el stored procedure csp_PMX_GetProveedorPrevio para obtener el proveedor de un previo
+    /// </summary>
+    public async Task<GetProveedorPrevioResponse?> GetProveedorPrevioAsync(string referencia)
+    {
+        var connection = Database.GetDbConnection();
+        await connection.OpenAsync();
+
+        try
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = "EXEC csp_PMX_GetProveedorPrevio @referencia = @referencia";
+            command.CommandType = System.Data.CommandType.Text;
+
+            var paramReferencia = command.CreateParameter();
+            paramReferencia.ParameterName = "@referencia";
+            paramReferencia.Value = referencia;
+            command.Parameters.Add(paramReferencia);
+
+            using var reader = await command.ExecuteReaderAsync();
+
+            if (await reader.ReadAsync())
+            {
+                return new GetProveedorPrevioResponse
+                {
+                    IdProveedor = reader["idProveedor"]?.ToString(),
+                    Proveedor = reader["proveedor"]?.ToString(),
+                    Estatus = reader["estatus"] != DBNull.Value && Convert.ToBoolean(reader["estatus"]),
+                    Msg = reader["msg"]?.ToString() ?? string.Empty
+                };
+            }
+
+            return null;
+        }
+        finally
+        {
+            await connection.CloseAsync();
+        }
+    }
+
+    /// <summary>
+    /// Validación de sp_previo_TL
+    /// </summary>
+    /// <param name="usuario">Nombre de usuario</param>
+    /// <param name="pass">Contraseña</param>
+    /// <returns>Resultado de la validación</returns>
+    public async Task<ValidaReabrirPrevioResponse?> PuedeReabrirPrevio(string usuario, string pass)
+    {
+        var connection = Database.GetDbConnection();
+        await connection.OpenAsync();
+
+        try
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = "EXEC sp_previo_TL @usuario = @usuario, @password = @password, @REIMPRESION = @REIMPRESION";
+            command.CommandType = System.Data.CommandType.Text;
+
+            var paramUsuario = command.CreateParameter();
+            paramUsuario.ParameterName = "@usuario";
+            paramUsuario.Value = usuario;
+            command.Parameters.Add(paramUsuario);
+
+            var paramPassword = command.CreateParameter();
+            paramPassword.ParameterName = "@password";
+            paramPassword.Value = pass;
+            command.Parameters.Add(paramPassword);
+
+            var paramReimpresion = command.CreateParameter();
+            paramReimpresion.ParameterName = "@REIMPRESION";
+            paramReimpresion.Value = 1;
+            command.Parameters.Add(paramReimpresion);
+
+            using var reader = await command.ExecuteReaderAsync();
+
+            if (await reader.ReadAsync())
+            {
+                return new ValidaReabrirPrevioResponse
+                {
+                    Usuario = reader["usuario"]?.ToString() ?? string.Empty,
+                    LUsuario = reader["LUsuario"]?.ToString() ?? string.Empty,
+                    PuedeRegenerar = reader["PuedeRegenerar"] != DBNull.Value && Convert.ToBoolean(reader["PuedeRegenerar"])
+                };
+            }
+
+            return null;
+        }
+        finally
+        {
+            await connection.CloseAsync();
+        }
+    }
+
+    /// <summary>
+    /// Reapertura el previo cerrrado
+    /// </summary>
+    /// <param name="referencia">Id Entrada/Referencia</param>
+    /// <returns>Previo reabierto</returns>
+    public async Task<PendienteDto?> ReabrePrevio(string referencia)
+    {
+        var connection = Database.GetDbConnection();
+        await connection.OpenAsync();
+
+        try
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = "EXEC csp_PMX_ReabrirPrevio @referencia = @referencia";
+            command.CommandType = System.Data.CommandType.Text;
+
+            var parameter = command.CreateParameter();
+            parameter.ParameterName = "@referencia";
+            parameter.Value = referencia;
+            command.Parameters.Add(parameter);
+
+            using var reader = await command.ExecuteReaderAsync();
+            
+            while (await reader.ReadAsync())
+            {
+                string docs = reader["ruta_documento"]?.ToString() ?? "";
+                List<PendienteDocumentosResponseDto> documentos = new List<PendienteDocumentosResponseDto>();
+                var docsArray = docs.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
+                if (docsArray.Length > 0)
+                {
+                    documentos = docsArray.Select(d => new PendienteDocumentosResponseDto
+                    {
+                        Documento = UrlFileServices.ExtracFileNameFromUrl(d),
+                        RutaDocumento = d
+                    }).ToList();
+                }
+
+                var item = new PendienteDto
+                {
+                    IdEntrada = reader["id_entrada"]?.ToString() ?? string.Empty,
+                    IdBodega = reader["id_bodega"]?.ToString() ?? string.Empty,
+                    Bodega = reader["bodega"]?.ToString() ?? string.Empty,
+                    IdCliente = reader["id_cliente"]?.ToString() ?? string.Empty,
+                    Cliente = reader["cliente"]?.ToString() ?? string.Empty,
+                    IdProveedor = reader["id_proveedor"]?.ToString() ?? string.Empty,
+                    Proveedor = reader["proveedor"]?.ToString() ?? string.Empty,
+                    FechaEntrada = reader["fecha_entrada"] != DBNull.Value ? Convert.ToDateTime(reader["fecha_entrada"]) : DateTime.MinValue,
+                    FechaPrevio = reader["fecha_previo"] != DBNull.Value ? Convert.ToDateTime(reader["fecha_previo"]) : null,
+                    Bultos = reader["bultos"] != DBNull.Value ? Convert.ToInt32(reader["bultos"]) : 0,
+                    TipoEnvio = reader["tipo_envio"]?.ToString() ?? string.Empty,
+                    Estatus = reader["estatus"]?.ToString() ?? string.Empty,
+                    TipoCaptura = reader["tipo_captura"]?.ToString() ?? string.Empty,
+                    FechaDocumento = reader["fecha_documento"] != DBNull.Value ? Convert.ToDateTime(reader["fecha_documento"]) : null,
+                    //RutaDocumento = reader["ruta_documento"]?.ToString(),
+                    Documentos = documentos,
+                    EsOpenpo = reader["es_openpo"] != DBNull.Value && Convert.ToBoolean(reader["es_openpo"])
+                };
+
+                return item;
             }
 
             return null;

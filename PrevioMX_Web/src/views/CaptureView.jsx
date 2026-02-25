@@ -75,8 +75,10 @@ const CaptureView = () => {
     const [verifiedDesgloses, setVerifiedDesgloses] = useState(false) // Check "He verificado los desgloses..." para habilitar Cerrar Previo
     const [showCerrarPrevioModal, setShowCerrarPrevioModal] = useState(false)
     const [discrepanciaCheck, setDiscrepanciaCheck] = useState(false) // Valor enviado en GET validar-cierre-previo
+    const [aplicaNom144Check, setAplicaNom144Check] = useState(false) // Valor enviado en GET validar-cierre-previo (aplicaNom144)
     const [showProveedorModal, setShowProveedorModal] = useState(false)
     const [pendingProveedor, setPendingProveedor] = useState(null) // Selección temporal en modal cambiar proveedor
+    const [detalleCargado, setDetalleCargado] = useState(false) // true cuando ya se cargó getDetalleEntrada → deshabilita editar proveedor
     const [ocrExtractedText, setOcrExtractedText] = useState('')
     const [showOcrModal, setShowOcrModal] = useState(false)
     /** Modo "OCR para número de parte": cuando el usuario pidió rellenar el input desde el PDF */
@@ -150,14 +152,30 @@ const CaptureView = () => {
                     }
                 }
 
-                // Actualizar documentInfo: prioridad localStorage, luego API (documentos se mantienen desde storage)
-                setDocumentInfo(prev => ({
-                    idCliente: prev.idCliente || detalle.idCliente || '',
-                    client: prev.client || detalle.cliente || '',
-                    idProveedor: prev.idProveedor || detalle.idProveedor || '',
-                    provider: prev.provider || detalle.proveedor || '',
+                // Valores base de documentInfo (localStorage + detalle)
+                const baseIdProveedor = storedData?.idProveedor || detalle.idProveedor || ''
+                const baseProvider = storedData?.provider || detalle.proveedor || ''
+
+                // Si el API proveedor-previo devuelve datos, usarlos; si no, mantener los existentes (para labels y para otros procesos)
+                let idProveedorFinal = baseIdProveedor
+                let providerFinal = baseProvider
+                try {
+                    const proveedorRes = await previoService.proveedorPrevio(reference)
+                    if (proveedorRes?.idProveedor != null && proveedorRes.idProveedor !== '') {
+                        idProveedorFinal = proveedorRes.idProveedor
+                        providerFinal = (proveedorRes.proveedor != null && proveedorRes.proveedor !== '') ? proveedorRes.proveedor : baseProvider
+                    }
+                } catch (e) {
+                    console.warn('proveedor-previo no disponible, usando datos del registro:', e)
+                }
+
+                setDocumentInfo({
+                    idCliente: storedData?.idCliente || detalle.idCliente || '',
+                    client: storedData?.client || detalle.cliente || '',
+                    idProveedor: idProveedorFinal,
+                    provider: providerFinal,
                     date: dateStr || ''
-                }))
+                })
 
                 const unitsRaw = Array.isArray(unitsRes) ? unitsRes : (unitsRes.items || [])
                 const countriesRaw = Array.isArray(countriesRes) ? countriesRes : (countriesRes.items || [])
@@ -226,6 +244,8 @@ const CaptureView = () => {
                     }
                 }
 
+                setDetalleCargado(true)
+
             } catch (err) {
                 console.error("Error loading capture data", err)
                 // Si hay datos de localStorage, no mostrar error para la info básica
@@ -247,11 +267,11 @@ const CaptureView = () => {
         navigate('/dashboard')
     }
 
-    const handleFinalize = async (discrepancia) => {
+    const handleFinalize = async (discrepancia, aplicaNom144) => {
         try {
             setFinalizing(true)
             setShowCerrarPrevioModal(false)
-            const response = await previoService.validarCierrePrevio(reference, discrepancia)
+            const response = await previoService.validarCierrePrevio(reference, discrepancia, aplicaNom144)
             
             if (response.estatus) {
                 // Éxito: mostrar toast y redireccionar de inmediato
@@ -471,6 +491,15 @@ const CaptureView = () => {
                                             >
                                                 <i className="bi bi-box-arrow-up-right"></i>
                                             </button>
+                                            <button
+                                                className="btn btn-sm btn-outline-primary"
+                                                onClick={() => window.open(`https://web.aduax.com/Arrivedexp/referencias.aspx?id=${encodeURIComponent(reference || '')}&r=0`, '_blank')}
+                                                title="Ver expediente"
+                                                style={{ borderRadius: '8px', cursor: 'pointer' }}
+                                            >
+                                                <i className="bi bi-folder2-open me-1"></i>
+                                                Ver expediente
+                                            </button>
                                         </div>
                                     }
                                 />
@@ -535,11 +564,12 @@ const CaptureView = () => {
                                         <button
                                             type="button"
                                             className="btn btn-sm btn-outline-secondary p-1"
+                                            disabled={detalleCargado}
                                             onClick={() => {
                                                 setPendingProveedor(documentInfo.idProveedor ? { cValue: documentInfo.idProveedor, cText: documentInfo.provider || documentInfo.idProveedor } : null)
                                                 setShowProveedorModal(true)
                                             }}
-                                            title="Cambiar proveedor"
+                                            title={detalleCargado ? 'No se puede cambiar el proveedor cuando el detalle ya está cargado' : 'Cambiar proveedor'}
                                             style={{ borderRadius: '8px' }}
                                         >
                                             <i className="bi bi-pencil"></i>
@@ -924,7 +954,7 @@ const CaptureView = () => {
                                 <p className="mb-4" style={{ fontSize: '1rem', color: '#333' }}>
                                     ¿Está seguro de cerrar el previo?
                                 </p>
-                                <label className="d-flex align-items-center gap-2 mb-0" style={{ cursor: 'pointer' }}>
+                                <label className="d-flex align-items-center gap-2 mb-3" style={{ cursor: 'pointer' }}>
                                     <input
                                         type="checkbox"
                                         checked={discrepanciaCheck}
@@ -935,6 +965,19 @@ const CaptureView = () => {
                                     />
                                     <span className="form-label mb-0" style={{ fontSize: '14px', fontWeight: 500 }}>
                                         Enviar con discrepancia
+                                    </span>
+                                </label>
+                                <label className="d-flex align-items-center gap-2 mb-0" style={{ cursor: 'pointer' }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={aplicaNom144Check}
+                                        onChange={(e) => setAplicaNom144Check(e.target.checked)}
+                                        className="form-check-input"
+                                        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                                        disabled={finalizing}
+                                    />
+                                    <span className="form-label mb-0" style={{ fontSize: '14px', fontWeight: 500 }}>
+                                        Aplica Nom144
                                     </span>
                                 </label>
                             </div>
@@ -951,7 +994,7 @@ const CaptureView = () => {
                                 <button
                                     type="button"
                                     className="btn oc-primary-btn-2"
-                                    onClick={() => handleFinalize(discrepanciaCheck)}
+                                    onClick={() => handleFinalize(discrepanciaCheck, aplicaNom144Check)}
                                     disabled={finalizing}
                                     style={{ borderRadius: '12px', padding: '8px 20px', cursor: finalizing ? 'not-allowed' : 'pointer' }}
                                 >

@@ -33,9 +33,9 @@ public class VisualizationService : IVisualizationService
         };
     }
 
-    public async Task<ValidarCierrePrevioResponse?> GetValidarCierrePrevioAsync(string idEntrada, string idUsuario, bool discrepancia)
+    public async Task<ValidarCierrePrevioResponse?> GetValidarCierrePrevioAsync(string idEntrada, string idUsuario, bool discrepancia, bool aplicaNom144)
     {
-        return await _context.GetValidarCierrePrevioAsync(idEntrada, idUsuario, discrepancia);
+        return await _context.GetValidarCierrePrevioAsync(idEntrada, idUsuario, discrepancia, aplicaNom144);
     }
 
     public async Task<RegistrarPartidaResponse?> RegistrarPartidaAsync(RegistrarPartidaRequest request)
@@ -102,6 +102,34 @@ public class VisualizationService : IVisualizationService
             request.Referencia, request.Po, request.Packing);
         
         return await _context.AgregarOpenPOAsync(request);
+    }
+
+    public async Task<RegistrarPartidaResponse?> GetExistePrevioCerradoAsync(string referencia)
+    {
+        _logger.LogInformation("Verificando si el previo está cerrado - Referencia: {Referencia}", referencia);
+
+        return await _context.GetExistePrevioCerradoAsync(referencia);
+    }
+
+    public async Task<GetProveedorPrevioResponse?> GetProveedorPrevioAsync(string referencia)
+    {
+        _logger.LogInformation("Obteniendo proveedor del previo - Referencia: {Referencia}", referencia);
+        
+        return await _context.GetProveedorPrevioAsync(referencia);
+    }
+
+    public async Task<ValidaReabrirPrevioResponse?> PuedeReabrirPrevio(string usuario, string pass)
+    {
+        _logger.LogInformation("Validación de reapertura de previo por credenciales");
+
+        return await _context.PuedeReabrirPrevio(usuario, pass);
+    }
+
+    public async Task<PendienteDto?> ReabrePrevio(string referencia)
+    {
+        _logger.LogInformation("Reaperturando previo cerrado: {Referencia}", referencia);
+
+        return await _context.ReabrePrevio(referencia);
     }
 }
 

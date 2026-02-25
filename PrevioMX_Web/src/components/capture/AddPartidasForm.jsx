@@ -157,6 +157,8 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
             resetSpInfo()
             setMarcaValida(true)
             setModeloValido(true)
+            // En OpenPO, habilitar modo captura manual para que el input no quede bloqueado y se pueda editar el texto OCR
+            setManualPartNumberEnabled(true)
             onConsumeOcrPartNumber()
             setTimeout(() => partNumberRef.current?.focus(), 100)
         }

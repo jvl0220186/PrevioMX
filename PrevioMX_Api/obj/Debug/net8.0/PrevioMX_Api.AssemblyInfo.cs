@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PrevioMX_Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ec443bfa72440b9945bd7f712d93e4547c864beb")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bf4755a15ab1c58f92d364b83f9a1b6e1c98f618")]
 [assembly: System.Reflection.AssemblyProductAttribute("PrevioMX_Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PrevioMX_Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

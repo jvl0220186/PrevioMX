@@ -6,7 +6,7 @@ public interface IVisualizationService
 {
     Task<PendientesResponse> GetPendientesAsync(string equipo);
     Task<DetalleEntradaResponse> GetDetalleEntradaAsync(string idEntrada);
-    Task<ValidarCierrePrevioResponse?> GetValidarCierrePrevioAsync(string idEntrada, string idUsuario, bool discrepancia);
+    Task<ValidarCierrePrevioResponse?> GetValidarCierrePrevioAsync(string idEntrada, string idUsuario, bool discrepancia, bool aplicaNom144);
     Task<RegistrarPartidaResponse?> RegistrarPartidaAsync(RegistrarPartidaRequest request);
     Task<RegistrarPartidaResponse?> ActualizarPartidaAsync(ActualizarPartidaRequest request);
     Task<RegistrarPartidaResponse?> EliminarPartidaAsync(EliminarPartidaRequest request);
@@ -15,5 +15,9 @@ public interface IVisualizationService
     Task<ValidarCuarentenasResponse> ValidarCuarentenasAsync(string idEntrada, string idUsuario);
     Task<ValidarMarcaDto?> ValidarMarcaAsync(string referencia, string idProducto, string marcaRegistro);
     Task<ValidarModeloDto?> ValidarModeloAsync(string referencia, string idProducto, string modeloRegistro);
+    Task<RegistrarPartidaResponse?> GetExistePrevioCerradoAsync(string referencia);
+    Task<ValidaReabrirPrevioResponse?> PuedeReabrirPrevio(string usuario, string pass);
+    Task<PendienteDto?> ReabrePrevio(string referencia);
+    Task<GetProveedorPrevioResponse?> GetProveedorPrevioAsync(string referencia);
 }
 

@@ -131,6 +131,14 @@
  */
 
 /**
+ * @typedef {Object} ProveedorPrevioResponse
+ * @property {string|null} [idProveedor]
+ * @property {string|null} [proveedor]
+ * @property {boolean} [estatus]
+ * @property {string} [msg]
+ */
+
+/**
  * @typedef {Object} RegistrarPartidaRequest
  * @property {string} [idBulto]
  * @property {string} [referencia]
@@ -203,6 +211,13 @@
  * @property {number} [temperatureC]
  * @property {number} [temperatureF]
  * @property {string} [summary]
+ */
+
+/**
+ * @typedef {Object} PuedeReabrirPrevioResponse
+ * @property {string} [usuario]
+ * @property {string} [lUsuario]
+ * @property {boolean} [puedeRegenerar]
  */
 
 /**
