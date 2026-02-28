@@ -1965,6 +1965,10 @@
       "EliminarPartidaRequest": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
           "idBulto": {
             "type": "string",
             "nullable": true

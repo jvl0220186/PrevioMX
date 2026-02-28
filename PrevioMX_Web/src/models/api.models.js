@@ -119,6 +119,7 @@
 
 /**
  * @typedef {Object} EliminarPartidaRequest
+ * @property {number} id - ID de la partida a eliminar
  * @property {string} idBulto - ID del bulto
  * @property {string} referencia - Referencia de la entrada
  * @property {string} idProducto - Número de parte del producto

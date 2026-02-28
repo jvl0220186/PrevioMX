@@ -433,6 +433,29 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
         // Filtrar productos del PO seleccionado (usando availablePOData)
         const products = availablePOData.filter(item => item.po === po)
         setSelectedPOProducts(products)
+
+        // Si solo hay un producto y es REVISION/REVISION, ir directo a captura manual (sin mostrar selector)
+        if (products.length === 1) {
+            const p = products[0]
+            const idRev = (p.idProducto || '').trim().toUpperCase() === 'REVISION'
+            const descRev = (p.descripcion || '').trim().toUpperCase() === 'REVISION'
+            if (idRev && descRev) {
+                setManualPartNumberEnabled(true)
+                setFormData(prev => ({
+                    ...prev,
+                    selectedPO: po,
+                    ocCompra: po,
+                    partNumber: '',
+                    description: '',
+                    quantity: '',
+                    unit: '',
+                    subCantidad: '',
+                    country: ''
+                }))
+                resetSpInfo()
+                setIsProductoClasificado(false)
+            }
+        }
     }
 
     const PRODUCTO_SUFFIX_DISTINTIVO = ' ✓'
@@ -1264,7 +1287,7 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                     paisOrigen: formData.country,
                     comentarios: buildComentarios(),
                     usuario: usuario,
-                    ocCompra: formData.ocCompra || '',
+                    ocCompra: formData.ocCompra || formData.selectedPO || '',
                     noParteFisico: formData.physicalPartNumber || '',
                     mms: buildMmsString()
                 }
@@ -1317,7 +1340,7 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
 
             // Registrar partida en cada bulto
             for (const bulto of bultosToProcess) {
-                // Preparar el request para el API (modelo actualizado)
+                // Preparar el request para el API (modelo actualizado). En OpenPO se envía la PO seleccionada aunque sea captura manual (ocCompra || selectedPO)
                 const request = {
                     idBulto: bulto,
                     referencia: idEntrada,
@@ -1329,7 +1352,7 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                     paisOrigen: formData.country,
                     comentarios: buildComentarios(),
                     usuario: usuario,
-                    ocCompra: formData.ocCompra || '',
+                    ocCompra: formData.ocCompra || formData.selectedPO || '',
                     noParteFisico: formData.physicalPartNumber || '',
                     mms: buildMmsString()
                 }
@@ -2217,6 +2240,18 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                                     type="button"
                                     className="btn btn-outline-secondary"
                                     onClick={() => {
+                                        if (tokenModal.type === 'conflict' && tokenModal.useOpenPO) {
+                                            // Usuario canceló la validación del token: aplicar valores de Standard Pack en lugar de OpenPO
+                                            resolveConflict(false)
+                                        } else if (tokenModal.field === 'quantity') {
+                                            handleChange('quantity', tokenModal.prevValue || '')
+                                        } else if (tokenModal.field === 'unit') {
+                                            handleChange('unit', tokenModal.prevValue || '')
+                                            setUnitDropdownVersion(prev => prev + 1)
+                                        } else if (tokenModal.field === 'country') {
+                                            handleChange('country', tokenModal.prevValue || '')
+                                            setCountryDropdownVersion(prev => prev + 1)
+                                        }
                                         setTokenModal({
                                             show: false,
                                             type: '',
@@ -2226,15 +2261,6 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                                             useOpenPO: false,
                                             prevValue: ''
                                         })
-                                        if (tokenModal.field === 'quantity') {
-                                            handleChange('quantity', tokenModal.prevValue || '')
-                                        } else if (tokenModal.field === 'unit') {
-                                            handleChange('unit', tokenModal.prevValue || '')
-                                            setUnitDropdownVersion(prev => prev + 1)
-                                        } else if (tokenModal.field === 'country') {
-                                            handleChange('country', tokenModal.prevValue || '')
-                                            setCountryDropdownVersion(prev => prev + 1)
-                                        }
                                         setTokenInput('')
                                     }}
                                     disabled={validandoToken}

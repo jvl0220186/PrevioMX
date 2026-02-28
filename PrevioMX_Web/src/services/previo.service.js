@@ -255,11 +255,8 @@ const previoService = {
 
   /**
    * Elimina una partida
-   * @param {Object} request - Datos para identificar la partida a eliminar
-   * @param {string} request.idBulto - ID del bulto
-   * @param {string} request.referencia - Referencia de la entrada
-   * @param {string} request.idProducto - Número de parte del producto
-   * @returns {Promise<{estatus: boolean, msg: string}>} Resultado de la eliminación
+   * @param {import('../models/api.models').EliminarPartidaRequest} request - Datos para identificar la partida a eliminar
+   * @returns {Promise<import('../models/api.models').EliminarPartidaResponse>} { estatus, msg }
    */
   async eliminarPartida(request) {
     try {

@@ -78,7 +78,6 @@ const CaptureView = () => {
     const [aplicaNom144Check, setAplicaNom144Check] = useState(false) // Valor enviado en GET validar-cierre-previo (aplicaNom144)
     const [showProveedorModal, setShowProveedorModal] = useState(false)
     const [pendingProveedor, setPendingProveedor] = useState(null) // Selección temporal en modal cambiar proveedor
-    const [detalleCargado, setDetalleCargado] = useState(false) // true cuando ya se cargó getDetalleEntrada → deshabilita editar proveedor
     const [ocrExtractedText, setOcrExtractedText] = useState('')
     const [showOcrModal, setShowOcrModal] = useState(false)
     /** Modo "OCR para número de parte": cuando el usuario pidió rellenar el input desde el PDF */
@@ -244,8 +243,6 @@ const CaptureView = () => {
                     }
                 }
 
-                setDetalleCargado(true)
-
             } catch (err) {
                 console.error("Error loading capture data", err)
                 // Si hay datos de localStorage, no mostrar error para la info básica
@@ -319,6 +316,7 @@ const CaptureView = () => {
         try {
             setDeleting(true)
             const response = await previoService.eliminarPartida({
+                id: parseInt(partidaToDelete.id, 10) || 0,
                 idBulto: partidaToDelete.idBulto || '',
                 referencia: reference,
                 idProducto: partidaToDelete.idProducto || ''
@@ -564,12 +562,12 @@ const CaptureView = () => {
                                         <button
                                             type="button"
                                             className="btn btn-sm btn-outline-secondary p-1"
-                                            disabled={detalleCargado}
+                                            disabled={partidasCapturadas.length > 0}
                                             onClick={() => {
                                                 setPendingProveedor(documentInfo.idProveedor ? { cValue: documentInfo.idProveedor, cText: documentInfo.provider || documentInfo.idProveedor } : null)
                                                 setShowProveedorModal(true)
                                             }}
-                                            title={detalleCargado ? 'No se puede cambiar el proveedor cuando el detalle ya está cargado' : 'Cambiar proveedor'}
+                                            title={partidasCapturadas.length > 0 ? 'No se puede cambiar el proveedor cuando el detalle ya tiene partidas capturadas' : 'Cambiar proveedor'}
                                             style={{ borderRadius: '8px' }}
                                         >
                                             <i className="bi bi-pencil"></i>

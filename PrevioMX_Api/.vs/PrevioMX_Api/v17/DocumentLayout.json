@@ -3,20 +3,24 @@
   "WorkspaceRootPath": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\business\\authdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:business\\authdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\dto\\getproveedorprevioresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:dto\\getproveedorprevioresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\controllers\\visualizationcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:controllers\\visualizationcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\business\\authdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:business\\authdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\dto\\eliminarpartidarequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:dto\\eliminarpartidarequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\business\\visualizationservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:business\\visualizationservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\dto\\getproveedorprevioresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:dto\\getproveedorprevioresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\business\\ivisualizationservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -57,10 +61,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\dto\\pendientedocumentosresponsedto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:dto\\pendientedocumentosresponsedto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\dto\\eliminarpartidarequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:dto\\eliminarpartidarequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -70,7 +70,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 15,
+          "SelectedChildIndex": 16,
           "Children": [
             {
               "$type": "Bookmark",
@@ -102,7 +102,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 4,
               "Title": "GetProveedorPrevioResponse.cs",
               "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\DTO\\GetProveedorPrevioResponse.cs",
               "RelativeDocumentMoniker": "DTO\\GetProveedorPrevioResponse.cs",
@@ -110,12 +110,11 @@
               "RelativeToolTip": "DTO\\GetProveedorPrevioResponse.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAqwAgAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T22:43:01.627Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-24T22:43:01.627Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 7,
               "Title": "Program.cs",
               "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Program.cs",
               "RelativeDocumentMoniker": "Program.cs",
@@ -127,7 +126,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 8,
               "Title": "CatalogosController.cs",
               "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Controllers\\CatalogosController.cs",
               "RelativeDocumentMoniker": "Controllers\\CatalogosController.cs",
@@ -139,7 +138,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 9,
               "Title": "ClasificacionController.cs",
               "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Controllers\\ClasificacionController.cs",
               "RelativeDocumentMoniker": "Controllers\\ClasificacionController.cs",
@@ -151,7 +150,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 13,
               "Title": "AgregarOpenPORequest.cs",
               "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\DTO\\AgregarOpenPORequest.cs",
               "RelativeDocumentMoniker": "DTO\\AgregarOpenPORequest.cs",
@@ -163,7 +162,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "IVisualizationService.cs",
               "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Business\\IVisualizationService.cs",
               "RelativeDocumentMoniker": "Business\\IVisualizationService.cs",
@@ -171,24 +170,24 @@
               "RelativeToolTip": "Business\\IVisualizationService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAABZAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-12T21:01:16.128Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-12T21:01:16.128Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 2,
               "Title": "EliminarPartidaRequest.cs",
               "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\DTO\\EliminarPartidaRequest.cs",
               "RelativeDocumentMoniker": "DTO\\EliminarPartidaRequest.cs",
               "ToolTip": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\DTO\\EliminarPartidaRequest.cs",
               "RelativeToolTip": "DTO\\EliminarPartidaRequest.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAfAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-12T20:59:18.71Z"
+              "WhenOpened": "2026-02-12T20:59:18.71Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 6,
               "Title": "PendientesResponse.cs",
               "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\DTO\\PendientesResponse.cs",
               "RelativeDocumentMoniker": "DTO\\PendientesResponse.cs",
@@ -200,33 +199,33 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "AuthDbContext.cs",
               "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Business\\AuthDbContext.cs",
               "RelativeDocumentMoniker": "Business\\AuthDbContext.cs",
               "ToolTip": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Business\\AuthDbContext.cs",
               "RelativeToolTip": "Business\\AuthDbContext.cs",
-              "ViewState": "AgIAAN0DAAAAAAAAAAAQwOwDAABCAAAAAAAAAA==",
+              "ViewState": "AgIAAFkDAAAAAAAAAAAwwGkDAAA8AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-12T01:17:40.986Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 0,
               "Title": "VisualizationController.cs",
               "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Controllers\\VisualizationController.cs",
               "RelativeDocumentMoniker": "Controllers\\VisualizationController.cs",
               "ToolTip": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Controllers\\VisualizationController.cs",
               "RelativeToolTip": "Controllers\\VisualizationController.cs",
-              "ViewState": "AgIAAKgBAAAAAAAAAADwv9YBAAA0AAAAAAAAAA==",
+              "ViewState": "AgIAAMwAAAAAAAAAAAApwOkAAAAgAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-01-13T01:44:26.386Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 12,
               "Title": "CatalogosResponse.cs",
               "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\DTO\\CatalogosResponse.cs",
               "RelativeDocumentMoniker": "DTO\\CatalogosResponse.cs",
@@ -244,14 +243,13 @@
               "RelativeDocumentMoniker": "Business\\VisualizationService.cs",
               "ToolTip": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Business\\VisualizationService.cs",
               "RelativeToolTip": "Business\\VisualizationService.cs",
-              "ViewState": "AgIAAGkAAAAAAAAAAAAiwHMAAABpAAAAAAAAAA==",
+              "ViewState": "AgIAAA8AAAAAAAAAAIA5wCUAAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-12T00:29:44.754Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-12T00:29:44.754Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 10,
               "Title": "CatalogosService.cs",
               "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Business\\CatalogosService.cs",
               "RelativeDocumentMoniker": "Business\\CatalogosService.cs",
@@ -263,7 +261,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 11,
               "Title": "ICatalogosService.cs",
               "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Business\\ICatalogosService.cs",
               "RelativeDocumentMoniker": "Business\\ICatalogosService.cs",
@@ -275,7 +273,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 14,
               "Title": "PendienteDocumentosResponseDto.cs",
               "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\DTO\\PendienteDocumentosResponseDto.cs",
               "RelativeDocumentMoniker": "DTO\\PendienteDocumentosResponseDto.cs",

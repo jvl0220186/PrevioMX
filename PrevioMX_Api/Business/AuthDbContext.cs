@@ -855,10 +855,16 @@ public class AuthDbContext : DbContext
         {
             using var command = connection.CreateCommand();
             command.CommandText = @"EXEC csp_PMX_EliminarPartida 
+                @id = @id, 
                 @idbulto = @idbulto, 
                 @Referencia = @Referencia, 
                 @id_producto = @id_producto";
             command.CommandType = System.Data.CommandType.Text;
+
+            var paramId = command.CreateParameter();
+            paramId.ParameterName = "@id";
+            paramId.Value = request.Id;
+            command.Parameters.Add(paramId);
 
             var paramIdBulto = command.CreateParameter();
             paramIdBulto.ParameterName = "@idbulto";
