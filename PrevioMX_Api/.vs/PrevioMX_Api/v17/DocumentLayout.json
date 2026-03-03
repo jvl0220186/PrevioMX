@@ -182,8 +182,7 @@
               "RelativeToolTip": "DTO\\EliminarPartidaRequest.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAfAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-12T20:59:18.71Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-12T20:59:18.71Z"
             },
             {
               "$type": "Document",
@@ -205,7 +204,7 @@
               "RelativeDocumentMoniker": "Business\\AuthDbContext.cs",
               "ToolTip": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Business\\AuthDbContext.cs",
               "RelativeToolTip": "Business\\AuthDbContext.cs",
-              "ViewState": "AgIAAFkDAAAAAAAAAAAwwGkDAAA8AAAAAAAAAA==",
+              "ViewState": "AgIAABAEAAAAAAAAAAAYwCcEAABCAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-12T01:17:40.986Z",
               "EditorCaption": ""
@@ -218,7 +217,7 @@
               "RelativeDocumentMoniker": "Controllers\\VisualizationController.cs",
               "ToolTip": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Controllers\\VisualizationController.cs",
               "RelativeToolTip": "Controllers\\VisualizationController.cs",
-              "ViewState": "AgIAAMwAAAAAAAAAAAApwOkAAAAgAAAAAAAAAA==",
+              "ViewState": "AgIAAPYBAAAAAAAAAAArwA0CAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-01-13T01:44:26.386Z",
               "EditorCaption": ""

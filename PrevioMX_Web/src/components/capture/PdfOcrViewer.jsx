@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import * as pdfjsLib from 'pdfjs-dist'
 import Tesseract from 'tesseract.js'
+import { API_CONFIG } from '../../config/api.config'
 
 // Worker para PDF.js: en dev Vite sirve desde node_modules; en prod usamos base + nombre fijo (IIS)
 if (import.meta.env.DEV) {
@@ -78,6 +79,23 @@ const PdfOcrViewer = ({
         }
     }, [pdfDoc, pageNum, scale, rotation])
 
+    // Si la URL del PDF es de otro origen (cross-origin), el navegador bloquea el fetch por CORS. Usar proxy del API.
+    const getEffectivePdfUrl = useCallback((url) => {
+        if (!url || typeof url !== 'string') return { url: url, useProxy: false }
+        try {
+            const pdfOrigin = new URL(url).origin
+            const appOrigin = typeof window !== 'undefined' ? window.location.origin : ''
+            if (appOrigin && pdfOrigin !== appOrigin) {
+                const base = (API_CONFIG.BASE_URL || '').replace(/\/*$/, '')
+                const proxyUrl = `${base}/api/Visualization/pdf-proxy?url=${encodeURIComponent(url)}`
+                return { url: proxyUrl, useProxy: true }
+            }
+        } catch (e) {
+            // URL inválida, usar tal cual
+        }
+        return { url: url, useProxy: false }
+    }, [])
+
     useEffect(() => {
         if (!pdfUrl) {
             setPdfDoc(null)
@@ -90,7 +108,13 @@ const PdfOcrViewer = ({
         setError(null)
         const loadPdf = async () => {
             try {
-                const doc = await pdfjsLib.getDocument({ url: pdfUrl }).promise
+                const { url: effectiveUrl, useProxy } = getEffectivePdfUrl(pdfUrl)
+                const options = { url: effectiveUrl }
+                if (useProxy && typeof window !== 'undefined') {
+                    const token = window.localStorage.getItem('token')
+                    if (token) options.httpHeaders = { Authorization: `Bearer ${token}` }
+                }
+                const doc = await pdfjsLib.getDocument(options).promise
                 if (cancelled) return
                 setPdfDoc(doc)
                 setNumPages(doc.numPages)
@@ -105,7 +129,7 @@ const PdfOcrViewer = ({
         }
         loadPdf()
         return () => { cancelled = true }
-    }, [pdfUrl])
+    }, [pdfUrl, getEffectivePdfUrl])
 
     useEffect(() => {
         if (pdfDoc) renderPage()

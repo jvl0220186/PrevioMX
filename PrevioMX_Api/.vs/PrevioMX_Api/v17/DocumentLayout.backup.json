@@ -7,12 +7,12 @@
       "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:business\\authdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\dto\\eliminarpartidarequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:dto\\eliminarpartidarequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\controllers\\visualizationcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:controllers\\visualizationcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\dto\\eliminarpartidarequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|solutionrelative:dto\\eliminarpartidarequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{68AE00DD-659D-448A-A5C8-B089DCBF7F07}|PrevioMX_Api.csproj|i:\\tfs_grupoei\\previo mx\\previomx\\previomx_api\\business\\visualizationservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -174,7 +174,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "EliminarPartidaRequest.cs",
               "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\DTO\\EliminarPartidaRequest.cs",
               "RelativeDocumentMoniker": "DTO\\EliminarPartidaRequest.cs",
@@ -182,8 +182,7 @@
               "RelativeToolTip": "DTO\\EliminarPartidaRequest.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAfAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-12T20:59:18.71Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-12T20:59:18.71Z"
             },
             {
               "$type": "Document",
@@ -205,23 +204,22 @@
               "RelativeDocumentMoniker": "Business\\AuthDbContext.cs",
               "ToolTip": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Business\\AuthDbContext.cs",
               "RelativeToolTip": "Business\\AuthDbContext.cs",
-              "ViewState": "AgIAAFkDAAAAAAAAAAAwwGkDAAA8AAAAAAAAAA==",
+              "ViewState": "AgIAABAEAAAAAAAAAAAYwCEEAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-12T01:17:40.986Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 1,
               "Title": "VisualizationController.cs",
               "DocumentMoniker": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Controllers\\VisualizationController.cs",
               "RelativeDocumentMoniker": "Controllers\\VisualizationController.cs",
               "ToolTip": "I:\\TFS_GrupoEI\\Previo MX\\PrevioMX\\PrevioMX_Api\\Controllers\\VisualizationController.cs",
               "RelativeToolTip": "Controllers\\VisualizationController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAADUAAAAnAAAAAAAAAA==",
+              "ViewState": "AgIAALMBAAAAAAAAAAAjwOABAABOAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-13T01:44:26.386Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-13T01:44:26.386Z"
             },
             {
               "$type": "Document",

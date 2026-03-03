@@ -1058,7 +1058,7 @@ public class AuthDbContext : DbContext
 
             var paramReimpresion = command.CreateParameter();
             paramReimpresion.ParameterName = "@REIMPRESION";
-            paramReimpresion.Value = 1;
+            paramReimpresion.Value = 0;
             command.Parameters.Add(paramReimpresion);
 
             using var reader = await command.ExecuteReaderAsync();
@@ -1068,8 +1068,8 @@ public class AuthDbContext : DbContext
                 return new ValidaReabrirPrevioResponse
                 {
                     Usuario = reader["usuario"]?.ToString() ?? string.Empty,
-                    LUsuario = reader["LUsuario"]?.ToString() ?? string.Empty,
-                    PuedeRegenerar = reader["PuedeRegenerar"] != DBNull.Value && Convert.ToBoolean(reader["PuedeRegenerar"])
+                    LUsuario = string.Empty, //reader["LUsuario"]?.ToString() ?? string.Empty,
+                    PuedeRegenerar = true //reader["PuedeRegenerar"] != DBNull.Value && Convert.ToBoolean(reader["PuedeRegenerar"])
                 };
             }
 

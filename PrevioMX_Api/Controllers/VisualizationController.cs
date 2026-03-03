@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using PrevioMX_Api.Business;
 using PrevioMX_Api.DTO;
 using System.Security.Claims;
+using System.Net.Http;
 
 namespace PrevioMX_Api.Controllers;
 
@@ -560,6 +561,65 @@ public class VisualizationController : ControllerBase
         {
             _logger.LogError(ex, "Error al reabrir el previo para referencia: {Referencia}", referencia);
             return StatusCode(500, new { message = "Error al reabrir el previo", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Proxy para obtener un PDF desde una URL externa (evita CORS cuando el frontend está en otro origen, ej. web.aduax.com vs vuc.grupoei.com.mx).
+    /// Solo se permiten URLs HTTPS de hosts configurados (vuc.grupoei.com.mx por defecto).
+    /// </summary>
+    /// <param name="url">URL del PDF (codificada). Ej: https://vuc.grupoei.com.mx/vucem/files/...</param>
+    [HttpGet("pdf-proxy")]
+    [ProducesResponseType(typeof(FileStreamResult), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(403)]
+    [ProducesResponseType(502)]
+    public async Task<IActionResult> GetPdfProxy([FromQuery] string url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return BadRequest(new { message = "El parámetro url es requerido" });
+        }
+
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uriResult) || !uriResult.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase))
+        {
+            return BadRequest(new { message = "Solo se permiten URLs HTTPS válidas" });
+        }
+
+        // Permitir: grupoei.com.mx, aduax.com, Amazon S3 (URLs firmadas) y sus subdominios
+        var host = uriResult.Host;
+        var allowed = host.Equals("grupoei.com.mx", StringComparison.OrdinalIgnoreCase)
+            || host.EndsWith(".grupoei.com.mx", StringComparison.OrdinalIgnoreCase)
+            || host.Equals("aduax.com", StringComparison.OrdinalIgnoreCase)
+            || host.EndsWith(".aduax.com", StringComparison.OrdinalIgnoreCase)
+            || host.EndsWith(".amazonaws.com", StringComparison.OrdinalIgnoreCase);
+        if (!allowed)
+        {
+            _logger.LogWarning("Intento de proxy PDF desde host no permitido: {Host}", host);
+            return StatusCode(403, new { message = "Host no permitido para proxy de PDF" });
+        }
+
+        try
+        {
+            using var httpClient = new HttpClient();
+            httpClient.Timeout = TimeSpan.FromSeconds(30);
+            var response = await httpClient.GetAsync(uriResult);
+            response.EnsureSuccessStatusCode();
+
+            var stream = await response.Content.ReadAsStreamAsync();
+            var contentType = response.Content.Headers.ContentType?.ToString() ?? "application/pdf";
+            return File(stream, contentType);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "Error al obtener PDF desde {Url}", url);
+            return StatusCode(502, new { message = "No se pudo obtener el documento desde el servidor remoto", error = ex.Message });
+        }
+        catch (TaskCanceledException ex)
+        {
+            _logger.LogError(ex, "Timeout al obtener PDF desde {Url}", url);
+            return StatusCode(502, new { message = "Tiempo de espera agotado al obtener el documento" });
         }
     }
 }
