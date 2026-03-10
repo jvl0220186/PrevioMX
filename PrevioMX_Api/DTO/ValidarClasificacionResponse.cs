@@ -30,4 +30,7 @@ public class ValidarClasificacionResponse
 
     [Column("sp_cantidades")]
     public string SpCantidades { get; set; } = string.Empty;
+
+    [Column("is_rrmms")]
+    public bool IsRrmms { get; set; }
 }

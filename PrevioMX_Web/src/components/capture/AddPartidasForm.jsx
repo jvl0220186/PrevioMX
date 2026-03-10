@@ -80,6 +80,18 @@ const numeroALetras = (num) => {
     return resultado.trim().replace(/\s+/g, ' ')
 }
 
+// Normaliza datos Standard Pack del API (soporta camelCase y PascalCase de .NET)
+const getSpFromResult = (result) => ({
+    isSpum: result?.isSpum ?? result?.IsSpum ?? false,
+    spUm: result?.spUm ?? result?.SpUm ?? '',
+    isSppo: result?.isSppo ?? result?.IsSppo ?? false,
+    spPo: result?.spPo ?? result?.SpPo ?? '',
+    isSpmms: result?.isSpmms ?? result?.IsSpmms ?? false,
+    spMms: result?.spMms ?? result?.SpMms ?? '',
+    spCantidades: result?.sp_cantidades ?? result?.spCantidades ?? result?.SpCantidades ?? '',
+    isRrmms: result?.isRrmms ?? result?.IsRrmms ?? false
+})
+
 const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [], catalogPaises = [], bultosAvailable = [], idEntrada = '', idProveedor = '', esOpenPO = false, openPOData = [], capturedProductIds = [], editingPartida = null, onPOAdded, onRequestOcrForPartNumber, ocrPartNumberToApply, onConsumeOcrPartNumber }) => {
     const [formData, setFormData] = useState({
         id: '', // ID de la partida (para edición)
@@ -103,7 +115,7 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
     // Indica si estamos en modo edición
     const isEditing = !!editingPartida
 
-    // Standard Pack info
+    // Standard Pack info (isSpmms = mostrar bloque MMS; isRrmms = MMS obligatorio)
     const [spInfo, setSpInfo] = useState({
         isSpum: false,
         spUm: '',
@@ -111,7 +123,8 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
         spPo: '',
         isSpmms: false,
         spMms: '',
-        spCantidades: ''
+        spCantidades: '',
+        isRrmms: false
     })
 
     // Lista de series capturadas (MMS entries)
@@ -363,9 +376,9 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
         
         const basicValid = basicFieldsValid && bultoValid && subCantidadValid
         
-        // Si requiere MMS, validar que cantidad === número de series (solo cuando el producto está clasificado)
+        // MMS: obligatorio solo cuando isRrmms es true; si es false o no existe, es opcional
         let mmsValid = true
-        if (spInfo.isSpmms && basicValid && isProductoClasificado) {
+        if (spInfo.isRrmms) {
             const qty = parseInt(formData.quantity) || 0
             mmsValid = qty > 0 && mmsEntries.length === qty
         }
@@ -383,7 +396,7 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
         setIsFormValid(basicValid && mmsValid && tokenValid)
     }, [
         formData,
-        spInfo.isSpmms,
+        spInfo.isRrmms,
         spInfo.isSpum,
         spInfo.isSppo,
         spInfo.spUm,
@@ -536,22 +549,24 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
             setLoadingClasificacion(true)
             const result = await previoService.validarPost({ idEntrada, idProducto: partNumber })
             
-            // Verificar si la respuesta tiene información útil
+            // Normalizar Standard Pack (API puede devolver camelCase o PascalCase)
+            const sp = getSpFromResult(result)
             const hasClasificacion = result.clasificacion && result.clasificacion.trim() !== ''
             const hasDescripcion = result.descripcion && result.descripcion.trim() !== ''
-            const hasSpInfo = result.isSpum || result.isSppo || result.isSpmms
+            const hasSpInfo = sp.isSpum || sp.isSppo || sp.isSpmms
             const isEmptyResponse = !hasClasificacion && !hasDescripcion && !hasSpInfo
             
             // Si la respuesta está vacía, usar valores del OpenPO
             if (isEmptyResponse) {
                 setSpInfo({
                     isSpum: !!openPOUm,
-                    spUm: openPOUm,
+                    spUm: openPOUm || '',
                     isSppo: !!openPOPais,
-                    spPo: openPOPais,
+                    spPo: openPOPais || '',
                     isSpmms: false,
                     spMms: '',
-                    spCantidades: ''
+                    spCantidades: '',
+                    isRrmms: false
                 })
                 setToast({
                     show: true,
@@ -572,22 +587,22 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
             const conflicts = []
             
             // Conflicto de UM
-            if (result.isSpum && result.spUm && openPOUm && result.spUm !== openPOUm) {
+            if (sp.isSpum && sp.spUm && openPOUm && sp.spUm !== openPOUm) {
                 conflicts.push({
                     field: 'unit',
                     label: 'Unidad de Medida',
                     openPOValue: openPOUm,
-                    spValue: result.spUm
+                    spValue: sp.spUm
                 })
             }
             
             // Conflicto de País de Origen
-            if (result.isSppo && result.spPo && openPOPais && result.spPo !== openPOPais) {
+            if (sp.isSppo && sp.spPo && openPOPais && sp.spPo !== openPOPais) {
                 conflicts.push({
                     field: 'country',
                     label: 'País de Origen',
                     openPOValue: openPOPais,
-                    spValue: result.spPo
+                    spValue: sp.spPo
                 })
             }
             
@@ -597,19 +612,20 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                     show: true,
                     conflicts: conflicts,
                     pendingSpInfo: {
-                        isSpum: result.isSpum || false,
-                        spUm: result.spUm || '',
-                        isSppo: result.isSppo || false,
-                        spPo: result.spPo || '',
-                        isSpmms: result.isSpmms || false,
-                        spMms: result.spMms || '',
-                        spCantidades: result.sp_cantidades || result.spCantidades || ''
+                        isSpum: sp.isSpum,
+                        spUm: sp.spUm,
+                        isSppo: sp.isSppo,
+                        spPo: sp.spPo,
+                        isSpmms: sp.isSpmms,
+                        spMms: sp.spMms,
+                        spCantidades: sp.spCantidades,
+                        isRrmms: sp.isRrmms
                     }
                 })
             } else {
                 // Sin conflictos, aplicar SP normalmente
-                const finalUm = result.isSpum && result.spUm ? result.spUm : openPOUm
-                const finalPais = result.isSppo && result.spPo ? result.spPo : openPOPais
+                const finalUm = sp.isSpum && sp.spUm ? sp.spUm : openPOUm
+                const finalPais = sp.isSppo && sp.spPo ? sp.spPo : openPOPais
                 
                 setFormData(prev => ({
                     ...prev,
@@ -618,14 +634,23 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                 }))
                 
                 setSpInfo({
-                    isSpum: result.isSpum || !!openPOUm,
-                    spUm: result.spUm || openPOUm,
-                    isSppo: result.isSppo || !!openPOPais,
-                    spPo: result.spPo || openPOPais,
-                    isSpmms: result.isSpmms || false,
-                    spMms: result.spMms || '',
-                    spCantidades: result.sp_cantidades || result.spCantidades || ''
+                    isSpum: sp.isSpum || !!openPOUm,
+                    spUm: sp.spUm || openPOUm || '',
+                    isSppo: sp.isSppo || !!openPOPais,
+                    spPo: sp.spPo || openPOPais || '',
+                    isSpmms: sp.isSpmms,
+                    spMms: sp.spMms,
+                    spCantidades: sp.spCantidades,
+                    isRrmms: sp.isRrmms
                 })
+                // Indicar que se cargaron los datos del Standard Pack
+                if (hasSpInfo) {
+                    setToast({
+                        show: true,
+                        message: '✅ Se cargaron los datos del Standard Pack.',
+                        type: 'success'
+                    })
+                }
             }
             
             // Validar clasificación
@@ -642,12 +667,14 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                 })
             }
             
-            // Alertar si requiere MMS
-            if (result.isSpmms) {
+            // Alertar si muestra bloque MMS (obligatorio si isRrmms; opcional si no)
+            if (sp.isSpmms) {
                 setTimeout(() => {
                     setToast({
                         show: true,
-                        message: '📋 Este producto requiere captura de Marca, Modelo y Serie.',
+                        message: sp.isRrmms
+                            ? '📋 Este producto requiere captura de Marca, Modelo y Serie.'
+                            : '📋 MMS opcional.',
                         type: 'info'
                     })
                 }, 2000)
@@ -658,12 +685,13 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
             // En caso de error, usar valores del OpenPO
             setSpInfo({
                 isSpum: !!openPOUm,
-                spUm: openPOUm,
+                spUm: openPOUm || '',
                 isSppo: !!openPOPais,
-                spPo: openPOPais,
+                spPo: openPOPais || '',
                 isSpmms: false,
                 spMms: '',
-                spCantidades: ''
+                spCantidades: '',
+                isRrmms: false
             })
         } finally {
             setLoadingClasificacion(false)
@@ -869,10 +897,11 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
             
             const result = await previoService.validarPost({ idEntrada, idProducto: partNumber })
             
-            // Verificar si la respuesta tiene información útil
+            // Normalizar Standard Pack (API puede devolver camelCase o PascalCase)
+            const sp = getSpFromResult(result)
             const hasClasificacion = result.clasificacion && result.clasificacion.trim() !== ''
             const hasDescripcion = result.descripcion && result.descripcion.trim() !== ''
-            const hasSpInfo = result.isSpum || result.isSppo || result.isSpmms
+            const hasSpInfo = sp.isSpum || sp.isSppo || sp.isSpmms
             const isEmptyResponse = !hasClasificacion && !hasDescripcion && !hasSpInfo
 
             // Si la respuesta está vacía, limpiar todo
@@ -897,27 +926,42 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                 return
             }
             
-            // Actualizar descripción y clasificación
+            // Actualizar descripción y clasificación. En modo edición no sobrescribir UM/país para no perder los valores ya guardados de la partida.
             setFormData(prev => ({
                 ...prev,
                 description: result.descripcion || prev.description,
                 clasificacion: result.clasificacion || '',
-                // Precargar UM si isSpum, si no limpiar
-                unit: result.isSpum && result.spUm ? result.spUm : (hasSpInfo ? '' : prev.unit),
-                // Precargar País si isSppo, si no limpiar
-                country: result.isSppo && result.spPo ? result.spPo : (hasSpInfo ? '' : prev.country)
+                unit: isEditing ? prev.unit : (sp.isSpum && sp.spUm ? sp.spUm : (hasSpInfo ? '' : prev.unit)),
+                country: isEditing ? prev.country : (sp.isSppo && sp.spPo ? sp.spPo : (hasSpInfo ? '' : prev.country))
             }))
 
-            // Guardar info de Standard Pack
+            // Guardar info de Standard Pack (mostrar bloque MMS si isSpmms; obligatorio si isRrmms)
             setSpInfo({
-                isSpum: result.isSpum || false,
-                spUm: result.spUm || '',
-                isSppo: result.isSppo || false,
-                spPo: result.spPo || '',
-                isSpmms: result.isSpmms || false,
-                spMms: result.spMms || '',
-                spCantidades: result.sp_cantidades || result.spCantidades || ''
+                isSpum: sp.isSpum,
+                spUm: sp.spUm,
+                isSppo: sp.isSppo,
+                spPo: sp.spPo,
+                isSpmms: sp.isSpmms,
+                spMms: sp.spMms,
+                spCantidades: sp.spCantidades,
+                isRrmms: sp.isRrmms
             })
+
+            // Indicar que se encontró/cargó Standard Pack
+            if (hasSpInfo) {
+                setToast({
+                    show: true,
+                    message: '✅ Se cargaron los datos del Standard Pack.',
+                    type: 'success'
+                })
+            }
+
+            // En modo edición, considerar los valores actuales (guardados) como ya autorizados por token, para no solicitar token de nuevo
+            if (isEditing) {
+                setUnidadTokenAutorizada(formData.unit)
+                setPaisTokenAutorizado(formData.country)
+                setCantidadTokenAutorizada(formData.quantity)
+            }
 
             // Validar clasificación
             const isValidClasificacion = result.clasificacion && /^\d{10}$/.test(result.clasificacion)
@@ -933,15 +977,17 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                 })
             }
 
-            // Alertar si requiere MMS
-            if (result.isSpmms) {
+            // Alertar si muestra bloque MMS (obligatorio si isRrmms; opcional si no)
+            if (sp.isSpmms) {
                 setTimeout(() => {
                     setToast({
                         show: true,
-                        message: '📋 Este producto requiere captura de Marca, Modelo y Serie. La cantidad debe coincidir con el número de series.',
+                        message: sp.isRrmms
+                            ? '📋 Este producto requiere captura de Marca, Modelo y Serie. La cantidad debe coincidir con el número de series.'
+                            : '📋 MMS opcional.',
                         type: 'info'
                     })
-                }, isValidClasificacion ? 0 : 3000)
+                }, 500)
             }
 
         } catch (error) {
@@ -970,7 +1016,8 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
             spPo: '',
             isSpmms: false,
             spMms: '',
-            spCantidades: ''
+            spCantidades: '',
+            isRrmms: false
         })
         setMmsEntries([])
         setUnidadTokenAutorizada('')
@@ -1250,8 +1297,8 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
     }
 
     const handleSubmit = async () => {
-        // Validación adicional para MMS (solo cuando el producto está clasificado)
-        if (spInfo.isSpmms && isProductoClasificado) {
+        // Validación adicional para MMS (obligatorio solo cuando isRrmms es true)
+        if (spInfo.isRrmms) {
             const qty = parseInt(formData.quantity) || 0
             if (mmsEntries.length !== qty) {
                 setToast({
@@ -1861,19 +1908,24 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                             )}
                         </div>
 
-                        {/* Marca, Modelo y Serie */}
+                        {/* Marca, Modelo y Serie: mostrar badges y alert cuando isSpmms O isRrmms; Requerido solo por isRrmms */}
                         <div className="mb-3">
                             <div className="d-flex justify-content-between align-items-center mb-2">
                                 <div className="d-flex align-items-center gap-2">
                                     <label className="form-label fw-bold mb-0">
                                         Marca, Modelo y Serie
-                                        {spInfo.isSpmms && (
+                                        {spInfo.isRrmms && (
                                             <span className="badge bg-warning text-dark ms-2" style={{ fontSize: '0.7rem' }}>
                                                 <i className="bi bi-exclamation-triangle me-1"></i>Requerido
                                             </span>
                                         )}
+                                        {(spInfo.isSpmms || spInfo.isRrmms) && !spInfo.isRrmms && (
+                                            <span className="badge bg-secondary ms-2" style={{ fontSize: '0.7rem' }}>
+                                                Opcional
+                                            </span>
+                                        )}
                                     </label>
-                                    {spInfo.isSpmms && formData.quantity && (
+                                    {(spInfo.isSpmms || spInfo.isRrmms) && formData.quantity && (
                                         <span className={`badge ${mmsEntries.length === parseInt(formData.quantity) ? 'bg-success' : 'bg-secondary'}`} style={{ fontSize: '0.8rem' }}>
                                             <i className={`bi ${mmsEntries.length === parseInt(formData.quantity) ? 'bi-check-circle' : 'bi-list-ol'} me-1`}></i>
                                             {mmsEntries.length} / {formData.quantity}
@@ -1891,14 +1943,14 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                                 </button>
                             </div>
 
-                            {spInfo.isSpmms && (
-                                <div className={`alert py-2 mb-2 ${isProductoClasificado ? 'alert-warning' : 'alert-info'}`} style={{ fontSize: '0.85rem' }}>
+                            {(spInfo.isSpmms || spInfo.isRrmms) && (
+                                <div className={`alert py-2 mb-2 ${spInfo.isRrmms ? 'alert-warning' : 'alert-info'}`} style={{ fontSize: '0.85rem' }}>
                                     <i className="bi bi-info-circle me-2"></i>
-                                    {isProductoClasificado
+                                    {spInfo.isRrmms
                                         ? <>Este producto requiere MMS. Capture {formData.quantity || '?'} serie(s).</>
-                                        : <>MMS opcional (producto no clasificado).</>
+                                        : <>MMS opcional.</>
                                     }
-                                    {isProductoClasificado && (
+                                    {spInfo.isRrmms && (
                                         <><br />
                                         <small className="text-muted">Marca → Enter → Modelo → Enter → Serie → Enter (guarda)</small></>
                                     )}
@@ -1911,6 +1963,7 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                                         <input
                                             ref={brandRef}
                                             type="text"
+                                            autoComplete="off"
                                             className={`form-control oc-input mb-2 ${isProductoClasificado && !marcaValida ? 'is-invalid' : ''} ${isProductoClasificado && marcaValida && formData.brand ? 'is-valid' : ''}`}
                                             placeholder="Marca"
                                             value={formData.brand}
@@ -1955,6 +2008,7 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                                         <input
                                             ref={modelRef}
                                             type="text"
+                                            autoComplete="off"
                                             className={`form-control oc-input ${isProductoClasificado && !modeloValido ? 'is-invalid' : ''} ${isProductoClasificado && modeloValido && formData.model ? 'is-valid' : ''}`}
                                             placeholder="Modelo"
                                             value={formData.model}
@@ -2013,6 +2067,7 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                                                 <input
                                                     ref={seriesRef}
                                                     type="text"
+                                                    autoComplete="off"
                                                     className={`form-control oc-input ${disableAddMms ? 'bg-light' : ''}`}
                                                     placeholder={isMaxReached ? 'Máximo alcanzado' : 'Serie'}
                                                     value={formData.series}
@@ -2244,12 +2299,19 @@ const AddPartidasForm = ({ onCancel, onSave, onPartidaSaved, catalogUnidades = [
                                             // Usuario canceló la validación del token: aplicar valores de Standard Pack en lugar de OpenPO
                                             resolveConflict(false)
                                         } else if (tokenModal.field === 'quantity') {
-                                            handleChange('quantity', tokenModal.prevValue || '')
+                                            // Al cancelar, regresar al valor del Standard Pack (primera cantidad sugerida) o al valor anterior
+                                            const cantidadesSp = parseSpCantidades()
+                                            const valorRevertir = cantidadesSp.length > 0 ? cantidadesSp[0] : (tokenModal.prevValue || '')
+                                            handleChange('quantity', valorRevertir)
                                         } else if (tokenModal.field === 'unit') {
-                                            handleChange('unit', tokenModal.prevValue || '')
+                                            // Al cancelar, regresar al valor del Standard Pack
+                                            const valorRevertir = spInfo.isSpum && spInfo.spUm ? spInfo.spUm : (tokenModal.prevValue || '')
+                                            handleChange('unit', valorRevertir)
                                             setUnitDropdownVersion(prev => prev + 1)
                                         } else if (tokenModal.field === 'country') {
-                                            handleChange('country', tokenModal.prevValue || '')
+                                            // Al cancelar, regresar al valor del Standard Pack
+                                            const valorRevertir = spInfo.isSppo && spInfo.spPo ? spInfo.spPo : (tokenModal.prevValue || '')
+                                            handleChange('country', valorRevertir)
                                             setCountryDropdownVersion(prev => prev + 1)
                                         }
                                         setTokenModal({

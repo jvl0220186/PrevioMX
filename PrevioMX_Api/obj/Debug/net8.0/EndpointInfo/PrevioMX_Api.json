@@ -2467,6 +2467,9 @@
           "spCantidades": {
             "type": "string",
             "nullable": true
+          },
+          "isRrmms": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false

@@ -194,16 +194,19 @@
  */
 
 /**
+ * Response de POST /api/Clasificacion/validar-post (clasificación y Standard Pack).
+ * El API devuelve camelCase (isSpum, spUm, isSpmms, etc.).
  * @typedef {Object} ValidarPostResponse
- * @property {string} [clasificacion]
- * @property {string} [descripcion]
- * @property {boolean} [isSpum]
- * @property {string} [spUm]
- * @property {boolean} [isSppo]
- * @property {string} [spPo]
- * @property {boolean} [isSpmms]
- * @property {string} [spMms]
- * @property {string} [spCantidades]
+ * @property {string} [clasificacion] - Clasificación arancelaria (10 dígitos si aplica)
+ * @property {string} [descripcion] - Descripción del producto
+ * @property {boolean} [isSpum] - Indica si hay UM sugerida por Standard Pack
+ * @property {string} [spUm] - Unidad de medida sugerida por Standard Pack
+ * @property {boolean} [isSppo] - Indica si hay país sugerido por Standard Pack
+ * @property {string} [spPo] - País de origen sugerido por Standard Pack
+ * @property {boolean} [isSpmms] - Indica si el producto requiere Marca/Modelo/Serie
+ * @property {string} [spMms] - Texto MMS si aplica
+ * @property {string} [spCantidades] - Cantidades sugeridas por Standard Pack (ej. "10,20,50")
+ * @property {boolean} [isRrmms] - Indica si aplica regla de MMS (RRMMS)
  */
 
 /**

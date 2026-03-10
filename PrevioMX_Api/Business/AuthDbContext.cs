@@ -370,7 +370,8 @@ public class AuthDbContext : DbContext
                     SpPo = reader["sp_po"]?.ToString() ?? string.Empty,
                     IsSpmms = reader["is_spmms"] != DBNull.Value && Convert.ToBoolean(reader["is_spmms"]),
                     SpMms = reader["sp_mms"]?.ToString() ?? string.Empty,
-                    SpCantidades = reader["sp_cantidades"]?.ToString() ?? string.Empty
+                    SpCantidades = reader["sp_cantidades"]?.ToString() ?? string.Empty,
+                    IsRrmms = reader["is_rrmms"] != DBNull.Value && Convert.ToBoolean(reader["is_rrmms"])
                 };
             }
 
