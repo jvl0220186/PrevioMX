@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Login - Previo AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF551A;
+            --primary-light: #FF7A4D;
+            --primary-bg: rgba(255, 85, 26, 0.08);
+            --primary-bg-hover: rgba(255, 85, 26, 0.14);
+            --success: #22c55e;
+            --success-bg: rgba(34, 197, 94, 0.1);
+            --danger: #ef4444;
+            --danger-bg: rgba(239, 68, 68, 0.1);
+            --warning: #f59e0b;
+            --warning-bg: rgba(245, 158, 11, 0.1);
+            --info: #3b82f6;
+
+            --bg: #f8f9fb;
+            --bg-card: #ffffff;
+            --border: #e5e7eb;
+            --border-light: #f0f1f3;
+            --text: #1f2937;
+            --text-secondary: #6b7280;
+            --text-muted: #9ca3af;
+
+            --font-heading: 'Space Grotesk', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 18px;
+            --radius-xl: 30px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg);
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+        }
+
+        /* ---- Mobile Frame ---- */
+        .mobile-frame-wrapper {
+            display: flex;
+            justify-content: center;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .mobile-frame {
+            width: 100%;
+            max-width: 480px;
+            min-height: 100vh;
+            background: var(--bg);
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        @media (min-width: 768px) {
+            .mobile-frame-wrapper { padding: 2rem 0; min-height: auto; }
+            .mobile-frame {
+                border-radius: 32px;
+                border: 1px solid var(--border);
+                min-height: 780px;
+                max-height: 900px;
+                overflow-y: auto;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+                background: #fff;
+            }
+        }
+
+        /* ---- Status Bar ---- */
+        .mobile-status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        /* ---- Login Layout ---- */
+        .login-body {
+            padding: 0 28px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: calc(100vh - 50px);
+        }
+
+        @media (min-width: 768px) {
+            .login-body {
+                min-height: 720px;
+            }
+        }
+
+        /* ---- Logo ---- */
+        .login-logo {
+            width: 72px;
+            height: 72px;
+            border-radius: 20px;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: #fff;
+            margin: 0 auto 1.2rem;
+            box-shadow: 0 8px 28px rgba(255, 85, 26, 0.3);
+        }
+
+        .login-title {
+            font-family: var(--font-heading);
+            font-weight: 800;
+            font-size: 1.5rem;
+            text-align: center;
+            color: var(--text);
+            margin-bottom: 0.2rem;
+        }
+
+        .login-subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-bottom: 2rem;
+        }
+
+        /* ---- Form ---- */
+        .form-label-sm {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-bottom: 0.35rem;
+        }
+
+        .login-form-group {
+            margin-bottom: 1.15rem;
+        }
+
+        .login-input-wrapper {
+            position: relative;
+        }
+
+        .login-input-wrapper > i.field-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 1.05rem;
+            transition: var(--transition);
+            pointer-events: none;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 0.8rem 1rem 0.8rem 2.7rem;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            background: #fff;
+            color: var(--text);
+            font-family: var(--font-body);
+            font-size: 0.95rem;
+            outline: none;
+            transition: var(--transition);
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .login-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .login-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 85, 26, 0.12);
+        }
+
+        .login-input-wrapper:focus-within > i.field-icon {
+            color: var(--primary);
+        }
+
+        /* ---- Select ---- */
+        select.login-input {
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            background-size: 12px;
+            padding-right: 2.5rem;
+        }
+
+        select.login-input option[value=""] {
+            color: var(--text-muted);
+        }
+
+        /* ---- Toggle Password ---- */
+        .toggle-password {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 1.05rem;
+            padding: 0;
+            transition: var(--transition);
+        }
+
+        .toggle-password:hover {
+            color: var(--primary);
+        }
+
+        /* ---- Button ---- */
+        .btn-login {
+            width: 100%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-md);
+            font-family: var(--font-heading);
+            font-weight: 700;
+            font-size: 0.95rem;
+            padding: 0.85rem 1.4rem;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 14px rgba(255, 85, 26, 0.3);
+            margin-top: 0.5rem;
+        }
+
+        .btn-login:hover {
+            background: var(--primary-light);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(255, 85, 26, 0.35);
+        }
+
+        .btn-login:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ---- Divider ---- */
+        .login-divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1.5rem 0;
+            color: var(--text-muted);
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .login-divider::before,
+        .login-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* ---- Footer ---- */
+        .login-footer {
+            text-align: center;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
+
+        .login-footer a {
+            color: var(--primary);
+            font-weight: 600;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .login-footer a:hover {
+            color: var(--primary-light);
+        }
+
+        .version-tag {
+            text-align: center;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-top: 2rem;
+            letter-spacing: 0.5px;
+        }
+
+        /* ---- Error ---- */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-6px); }
+            40% { transform: translateX(6px); }
+            60% { transform: translateX(-4px); }
+            80% { transform: translateX(4px); }
+        }
+
+        .shake { animation: shake 0.35s ease; }
+
+        .input-error {
+            border-color: var(--danger) !important;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+        }
+
+        /* ---- Toast ---- */
+        .toast-msg {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            max-width: 340px;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 0.8rem 1rem;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: toastIn 0.3s ease;
+        }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Mobile Login -->
+    <div class="mobile-frame-wrapper">
+        <div class="mobile-frame">
+
+            <!-- Status Bar -->
+            <div class="mobile-status-bar">
+                <span>9:41</span>
+                <div class="d-flex gap-1 align-items-center" style="font-size:0.7rem;">
+                    <i class="bi bi-reception-4"></i>
+                    <i class="bi bi-wifi"></i>
+                    <i class="bi bi-battery-full"></i>
+                </div>
+            </div>
+
+            <!-- Login Body -->
+            <div class="login-body">
+
+                <!-- Logo -->
+                <div class="login-logo">
+                    <i class="bi bi-hexagon-fill"></i>
+                </div>
+
+                <h1 class="login-title">Previo AI</h1>
+                <p class="login-subtitle">Ingresa tus credenciales para continuar</p>
+
+                <!-- Login Form -->
+                <form id="loginForm" onsubmit="return false;">
+
+                    <!-- Usuario -->
+                    <div class="login-form-group">
+                        <label class="form-label-sm" for="txtUsuario">
+                            <i class="bi bi-person me-1"></i>Usuario
+                        </label>
+                        <div class="login-input-wrapper">
+                            <input type="text" id="txtUsuario" class="login-input" placeholder="Ingresa tu usuario" autocomplete="username" required>
+                            <i class="bi bi-person field-icon"></i>
+                        </div>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="login-form-group">
+                        <label class="form-label-sm" for="txtPassword">
+                            <i class="bi bi-lock me-1"></i>Contraseña
+                        </label>
+                        <div class="login-input-wrapper">
+                            <input type="password" id="txtPassword" class="login-input" placeholder="Ingresa tu contraseña" autocomplete="current-password" required>
+                            <i class="bi bi-lock field-icon"></i>
+                            <button type="button" class="toggle-password" id="btnTogglePass">
+                                <i class="bi bi-eye" id="eyeIcon"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Recinto / Bodega (Combo) -->
+                    <div class="login-form-group" id="grpUbicacion" style="display:none;">
+                        <label class="form-label-sm" for="cmbRecinto" id="lblUbicacion">
+                            <i class="bi bi-building me-1" id="iconUbicacion"></i><span id="lblUbicacionText">Recinto</span>
+                        </label>
+                        <div class="login-input-wrapper">
+                            <select id="cmbRecinto" class="login-input" required>
+                                <option value="" disabled selected>Selecciona una opción</option>
+                            </select>
+                            <i class="bi bi-building field-icon"></i>
+                        </div>
+                    </div>
+
+                    <!-- Login Button -->
+                    <button type="button" class="btn-login" id="btnLogin">
+                        <i class="bi bi-box-arrow-in-right"></i>
+                        Iniciar Sesión
+                    </button>
+                </form>
+
+                <div class="login-divider">o</div>
+
+                <div class="login-footer">
+                    ¿Olvidaste tu contraseña? <a href="#">Recupérala aquí</a>
+                </div>
+
+                <div class="version-tag">Previo AI v3.0 &middot; &copy; 2026</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script>
+    $(document).ready(function () {
+
+        function showToast(message, type) {
+            type = type || 'success';
+            var icons = { success: 'bi-check-circle-fill', warning: 'bi-exclamation-triangle-fill', danger: 'bi-x-circle-fill', info: 'bi-info-circle-fill' };
+            var colors = { success: '#22c55e', warning: '#f59e0b', danger: '#ef4444', info: '#3b82f6' };
+            var $t = $('<div class="toast-msg"></div>')
+                .css('border-left', '3px solid ' + colors[type])
+                .html('<i class="bi ' + icons[type] + '" style="color:' + colors[type] + ';font-size:1.1rem;"></i> ' + message)
+                .appendTo('body');
+            setTimeout(function () { $t.fadeOut(250, function () { $(this).remove(); }); }, 3200);
+        }
+
+        // Users DB
+        var usersDB = {
+            'mgarciah.mty': {
+                password: '1234',
+                nombre: 'Miguel García',
+                tipo: 'recinto',
+                opciones: [
+                    { val: 'FEDEX_CR243', text: 'FEDEX para el CR 243', recintoNum: 11 },
+                    { val: 'DHL_OMA_158', text: 'DHL OMA para el CR 158', recintoNum: 29 },
+                    { val: 'UPS_CR164', text: 'UPS para el CR 164', recintoNum: 12 },
+                    { val: 'UPS_OMA_158', text: 'UPS OMA para el CR 158', recintoNum: 13 },
+                    { val: 'TRANSITO_OMA_158', text: 'TRANSITO OMA para el CR 158', recintoNum: 14 },
+                    { val: 'TRANSITO_PESADO_OMA_260', text: 'TRANSITO PESADO OMA para el CR 260', recintoNum: 15 },
+                    { val: 'FEDEX_277', text: 'FEDEX 277', recintoNum: 16 },
+                    { val: 'CLA_228', text: 'CLA 228', recintoNum: 17 },
+                    { val: 'WTC_GDL_28', text: 'WTC-GDL 28', recintoNum: 18 },
+                    { val: 'TERMINAL_LOGISTICS', text: 'Terminal Logistics, S.A. de C.V.', recintoNum: 19 },
+                    { val: 'AIFA', text: 'AIFA', recintoNum: 20 },
+                    { val: 'AICM', text: 'AICM', recintoNum: 21 },
+                    { val: 'UPS_309', text: 'UPS 309', recintoNum: 22 },
+                    { val: 'DHL_223', text: 'DHL 223', recintoNum: 23 }
+                ]
+            },
+            'tlopez.lrd': {
+                password: '1234',
+                nombre: 'Tomás López',
+                tipo: 'bodega',
+                opciones: [
+                    { val: 'EI_LOGISTIC', text: 'EI Logistic' },
+                    { val: 'PROTRANS', text: 'Protrans' },
+                    { val: 'LUX', text: 'Lux' }
+                ]
+            }
+        };
+
+        var currentUser = null;
+
+        // Toggle password
+        $('#btnTogglePass').on('click', function () {
+            var $input = $('#txtPassword');
+            var $icon = $('#eyeIcon');
+            if ($input.attr('type') === 'password') {
+                $input.attr('type', 'text');
+                $icon.removeClass('bi-eye').addClass('bi-eye-slash');
+            } else {
+                $input.attr('type', 'password');
+                $icon.removeClass('bi-eye-slash').addClass('bi-eye');
+            }
+        });
+
+        // Detect user on blur/input and load options
+        $('#txtUsuario').on('change blur', function () {
+            var usuario = $(this).val().trim().toLowerCase();
+            var user = usersDB[usuario];
+            if (user && user !== currentUser) {
+                currentUser = user;
+                var isRecinto = user.tipo === 'recinto';
+                $('#lblUbicacionText').text(isRecinto ? 'Recinto' : 'Bodega');
+                $('#iconUbicacion').attr('class', isRecinto ? 'bi bi-building me-1' : 'bi bi-box-seam me-1');
+                var $sel = $('#cmbRecinto').empty();
+                $sel.append('<option value="" disabled selected>Selecciona ' + (isRecinto ? 'un recinto' : 'una bodega') + '</option>');
+                user.opciones.forEach(function (o) {
+                    $sel.append('<option value="' + o.val + '">' + o.text + '</option>');
+                });
+                $('#grpUbicacion').slideDown(200);
+            } else if (!user) {
+                currentUser = null;
+                $('#grpUbicacion').slideUp(200);
+                $('#cmbRecinto').empty().append('<option value="" disabled selected>Selecciona una opción</option>');
+            }
+        });
+
+        // Login
+        $('#btnLogin').on('click', function () {
+            var usuario = $('#txtUsuario').val().trim().toLowerCase();
+            var password = $('#txtPassword').val().trim();
+            var recinto = $('#cmbRecinto').val();
+            var valid = true;
+            var user = usersDB[usuario];
+
+            if (!usuario) {
+                $('#txtUsuario').addClass('input-error shake');
+                setTimeout(function () { $('#txtUsuario').removeClass('shake'); }, 400);
+                valid = false;
+            } else if (!user) {
+                $('#txtUsuario').addClass('input-error shake');
+                setTimeout(function () { $('#txtUsuario').removeClass('shake'); }, 400);
+                showToast('Usuario no encontrado.', 'danger');
+                return;
+            } else {
+                $('#txtUsuario').removeClass('input-error');
+            }
+
+            if (!password) {
+                $('#txtPassword').addClass('input-error shake');
+                setTimeout(function () { $('#txtPassword').removeClass('shake'); }, 400);
+                valid = false;
+            } else if (user && password !== user.password) {
+                $('#txtPassword').addClass('input-error shake');
+                setTimeout(function () { $('#txtPassword').removeClass('shake'); }, 400);
+                showToast('Contraseña incorrecta.', 'danger');
+                return;
+            } else {
+                $('#txtPassword').removeClass('input-error');
+            }
+
+            if (!recinto) {
+                $('#cmbRecinto').addClass('input-error shake');
+                setTimeout(function () { $('#cmbRecinto').removeClass('shake'); }, 400);
+                valid = false;
+            } else {
+                $('#cmbRecinto').removeClass('input-error');
+            }
+
+            if (!valid) {
+                showToast('Completa todos los campos para continuar.', 'warning');
+                return;
+            }
+
+            var $btn = $(this);
+            $btn.prop('disabled', true);
+            $btn.html('<span class="spinner-border spinner-border-sm me-2"></span>Verificando...');
+
+            var ubicacionText = $('#cmbRecinto option:selected').text();
+
+            setTimeout(function () {
+                $btn.css('background', 'var(--success)');
+                $btn.css('box-shadow', '0 4px 14px rgba(34, 197, 94, 0.3)');
+                $btn.html('<i class="bi bi-check-circle"></i> Acceso correcto');
+                showToast('Bienvenido, ' + user.nombre + '. Redirigiendo...', 'success');
+
+                var optUbic = user.opciones.find(function (o) { return o.val === recinto; });
+                var recintoNum = optUbic && optUbic.recintoNum != null ? optUbic.recintoNum : null;
+
+                localStorage.setItem('previo_session', JSON.stringify({
+                    usuario: usuario,
+                    nombre: user.nombre,
+                    tipo: user.tipo,
+                    ubicacion: ubicacionText,
+                    ubicacionVal: recinto,
+                    recintoNum: recintoNum
+                }));
+
+                setTimeout(function () {
+                    window.location.href = 'take-pictures.html';
+                }, 1500);
+            }, 1500);
+        });
+
+        // Clear errors on input
+        $('#txtUsuario, #txtPassword').on('input', function () {
+            $(this).removeClass('input-error');
+        });
+
+        $('#cmbRecinto').on('change', function () {
+            $(this).removeClass('input-error');
+        });
+
+        setTimeout(function () { $('#txtUsuario').focus(); }, 500);
+    });
+    </script>
+</body>
+</html>

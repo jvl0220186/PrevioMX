@@ -1,0 +1,171 @@
+================================================================================
+PROCESOS DE CAPTURA — PREVIO (mobile-login + take-pictures)
+================================================================================
+Este documento resume los dos flujos implementados en la demo: usuario de tipo
+"recinto" (trabajo por guías y código de recinto) y usuario de tipo "bodega"
+(trabajo directo por bulto). La descripción va desde el login hasta la toma
+de fotos del documento (packing list / factura) y el cierre del ciclo.
+
+Archivos de referencia:
+  - pages/mobile-login.html  (autenticación y sesión)
+  - pages/take-pictures.html (wizard de captura)
+
+
+================================================================================
+1. FLUJO RECINTO / GUÍA (session.tipo === 'recinto')
+================================================================================
+
+1.1 Login (mobile-login.html)
+------------------------------
+- El usuario ingresa usuario y contraseña.
+- Al reconocer el usuario, el sistema muestra el selector de ubicación etiquetado
+  como "Recinto" y carga las opciones definidas para ese usuario (cada opción
+  puede traer un recintoNum numérico asociado).
+- Tras elegir recinto y validar credenciales, se guarda en localStorage la
+  clave "previo_session" con, entre otros: nombre, tipo: "recinto", texto de
+  ubicación, ubicacionVal y recintoNum (necesario para validar el escaneo de
+  bulto en formato prefijo.sufijo).
+- Redirección a pages/take-pictures.html.
+
+1.2 Pantalla inicial — Paso 0 (take-pictures.html, step0)
+----------------------------------------------------------
+- El encabezado muestra la ubicación de la sesión.
+- No se ofrece alternancia bulto/guía: el flujo es siempre por guías.
+- Se muestra el panel "Iniciar Captura": campo para escanear o capturar números
+  de guía (contra la base simulada guiasDB). Las guías válidas se van agregando
+  a una lista; se puede quitar una guía de la lista antes de continuar.
+- Botón "Continuar Captura": pasa a la configuración de recepción si hay al
+  menos una guía en la lista.
+
+1.3 Configuración de recepción (stepGuiaConfig)
+-----------------------------------------------
+- Muestra cuántas guías se van a procesar.
+- Proveedor (select), y conmutadores de recepción (maquinaria, rojo, tarima,
+  sellos, etc., según la pantalla).
+- "Siguiente" guarda esa configuración en el estado (state.guiaConfig, etc.)
+  y lleva al paso de escaneo de bultos (step1). Aquí no se fija aún qué guía
+  corresponde a cada bulto; eso ocurre en el paso 1.
+
+1.4 Bucle por bulto — Paso 1 (step1)
+------------------------------------
+- Texto orientado a recinto: se exige primero elegir la guía entre las que se
+  cargaron al inicio (listado táctil). Sin guía seleccionada, el campo de
+  escaneo del bulto permanece deshabilitado.
+- Con guía elegida, el operador escanea el código del bulto en formato
+  recintoNum + "." + sufijo (el prefijo debe coincidir con recintoNum de la
+  sesión). Así se forma la relación guía ↔ bulto para ese ciclo de fotos.
+- Si el código es válido, se arma state.currentBulto (incluye guía, código
+  escaneado, referencia/cliente/descripción provenientes de la fila de guía y
+  proveedor de la configuración) y se entra al paso de fotos.
+- Tras terminar las fotos de un bulto, "Siguiente bulto" vuelve a este paso:
+  de nuevo hay que seleccionar guía (puede ser otra o la misma) y escanear el
+  siguiente bulto.
+- "Cerrar captura de etiquetas" lleva al resumen cuando ya hay bultos
+  procesados.
+
+1.5 Fotos de etiquetas — Paso 2 (step2)
+---------------------------------------
+- Vista simulada de cámara por etiqueta: capturar, repetir, "Tomar otra" para
+  siguiente etiqueta del mismo bulto.
+- Fotos de producto (si aplica por configuración), datos MMS (marca/modelo/
+  serie) por etiqueta, validaciones asociadas.
+- "Siguiente bulto" guarda el bulto actual en la sesión y regresa al paso 1.
+
+1.6 Resumen de etiquetas — Paso 3 (step3)
+-----------------------------------------
+- Muestra totales y detalle por bulto (etiquetas, producto, MMS si hubo).
+- "Concluir" pasa a la pregunta de documentación.
+
+1.7 Packing list — Paso 4 (step4)
+----------------------------------
+- Pregunta si cuenta con packing list (o documento equivalente en copys de
+  recinto).
+
+1.8 Fotos del documento — Paso 5 (step5)
+----------------------------------------
+- Si responde que sí: indica cuántas hojas va a fotografiar y entra al paso 6.
+- Si responde que no: finaliza el ciclo (mensaje de procesamiento y reinicio
+  del wizard al paso 0, limpiando guías y estado).
+
+1.9 Captura de hojas — Paso 6 (step6)
+--------------------------------------
+- Simulación de cámara página por página hasta completar el total indicado.
+
+1.10 Cierre con PDF — Paso 7 (step7)
+-------------------------------------
+- Pantalla de progreso de generación/envío del documento; al terminar, mensaje
+  de éxito y reinicio completo al paso 0 (lista de guías vacía, configuración
+  reiniciada) para un nuevo ciclo.
+
+
+================================================================================
+2. FLUJO BODEGA / BULTO (session.tipo === 'bodega')
+================================================================================
+
+2.1 Login (mobile-login.html)
+------------------------------
+- Igual que en recinto: usuario, contraseña y selector de ubicación, pero el
+  rotulo es "Bodega" y las opciones de usuario tipo bodega no suelen incluir
+  recintoNum en la demo.
+- "previo_session" guarda tipo: "bodega", ubicación, etc. (recintoNum puede ser
+  null).
+
+2.2 Pantalla inicial — Paso 0 (take-pictures.html, step0)
+----------------------------------------------------------
+- Panel de bulto visible: búsqueda/escaneo del código de bulto contra la base
+  simulada bultosDB.
+- Al validar, se muestra la tarjeta de información del bulto (referencia,
+  descripción) y los selects obligatorios de Cliente y Proveedor.
+- Botón "Continuar": pasa directamente al paso de fotos (step2) con ese bulto;
+  no existe en este flujo la lista de guías ni la pantalla de configuración de
+  recepción del modo recinto.
+
+2.3 Bucle por bulto adicional — Paso 1 (step1)
+----------------------------------------------
+- Tras procesar un bulto y pulsar "Siguiente bulto", el wizard regresa al paso 1.
+- Título y texto genéricos de "Escanear bulto": se valida el código contra
+  bultosDB (no se usa formato recinto.sufijo ni selector de guía).
+- Si el bulto es válido, se arma state.currentBulto y se entra otra vez al
+  paso 2 de fotos.
+- "Cerrar captura de etiquetas" lleva al resumen.
+
+2.4 Fotos de etiquetas — Paso 2 (step2)
+----------------------------------------
+- Misma experiencia que en recinto (etiquetas, producto si aplica, MMS), pero la
+  tarjeta "Bulto actual" muestra referencia/código sin línea de guía.
+
+2.5 Resumen — Paso 3 (step3)
+----------------------------
+- Igual concepto que recinto: confirmación de lo capturado por bulto.
+
+2.6 Packing list — Paso 4 (step4)
+----------------------------------
+- Misma pregunta que en recinto.
+
+2.7 Fotos del documento — Paso 5 (step5)
+----------------------------------------
+- Misma lógica: número de hojas o salida sin documento.
+
+2.8 Captura de hojas — Paso 6 (step6)
+--------------------------------------
+- Igual que recinto.
+
+2.9 Cierre con PDF — Paso 7 (step7)
+------------------------------------
+- Igual que recinto; al reiniciar, el paso 0 vuelve al panel de bulto sin lista
+  de guías.
+
+
+================================================================================
+NOTAS ÚTILES
+================================================================================
+- Los datos (bultos, guías) son simulados en el front para la demo; en
+  producción sustituirían llamadas a servicios reales.
+- El texto de los pasos 4–6 para recinto puede mostrar formulación tipo
+  "packing list o factura" según copy aplicado en la página.
+- Tras un ciclo completo, resetAll() limpia bultos procesados, buffers de fotos,
+  MMS, fotos de documento y, en recinto, la lista de guías y la configuración de
+  recepción, dejando el inicio listo para un nuevo proceso.
+
+Fecha de referencia del documento: alineado con el estado actual del código en
+take-pictures.html y mobile-login.html.

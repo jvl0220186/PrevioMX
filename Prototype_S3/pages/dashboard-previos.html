@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Captura de Previos - PrevioMX</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF551A;
+            --primary-light: #FF7A4D;
+            --primary-bg: rgba(255, 85, 26, 0.08);
+            --primary-bg-hover: rgba(255, 85, 26, 0.14);
+            --success: #22c55e;
+            --success-bg: rgba(34, 197, 94, 0.08);
+            --info: #3b82f6;
+            --info-bg: rgba(59, 130, 246, 0.08);
+            --warning: #f59e0b;
+            --warning-bg: rgba(245, 158, 11, 0.08);
+
+            --bg: #f8f7f4;
+            --bg-card: #ffffff;
+            --border: #e5e2dc;
+            --border-light: #eeece8;
+            --text: #1a1a1a;
+            --text-secondary: #6b6b6b;
+            --text-muted: #9a9a9a;
+
+            --font-heading: 'Space Grotesk', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+            --shadow-md: 0 2px 8px rgba(0,0,0,0.06);
+            --transition: 0.2s ease;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ---- Top Navbar ---- */
+        .top-navbar {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-brand {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+
+        .nav-brand-title {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--text);
+        }
+
+        .nav-brand-sub {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .nav-badge {
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .nav-badge strong {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .nav-toggle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--text-secondary);
+        }
+
+        .nav-toggle:hover {
+            background: var(--primary-bg);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        /* ---- Main Content ---- */
+        .main-content {
+            width: 100%;
+            padding: 1.5rem 2.5rem 3rem;
+        }
+
+        /* ---- Stat Cards ---- */
+        .stat-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.2rem;
+            margin-bottom: 2.2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 1.4rem 1.6rem;
+        }
+
+        .stat-card-label {
+            font-size: 0.6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card-value {
+            font-family: var(--font-heading);
+            font-size: 2.6rem;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1;
+        }
+
+        .stat-card.stat-sin-docs {
+            background: #f4ede3;
+            border-color: #e6dac8;
+        }
+        .stat-card.stat-sin-docs .stat-card-label { color: #8c7e6a; }
+        .stat-card.stat-sin-docs .stat-card-value { color: #1a1a1a; }
+
+        .stat-card.stat-procesando {
+            background: #ffffff;
+            border-color: #e5e2dc;
+        }
+        .stat-card.stat-procesando .stat-card-label { color: #8a8a8a; }
+        .stat-card.stat-procesando .stat-card-value { color: #1a1a1a; }
+
+        .stat-card.stat-listo {
+            background: #ecf5ef;
+            border-color: #cfe6d5;
+        }
+        .stat-card.stat-listo .stat-card-label { color: #4d9464; }
+        .stat-card.stat-listo .stat-card-value { color: #1a1a1a; }
+
+        .stat-card.stat-total {
+            background: #ffffff;
+            border: 1px solid #e5e2dc;
+            border-left: 3px solid var(--primary);
+        }
+        .stat-card.stat-total .stat-card-label { color: #8a8a8a; }
+        .stat-card.stat-total .stat-card-value { color: var(--primary); }
+
+        /* ---- Section Header ---- */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-family: var(--font-heading);
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        .section-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            font-family: var(--font-body);
+            font-size: 0.8rem;
+            padding: 0.45rem 0.75rem 0.45rem 2rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #fff;
+            color: #333;
+            width: 180px;
+            transition: var(--transition);
+            outline: none;
+        }
+
+        .search-box input:focus {
+            border-color: #bbb;
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.04);
+        }
+
+        .search-box input::placeholder {
+            color: #bbb;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 0.6rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #bbb;
+            font-size: 0.82rem;
+        }
+
+        .filter-btn {
+            font-family: var(--font-body);
+            font-size: 0.8rem;
+            padding: 0.45rem 0.85rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #fff;
+            color: #555;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            white-space: nowrap;
+        }
+
+        .filter-btn:hover {
+            border-color: #bbb;
+            color: #333;
+        }
+
+        .filter-btn .badge-count {
+            color: #555;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        /* ---- Table ---- */
+        .table-wrapper {
+            background: #ffffff;
+            border: 1px solid #e5e2dc;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+        }
+
+        .table-scroll::-webkit-scrollbar {
+            height: 10px;
+        }
+        .table-scroll::-webkit-scrollbar-track {
+            background: #dbd8d2;
+        }
+        .table-scroll::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 5px;
+        }
+        .table-scroll::-webkit-scrollbar-thumb:hover {
+            background: #222;
+        }
+
+        .data-table {
+            width: 100%;
+            min-width: 1200px;
+            border-collapse: collapse;
+        }
+
+        .data-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        .data-table thead th {
+            background: #faf9f6;
+            font-weight: 400;
+            font-size: 0.78rem;
+            color: #888;
+            padding: 0.65rem 1rem;
+            border-bottom: 1px solid #e5e2dc;
+            white-space: nowrap;
+            text-align: left;
+        }
+
+        .data-table tbody tr {
+            border-bottom: 1px solid #f0eee9;
+        }
+
+        .data-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .data-table tbody tr:hover {
+            background: #fcfbf9;
+        }
+
+        .data-table tbody td {
+            padding: 0.85rem 1rem;
+            color: #333;
+            vertical-align: middle;
+            white-space: nowrap;
+            font-size: 0.8rem;
+        }
+
+        .td-ref {
+            font-weight: 500;
+            color: #1a1a1a;
+        }
+
+        .td-muted {
+            color: #888;
+        }
+
+        .td-truncate {
+            max-width: 320px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .td-center {
+            text-align: center;
+        }
+
+        .status-text {
+            font-size: 0.78rem;
+            font-weight: 400;
+            white-space: nowrap;
+        }
+
+        .status-sin-docs {
+            color: #888;
+        }
+
+        .status-procesando {
+            color: #2970c2;
+        }
+
+        .status-listo {
+            color: #2c6e42;
+        }
+
+        .ia-badge {
+            font-size: 0.8rem;
+            color: #bbb;
+        }
+
+        .ia-badge-ai {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 0.22rem 0.7rem;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #4ade80, #a3e635, #facc15);
+            color: #1a3a1a;
+            letter-spacing: 0.3px;
+        }
+
+        .ia-badge-ai i {
+            font-size: 0.72rem;
+        }
+
+        .btn-iniciar {
+            font-family: var(--font-body);
+            font-size: 0.74rem;
+            font-weight: 600;
+            padding: 0.4rem 1rem;
+            border: none;
+            border-radius: 20px;
+            background: #fce5d8;
+            color: #d44a12;
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+
+        .btn-iniciar:hover {
+            background: #f8d5c2;
+            color: #b83a0a;
+        }
+
+        /* ---- Sticky last column (Acción) ---- */
+        .data-table thead th:last-child,
+        .data-table tbody td:last-child {
+            position: sticky;
+            right: 0;
+            z-index: 1;
+            background: #fff;
+            box-shadow: -4px 0 8px rgba(0,0,0,0.04);
+        }
+
+        .data-table thead th:last-child {
+            background: #faf9f6;
+            z-index: 3;
+        }
+
+        .data-table tbody tr:hover td:last-child {
+            background: #fcfbf9;
+        }
+
+        /* ---- Active stat card ---- */
+        .stat-card {
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+        }
+
+        .stat-card.active {
+            outline: 2px solid var(--primary);
+            outline-offset: -2px;
+            box-shadow: 0 2px 12px rgba(255, 85, 26, 0.12);
+        }
+
+        /* ---- FAB ---- */
+        .fab-chat {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #22c55e;
+            border: none;
+            color: #fff;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 3px 12px rgba(34, 197, 94, 0.35);
+            transition: var(--transition);
+            z-index: 50;
+        }
+
+        .fab-chat:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 16px rgba(34, 197, 94, 0.45);
+        }
+
+        /* ---- Responsive ---- */
+        @media (max-width: 900px) {
+            .stat-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .main-content {
+                padding: 1rem;
+            }
+            .top-navbar {
+                padding: 0 1rem;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .stat-cards {
+                grid-template-columns: 1fr 1fr;
+            }
+            .stat-card-value {
+                font-size: 1.6rem;
+            }
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Navbar -->
+    <nav class="top-navbar">
+        <div class="nav-brand">
+            <span class="nav-brand-title">Sistema de Captura de Previos</span>
+            <span class="nav-brand-sub">Previos MX</span>
+        </div>
+        <div class="nav-right">
+            <span class="nav-badge"><strong>336</strong> Pendientes</span>
+            <button class="nav-toggle" title="Opciones">
+                <i class="bi bi-moon"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+
+        <!-- Stat Cards -->
+        <div class="stat-cards">
+            <div class="stat-card stat-sin-docs">
+                <div class="stat-card-label">Sin Documentos</div>
+                <div class="stat-card-value">336</div>
+            </div>
+            <div class="stat-card stat-procesando">
+                <div class="stat-card-label">Procesando Documentos</div>
+                <div class="stat-card-value">16</div>
+            </div>
+            <div class="stat-card stat-listo">
+                <div class="stat-card-label">Documento Listo</div>
+                <div class="stat-card-value">36</div>
+            </div>
+            <div class="stat-card stat-total">
+                <div class="stat-card-label">Total</div>
+                <div class="stat-card-value">372</div>
+            </div>
+        </div>
+
+        <!-- Section Header -->
+        <div class="section-header">
+            <h2 class="section-title">Referencias Pendientes de Previo</h2>
+            <div class="section-controls">
+                <div class="search-box">
+                    <i class="bi bi-search"></i>
+                    <input type="text" id="searchInput" placeholder="Buscar...">
+                </div>
+                <button class="filter-btn" id="btnFilter">
+                    <i class="bi bi-funnel"></i>
+                    <span class="badge-count">+20</span>
+                    opciones seleccionadas
+                    <i class="bi bi-chevron-down" style="font-size:0.7rem;margin-left:0.2rem;"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrapper">
+            <div class="table-scroll">
+                <table class="data-table" id="dataTable">
+                    <thead>
+                        <tr>
+                            <th>Número de Referencia</th>
+                            <th>Bodega</th>
+                            <th>Cliente</th>
+                            <th>Proveedor</th>
+                            <th>Tipo Envío</th>
+                            <th>Fecha de Llegada</th>
+                            <th class="td-center">Bultos</th>
+                            <th>Estatus</th>
+                            <th class="td-center">IA</th>
+                            <th class="td-center">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- FAB -->
+    <button class="fab-chat" title="Chat"><i class="bi bi-chat-dots-fill"></i></button>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script>
+    $(document).ready(function () {
+
+        var mockData = [
+            { ref: '10080354', bodega: 'IN TRANSIT TO LAREDO SPIVEY', cliente: 'KLOECKNER METALS SERVICE CENTERS DE MEXICO S DE RL...', proveedor: 'NATIONAL MATERIAL COMPANY (DIV. - NATIONAL MATERIA...', tipo: 'DIRECTA FAST', fecha: '28 ene 2025', bultos: 1, estatus: 'Procesando Etiquetas/Documento', ia: '—' },
+            { ref: '10080414', bodega: 'IN TRANSIT TO LAREDO SPIVEY', cliente: 'NP STEEL SA DE CV', proveedor: 'CLEVELAND-CLIFFS STEEL LLC', tipo: 'DIRECTA CON MANIOBRAS', fecha: '30 ene 2025', bultos: 1, estatus: 'Procesando Etiquetas/Documento', ia: '—' },
+            { ref: '10080503', bodega: 'IN TRANSIT TO LAREDO SPIVEY', cliente: 'NP STEEL SA DE CV', proveedor: 'NUCOR CORPORATION', tipo: 'DIRECTA FAST', fecha: '01 feb 2025', bultos: 2, estatus: 'Procesando Etiquetas/Documento', ia: '—' },
+            { ref: '10080813', bodega: 'IN TRANSIT TO LAREDO SPIVEY', cliente: 'NP STEEL SA DE CV', proveedor: 'CLEVELAND-CLIFFS STEEL LLC', tipo: 'DIRECTA CON MANIOBRAS', fecha: '14 feb 2025', bultos: 1, estatus: 'Sin Documentos', ia: '—' },
+            { ref: '10081022', bodega: 'IN TRANSIT TO LAREDO SPIVEY', cliente: 'NP STEEL SA DE CV', proveedor: 'CLEVELAND-CLIFFS STEEL LLC', tipo: 'DIRECTA CON MANIOBRAS', fecha: '24 feb 2025', bultos: 1, estatus: 'Sin Documentos', ia: '—' },
+            { ref: '10081023', bodega: 'IN TRANSIT TO LAREDO SPIVEY', cliente: 'NP STEEL SA DE CV', proveedor: 'CLEVELAND-CLIFFS STEEL LLC', tipo: 'DIRECTA CON MANIOBRAS', fecha: '24 feb 2025', bultos: 1, estatus: 'Procesando Etiquetas/Documento', ia: '—' },
+            { ref: '10081081', bodega: 'IN TRANSIT TO LAREDO SPIVEY', cliente: 'NP STEEL SA DE CV', proveedor: 'CLEVELAND-CLIFFS STEEL LLC', tipo: 'DIRECTA CON MANIOBRAS', fecha: '26 feb 2025', bultos: 1, estatus: 'Sin Documentos', ia: '—' },
+            { ref: '10081084', bodega: 'IN TRANSIT TO LAREDO SPIVEY', cliente: 'NP STEEL SA DE CV', proveedor: 'CLEVELAND-CLIFFS STEEL LLC', tipo: 'DIRECTA CON MANIOBRAS', fecha: '26 feb 2025', bultos: 1, estatus: 'Procesando Etiquetas/Documento', ia: '—' },
+            { ref: '10081150', bodega: 'IN TRANSIT TO LAREDO SPIVEY', cliente: 'ACEROS Y LAMINADOS SA DE CV', proveedor: 'STEEL DYNAMICS INC', tipo: 'DIRECTA FAST', fecha: '28 feb 2025', bultos: 3, estatus: 'Sin Documentos', ia: '—' },
+            { ref: '10081203', bodega: 'IN TRANSIT TO LAREDO SPIVEY', cliente: 'NP STEEL SA DE CV', proveedor: 'NUCOR CORPORATION', tipo: 'DIRECTA CON MANIOBRAS', fecha: '03 mar 2025', bultos: 1, estatus: 'Procesando Etiquetas/Documento', ia: '—' },
+            { ref: '10081290', bodega: 'IN TRANSIT TO LAREDO SPIVEY', cliente: 'DISTRIBUIDORA DE ACEROS DEL NORTE SA', proveedor: 'CLEVELAND-CLIFFS STEEL LLC', tipo: 'DIRECTA FAST', fecha: '05 mar 2025', bultos: 2, estatus: 'Procesando Etiquetas/Documento', ia: '—' },
+            { ref: '10081345', bodega: 'IN TRANSIT TO LAREDO SPIVEY', cliente: 'NP STEEL SA DE CV', proveedor: 'NUCOR CORPORATION', tipo: 'DIRECTA CON MANIOBRAS', fecha: '07 mar 2025', bultos: 1, estatus: 'Documento Listo', ia: 'Sí' },
+            { ref: '10081400', bodega: 'IN TRANSIT TO LAREDO SPIVEY', cliente: 'NP STEEL SA DE CV', proveedor: 'STEEL DYNAMICS INC', tipo: 'DIRECTA FAST', fecha: '10 mar 2025', bultos: 2, estatus: 'Documento Listo', ia: 'No' },
+            { ref: '10081412', bodega: 'IN TRANSIT TO LAREDO SPIVEY', cliente: 'ACEROS Y LAMINADOS SA DE CV', proveedor: 'CLEVELAND-CLIFFS STEEL LLC', tipo: 'DIRECTA CON MANIOBRAS', fecha: '11 mar 2025', bultos: 1, estatus: 'Documento Listo', ia: 'Sí' },
+            { ref: '10081425', bodega: 'IN TRANSIT TO LAREDO SPIVEY', cliente: 'KLOECKNER METALS SERVICE CENTERS DE MEXICO S DE RL...', proveedor: 'NUCOR CORPORATION', tipo: 'DIRECTA FAST', fecha: '12 mar 2025', bultos: 3, estatus: 'Documento Listo', ia: 'No' },
+            { ref: '10081430', bodega: 'IN TRANSIT TO LAREDO SPIVEY', cliente: 'NP STEEL SA DE CV', proveedor: 'CLEVELAND-CLIFFS STEEL LLC', tipo: 'DIRECTA CON MANIOBRAS', fecha: '12 mar 2025', bultos: 1, estatus: 'Documento Listo', ia: 'Sí' },
+            { ref: '10081502', bodega: 'IN TRANSIT TO LAREDO SPIVEY', cliente: 'DISTRIBUIDORA DE ACEROS DEL NORTE SA', proveedor: 'STEEL DYNAMICS INC', tipo: 'DIRECTA FAST', fecha: '13 mar 2025', bultos: 2, estatus: 'Sin Documentos', ia: '—' },
+            { ref: '10081510', bodega: 'IN TRANSIT TO LAREDO SPIVEY', cliente: 'NP STEEL SA DE CV', proveedor: 'NUCOR CORPORATION', tipo: 'DIRECTA CON MANIOBRAS', fecha: '13 mar 2025', bultos: 1, estatus: 'Procesando Etiquetas/Documento', ia: '—' }
+        ];
+
+        var statusMap = {
+            'Sin Documentos': 'status-sin-docs',
+            'Procesando Etiquetas/Documento': 'status-procesando',
+            'Documento Listo': 'status-listo'
+        };
+
+        var activeFilter = null;
+        var filterMap = {
+            'stat-sin-docs': 'Sin Documentos',
+            'stat-procesando': 'Procesando Etiquetas/Documento',
+            'stat-listo': 'Documento Listo',
+            'stat-total': null
+        };
+
+        function getFilteredData() {
+            var data = mockData;
+            if (activeFilter) {
+                data = data.filter(function (r) { return r.estatus === activeFilter; });
+            }
+            var q = $('#searchInput').val().toLowerCase();
+            if (q) {
+                data = data.filter(function (r) {
+                    return (r.ref + ' ' + r.bodega + ' ' + r.cliente + ' ' + r.proveedor + ' ' + r.tipo + ' ' + r.fecha + ' ' + r.estatus).toLowerCase().indexOf(q) !== -1;
+                });
+            }
+            return data;
+        }
+
+        function renderTable(data) {
+            var $body = $('#tableBody').empty();
+            data.forEach(function (row) {
+                var statusClass = statusMap[row.estatus] || '';
+
+                var iaHtml;
+                if (row.ia === 'Sí') {
+                    iaHtml = '<span class="ia-badge-ai"><i class="bi bi-stars"></i> Sí</span>';
+                } else if (row.ia === 'No') {
+                    iaHtml = '<span style="color:#999;font-weight:500;font-size:0.78rem;">No</span>';
+                } else {
+                    iaHtml = '<span class="ia-badge">—</span>';
+                }
+
+                var actionHtml;
+                if (row.estatus === 'Documento Listo') {
+                    actionHtml = '<button class="btn-iniciar" data-ref="' + row.ref + '" data-ia="' + row.ia + '">Iniciar Captura</button>';
+                } else if (row.estatus === 'Procesando Etiquetas/Documento') {
+                    actionHtml = '<span style="font-size:0.75rem;color:#2970c2;"><i class="bi bi-hourglass-split me-1"></i>Procesando</span>';
+                } else {
+                    actionHtml = '<button class="btn-iniciar" data-ref="' + row.ref + '" data-ia="' + row.ia + '">Iniciar Captura</button>';
+                }
+
+                $body.append(
+                    '<tr>' +
+                        '<td class="td-ref">' + row.ref + '</td>' +
+                        '<td class="td-muted td-truncate">' + row.bodega + '</td>' +
+                        '<td class="td-truncate">' + row.cliente + '</td>' +
+                        '<td class="td-truncate">' + row.proveedor + '</td>' +
+                        '<td>' + row.tipo + '</td>' +
+                        '<td>' + row.fecha + '</td>' +
+                        '<td class="td-center">' + row.bultos + '</td>' +
+                        '<td><span class="status-text ' + statusClass + '">' + row.estatus + '</span></td>' +
+                        '<td class="td-center">' + iaHtml + '</td>' +
+                        '<td class="td-center td-action">' + actionHtml + '</td>' +
+                    '</tr>'
+                );
+            });
+
+            if (data.length === 0) {
+                $body.append('<tr><td colspan="10" class="td-center" style="padding:2rem;color:#bbb;">No se encontraron registros</td></tr>');
+            }
+        }
+
+        renderTable(mockData);
+
+        // KPI card filter
+        $('.stat-card').on('click', function () {
+            var $card = $(this);
+            var key = null;
+
+            if ($card.hasClass('stat-sin-docs')) key = 'stat-sin-docs';
+            else if ($card.hasClass('stat-procesando')) key = 'stat-procesando';
+            else if ($card.hasClass('stat-listo')) key = 'stat-listo';
+            else if ($card.hasClass('stat-total')) key = 'stat-total';
+
+            var newFilter = filterMap[key];
+
+            if ($card.hasClass('active')) {
+                $('.stat-card').removeClass('active');
+                activeFilter = null;
+            } else {
+                $('.stat-card').removeClass('active');
+                $card.addClass('active');
+                activeFilter = newFilter;
+            }
+
+            renderTable(getFilteredData());
+        });
+
+        // Search filter
+        $('#searchInput').on('input', function () {
+            renderTable(getFilteredData());
+        });
+
+        // Iniciar Captura click
+        $(document).on('click', '.btn-iniciar', function () {
+            var ref = $(this).data('ref');
+            var ia = $(this).data('ia') || 'No';
+            window.location.href = 'detalle-previo.html?ref=' + ref + '&ia=' + encodeURIComponent(ia);
+        });
+    });
+    </script>
+</body>
+</html>

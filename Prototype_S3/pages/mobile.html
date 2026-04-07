@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Móvil - PrevioMX</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+    <div class="bg-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+    </div>
+
+    <!-- Navbar (visible on desktop to navigate back) -->
+    <nav class="navbar navbar-expand-lg fixed-top glass-nav d-none d-md-flex">
+        <div class="container">
+            <a class="navbar-brand brand-glow" href="../index.html">
+                <i class="bi bi-hexagon-fill me-2"></i>PrevioMX
+            </a>
+            <ul class="navbar-nav ms-auto align-items-center gap-1">
+                <li class="nav-item"><a class="nav-link" href="../index.html"><i class="bi bi-grid-1x2 me-1"></i>Inicio</a></li>
+                <li class="nav-item"><a class="nav-link" href="dashboard.html"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link active" href="mobile.html"><i class="bi bi-phone me-1"></i>Móvil</a></li>
+                <li class="nav-item"><a class="nav-link" href="components.html"><i class="bi bi-puzzle me-1"></i>Componentes</a></li>
+                <li class="nav-item"><a class="nav-link" href="take-pictures.html"><i class="bi bi-camera me-1"></i>Fotos</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Mobile Prototype -->
+    <div class="mobile-frame-wrapper" style="padding-top:80px;">
+        <div class="mobile-frame">
+            <!-- Status Bar -->
+            <div class="mobile-status-bar">
+                <span>9:41</span>
+                <div class="d-flex gap-1 align-items-center" style="font-size:0.7rem;">
+                    <i class="bi bi-reception-4"></i>
+                    <i class="bi bi-wifi"></i>
+                    <i class="bi bi-battery-full"></i>
+                </div>
+            </div>
+
+            <!-- Header -->
+            <div class="mobile-header">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <small class="text-muted">Buenos días</small>
+                        <h4 class="mb-0">Juan López</h4>
+                    </div>
+                    <div class="mobile-avatar" style="background:var(--gradient-main);">JL</div>
+                </div>
+                <input type="text" class="mobile-search" placeholder="Buscar transacciones...">
+            </div>
+
+            <!-- Body Content -->
+            <div class="mobile-body">
+                <!-- Balance Card -->
+                <div class="mobile-card" style="background:var(--gradient-main);border:none;">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <small style="opacity:0.8;">Balance disponible</small>
+                        <i class="bi bi-eye" style="opacity:0.6;cursor:pointer;"></i>
+                    </div>
+                    <div style="font-family:var(--font-heading);font-size:2rem;font-weight:800;">$24,580<small style="font-size:0.9rem;opacity:0.7;">.50</small></div>
+                    <div class="d-flex gap-2 mt-2">
+                        <small style="opacity:0.7;">**** 4892</small>
+                        <small style="opacity:0.7;">|</small>
+                        <small style="opacity:0.7;">Visa Platinum</small>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions mt-4">
+                    <button class="quick-action-btn">
+                        <div class="quick-action-icon" style="background:rgba(108,92,231,0.15);color:var(--accent-1);"><i class="bi bi-send"></i></div>
+                        <span>Enviar</span>
+                    </button>
+                    <button class="quick-action-btn">
+                        <div class="quick-action-icon" style="background:rgba(0,206,201,0.15);color:var(--accent-2);"><i class="bi bi-qr-code-scan"></i></div>
+                        <span>Escanear</span>
+                    </button>
+                    <button class="quick-action-btn">
+                        <div class="quick-action-icon" style="background:rgba(253,121,168,0.15);color:var(--accent-3);"><i class="bi bi-credit-card"></i></div>
+                        <span>Tarjetas</span>
+                    </button>
+                    <button class="quick-action-btn">
+                        <div class="quick-action-icon" style="background:rgba(255,234,167,0.15);color:var(--accent-4);"><i class="bi bi-three-dots"></i></div>
+                        <span>Más</span>
+                    </button>
+                </div>
+
+                <!-- Recent Transactions -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 style="font-family:var(--font-heading);font-weight:700;margin:0;">Movimientos</h6>
+                    <a href="#" style="font-size:0.8rem;">Ver todos <i class="bi bi-chevron-right"></i></a>
+                </div>
+
+                <div class="mobile-card">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="mobile-avatar" style="background:rgba(0,206,201,0.15);color:var(--accent-2);font-size:1.1rem;width:42px;height:42px;">
+                            <i class="bi bi-shop"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div style="font-weight:600;font-size:0.9rem;">Amazon MX</div>
+                            <small class="text-muted">Hoy, 10:23 AM</small>
+                        </div>
+                        <div style="font-weight:700;color:var(--accent-3);">-$1,299</div>
+                    </div>
+                </div>
+
+                <div class="mobile-card">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="mobile-avatar" style="background:rgba(108,92,231,0.15);color:var(--accent-1);font-size:1.1rem;width:42px;height:42px;">
+                            <i class="bi bi-building"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div style="font-weight:600;font-size:0.9rem;">Nómina Empresa</div>
+                            <small class="text-muted">Ayer, 12:00 PM</small>
+                        </div>
+                        <div style="font-weight:700;color:var(--accent-2);">+$18,500</div>
+                    </div>
+                </div>
+
+                <div class="mobile-card">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="mobile-avatar" style="background:rgba(253,121,168,0.15);color:var(--accent-3);font-size:1.1rem;width:42px;height:42px;">
+                            <i class="bi bi-cup-hot"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div style="font-weight:600;font-size:0.9rem;">Starbucks</div>
+                            <small class="text-muted">Ayer, 8:45 AM</small>
+                        </div>
+                        <div style="font-weight:700;color:var(--accent-3);">-$189</div>
+                    </div>
+                </div>
+
+                <div class="mobile-card">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="mobile-avatar" style="background:rgba(255,234,167,0.15);color:var(--accent-4);font-size:1.1rem;width:42px;height:42px;">
+                            <i class="bi bi-lightning-charge"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div style="font-weight:600;font-size:0.9rem;">CFE - Luz</div>
+                            <small class="text-muted">11 Mar, 3:00 PM</small>
+                        </div>
+                        <div style="font-weight:700;color:var(--accent-3);">-$847</div>
+                    </div>
+                </div>
+
+                <div class="mobile-card">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="mobile-avatar" style="background:rgba(0,206,201,0.15);color:var(--accent-2);font-size:1.1rem;width:42px;height:42px;">
+                            <i class="bi bi-person-plus"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div style="font-weight:600;font-size:0.9rem;">Transfer - Ana R.</div>
+                            <small class="text-muted">10 Mar, 5:12 PM</small>
+                        </div>
+                        <div style="font-weight:700;color:var(--accent-2);">+$3,200</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Bar -->
+            <div class="mobile-tab-bar">
+                <button class="mobile-tab-item active">
+                    <i class="bi bi-house"></i>
+                    <span>Inicio</span>
+                </button>
+                <button class="mobile-tab-item">
+                    <i class="bi bi-credit-card-2-back"></i>
+                    <span>Tarjetas</span>
+                </button>
+                <button class="mobile-tab-item">
+                    <i class="bi bi-qr-code-scan"></i>
+                    <span>Pagar</span>
+                </button>
+                <button class="mobile-tab-item">
+                    <i class="bi bi-bar-chart-line"></i>
+                    <span>Análisis</span>
+                </button>
+                <button class="mobile-tab-item">
+                    <i class="bi bi-gear"></i>
+                    <span>Config</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="../js/main.js"></script>
+</body>
+</html>

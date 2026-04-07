@@ -1,0 +1,2324 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle Previo - PrevioMX</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF551A;
+            --primary-light: #FF7A4D;
+            --primary-bg: rgba(255, 85, 26, 0.08);
+            --success: #22c55e;
+            --success-bg: rgba(34, 197, 94, 0.08);
+            --danger: #ef4444;
+            --danger-bg: rgba(239, 68, 68, 0.08);
+            --info: #3b82f6;
+            --info-bg: rgba(59, 130, 246, 0.08);
+            --bg: #f8f7f4;
+            --bg-card: #ffffff;
+            --border: #e5e2dc;
+            --border-light: #eeece8;
+            --text: #1a1a1a;
+            --text-secondary: #6b6b6b;
+            --text-muted: #9a9a9a;
+            --font-heading: 'Space Grotesk', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --transition: 0.2s ease;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ---- Top Bar ---- */
+        .top-bar {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 0 1.5rem;
+            height: 54px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+        }
+
+        .btn-back {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .btn-back:hover { color: var(--primary); }
+
+        .top-ref {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            font-size: 1.05rem;
+        }
+
+        .top-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .pending-badge {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        /* ---- Main Layout ---- */
+        .main-split {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        /* ---- Left Panel: Document Viewer ---- */
+        .panel-doc {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border);
+            background: #eae8e3;
+            min-width: 0;
+        }
+
+        .doc-selector {
+            background: var(--bg-card);
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .doc-selector select {
+            font-family: var(--font-body);
+            font-size: 0.8rem;
+            flex: 1;
+            padding: 0.35rem 0.6rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #fff;
+            color: var(--text);
+            outline: none;
+        }
+
+        .doc-selector .doc-check {
+            color: var(--success);
+            font-size: 1rem;
+        }
+
+        .doc-toolbar {
+            background: var(--bg-card);
+            padding: 0.4rem 1rem;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+        }
+
+        .doc-toolbar .doc-filename {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-right: auto;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .doc-toolbar .doc-page-info {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-right: 0.5rem;
+        }
+
+        .doc-toolbar button {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+            transition: var(--transition);
+        }
+
+        .doc-toolbar button:hover {
+            background: var(--primary-bg);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn-ver-expediente {
+            background: none !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 6px !important;
+            padding: 0.3rem 0.7rem !important;
+            width: auto !important;
+            font-size: 0.72rem !important;
+            font-weight: 500;
+            gap: 0.3rem;
+            display: inline-flex !important;
+            color: var(--text-secondary) !important;
+        }
+
+        .doc-viewer {
+            flex: 1;
+            overflow: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 1rem;
+        }
+
+        .doc-viewer img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+            background: #fff;
+        }
+
+        /* ---- Label overlay in doc viewer ---- */
+        .label-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            animation: fadeIn 0.2s ease;
+            padding: 1.5rem;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .label-overlay-card {
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 12px 48px rgba(0,0,0,0.25);
+            display: flex;
+            flex-direction: column;
+            max-width: 92%;
+            max-height: 92%;
+            overflow: hidden;
+        }
+
+        .label-overlay-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .label-overlay-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 0.25rem 0.9rem;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #4ade80, #a3e635, #facc15);
+            color: #1a3a1a;
+        }
+
+        .label-overlay-close {
+            background: #f5f5f5;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .label-overlay-close:hover {
+            background: #eee;
+            color: var(--text);
+        }
+
+        .label-overlay-body {
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-y: auto;
+            flex: 1;
+            background: #fafaf8;
+        }
+
+        .label-overlay-body img {
+            max-width: 100%;
+            max-height: 55vh;
+            object-fit: contain;
+            border-radius: 8px;
+            border: 1px solid var(--border-light);
+        }
+
+        .label-overlay-caption {
+            margin-top: 0.6rem;
+            font-size: 0.73rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .label-overlay-footer {
+            display: flex;
+            justify-content: center;
+            gap: 0.7rem;
+            padding: 0.75rem 1rem;
+            border-top: 1px solid var(--border-light);
+            background: #fff;
+        }
+
+        .label-overlay-footer button {
+            font-family: var(--font-body);
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 0.5rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: var(--transition);
+        }
+
+        .btn-overlay-confirm {
+            background: var(--success);
+            color: #fff;
+        }
+
+        .btn-overlay-confirm:hover { background: #1aab4e; }
+
+        .btn-overlay-correct {
+            background: #fff;
+            color: var(--text-secondary);
+            border: 1px solid var(--border) !important;
+        }
+
+        .btn-overlay-correct:hover {
+            background: #f5f5f5;
+            color: var(--text);
+        }
+
+        /* ---- Product card states ---- */
+        .product-card.confirmed {
+            border-color: #bbf0cc;
+            background: #f7fdf9;
+        }
+
+        .product-card.confirmed .btn-icon-ok {
+            background: var(--success);
+            color: #fff;
+        }
+
+        .product-card.pending .btn-icon-ok {
+            background: #fef3cd;
+            color: #b27a00;
+        }
+
+        /* ---- Edit Partida Modal ---- */
+        .modal-edit .modal-content {
+            border: none;
+            border-radius: 12px;
+        }
+
+        .modal-edit .modal-header {
+            border-bottom: 1px solid var(--border-light);
+            padding: 1.2rem 1.5rem;
+        }
+
+        .modal-edit .modal-header h5 {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .modal-edit .modal-header .badge-id {
+            font-size: 0.68rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            background: #fef3cd;
+            color: #7a5e00;
+        }
+
+        .modal-edit .modal-body {
+            padding: 1.2rem 1.5rem;
+        }
+
+        .edit-field {
+            margin-bottom: 1rem;
+        }
+
+        .edit-field label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text);
+            display: block;
+            margin-bottom: 0.35rem;
+        }
+
+        .edit-field label span {
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        .edit-field input,
+        .edit-field select,
+        .edit-field textarea {
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            width: 100%;
+            padding: 0.55rem 0.8rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #fff;
+            color: var(--text);
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .edit-field input:focus,
+        .edit-field select:focus,
+        .edit-field textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 85, 26, 0.06);
+        }
+
+        .edit-field textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .edit-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.8rem;
+        }
+
+        .edit-locked {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 0.4rem;
+        }
+
+        .edit-locked .badge-lock {
+            font-size: 0.62rem;
+            padding: 0.12rem 0.45rem;
+            border-radius: 4px;
+            background: #eee;
+            color: #777;
+        }
+
+        .edit-hint {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .edit-alert {
+            background: var(--success-bg);
+            border-radius: 8px;
+            padding: 0.6rem 0.9rem;
+            font-size: 0.78rem;
+            color: #1a6b35;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.4rem;
+            margin-bottom: 1rem;
+        }
+
+        .modal-edit .modal-footer {
+            border-top: 1px solid var(--border-light);
+            padding: 0.8rem 1.5rem;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.6rem;
+        }
+
+        .btn-cancel {
+            font-family: var(--font-body);
+            font-size: 0.82rem;
+            font-weight: 500;
+            padding: 0.5rem 1.3rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #fff;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .btn-update {
+            font-family: var(--font-body);
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 0.5rem 1.3rem;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            background: #fff;
+            color: var(--primary);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-update:hover {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        /* ---- Modal Split: Etiqueta + Edición ---- */
+        .modal-split .modal-dialog { max-width: 960px; }
+        .modal-split .modal-content { border: none; border-radius: 14px; overflow: hidden; }
+        .modal-split .modal-header {
+            border-bottom: 1px solid var(--border-light);
+            padding: 0.8rem 1.2rem;
+        }
+        .modal-split .modal-header h5 {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .split-body {
+            display: flex;
+            min-height: 0;
+            max-height: 75vh;
+        }
+        .split-left {
+            flex: 1;
+            background: #1a1a1a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.2rem;
+            position: relative;
+            min-width: 0;
+        }
+        .split-left img {
+            max-width: 100%;
+            max-height: 60vh;
+            object-fit: contain;
+            border-radius: 6px;
+        }
+        .split-left-caption {
+            margin-top: 0.6rem;
+            font-size: 0.72rem;
+            color: rgba(255,255,255,0.6);
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .split-left-badge {
+            position: absolute;
+            top: 0.8rem;
+            left: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 0.2rem 0.8rem;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #4ade80, #a3e635, #facc15);
+            color: #1a3a1a;
+        }
+        .split-right {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.2rem 1.4rem;
+            min-width: 0;
+        }
+        .split-right .edit-field { margin-bottom: 0.8rem; }
+        .split-right .edit-row { gap: 0.6rem; }
+
+        .edit-field.has-diff input,
+        .edit-field.has-diff textarea,
+        .edit-field.has-diff select {
+            border-color: #f97316;
+            background: #fffbf7;
+            box-shadow: 0 0 0 3px rgba(249,115,22,0.08);
+        }
+
+        .edit-field.has-diff label::after {
+            content: ' ⚠ Discrepancia';
+            font-size: 0.62rem;
+            font-weight: 700;
+            color: #f97316;
+            margin-left: 0.4rem;
+        }
+
+        .mms-section {
+            border-top: 1px solid var(--border-light);
+            padding-top: 0.8rem;
+            margin-top: 0.4rem;
+        }
+
+        .mms-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.6rem;
+        }
+
+        .mms-header label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .mms-header button {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            transition: var(--transition);
+        }
+
+        .mms-header button:hover { border-color: var(--primary); color: var(--primary); }
+
+        .mms-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 0.5rem;
+            align-items: end;
+        }
+
+        .mms-row .edit-field { margin-bottom: 0.5rem; }
+
+        .btn-mms-add {
+            width: 34px;
+            height: 34px;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            background: #fff;
+            color: var(--primary);
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-bottom: 0.5rem;
+            transition: var(--transition);
+        }
+
+        .btn-mms-add:hover { background: var(--primary); color: #fff; }
+
+        .notes-section {
+            border-top: 1px solid var(--border-light);
+            padding-top: 0.8rem;
+            margin-top: 0.4rem;
+        }
+
+        .modal-split .modal-footer {
+            border-top: 1px solid var(--border-light);
+            padding: 0.7rem 1.2rem;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.6rem;
+        }
+
+        /* ---- Right Panel ---- */
+        .panel-info {
+            width: 420px;
+            min-width: 380px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            background: var(--bg);
+        }
+
+        .panel-info-inner {
+            padding: 1.2rem 1.4rem 2rem;
+        }
+
+        .info-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 1rem 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .info-section-title {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            font-size: 0.88rem;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 0.35rem 0;
+            font-size: 0.8rem;
+        }
+
+        .info-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+            min-width: 120px;
+        }
+
+        .info-val {
+            text-align: right;
+            font-weight: 500;
+            color: var(--text);
+            max-width: 240px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .info-val .btn-edit {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            width: 22px;
+            height: 22px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            margin-left: 0.3rem;
+            vertical-align: middle;
+        }
+
+        /* ---- KPI mini ---- */
+        .kpi-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.8rem;
+            margin-top: 0.8rem;
+        }
+
+        .kpi-mini {
+            text-align: center;
+            padding: 0.8rem 0.5rem;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+        }
+
+        .kpi-mini-val {
+            font-family: var(--font-heading);
+            font-size: 1.6rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .kpi-mini-label {
+            font-size: 0.6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-top: 0.3rem;
+        }
+
+        .kpi-capturados .kpi-mini-val { color: var(--text); }
+        .kpi-pendientes .kpi-mini-val { color: var(--primary); }
+
+        /* ---- Product Lines ---- */
+        .lines-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.8rem;
+        }
+
+        .lines-title {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            font-size: 0.88rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .btn-agregar {
+            font-family: var(--font-body);
+            font-size: 0.76rem;
+            font-weight: 600;
+            padding: 0.4rem 1rem;
+            border: 2px solid var(--primary);
+            border-radius: 22px;
+            background: transparent;
+            color: var(--primary);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-agregar:hover {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .bulto-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0;
+            margin-bottom: 0.5rem;
+        }
+
+        .bulto-code {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .bulto-badge {
+            font-size: 0.68rem;
+            font-weight: 600;
+            padding: 0.15rem 0.55rem;
+            border-radius: 10px;
+            background: var(--info-bg);
+            color: var(--info);
+            margin-left: auto;
+        }
+
+        .product-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 0.8rem 1rem;
+            margin-bottom: 0.6rem;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .product-card.has-discrep {
+            border-left: 3px solid #f97316;
+            background: #fffbf7;
+        }
+
+        .discrep-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
+            font-size: 0.62rem;
+            font-weight: 700;
+            padding: 0.12rem 0.5rem;
+            border-radius: 10px;
+            background: #fff7ed;
+            color: #f97316;
+            border: 1px solid #fed7aa;
+            margin-top: 0.35rem;
+        }
+
+        .product-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            margin-top: 0.35rem;
+        }
+
+        .badge-mms {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
+            font-size: 0.62rem;
+            font-weight: 700;
+            padding: 0.12rem 0.5rem;
+            border-radius: 10px;
+            background: #eff6ff;
+            color: #2563eb;
+            border: 1px solid #bfdbfe;
+        }
+
+        /* Filter bar */
+        .filter-discrep-bar {
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.8rem;
+            margin-bottom: 0.8rem;
+            border-radius: 8px;
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            font-size: 0.78rem;
+            color: #9a3412;
+        }
+
+        .filter-discrep-bar.visible { display: flex; }
+
+        .filter-discrep-bar label {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .filter-discrep-bar input[type="checkbox"] {
+            accent-color: #f97316;
+            width: 15px;
+            /* height: 15px; */
+            cursor: pointer;
+        }
+
+        .filter-discrep-count {
+            margin-left: auto;
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 0.15rem 0.5rem;
+            border-radius: 10px;
+            background: #f97316;
+            color: #fff;
+        }
+
+        .product-info { flex: 1; min-width: 0; }
+
+        .product-sku {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text);
+        }
+
+        .product-desc {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.1rem;
+        }
+
+        .product-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-top: 0.35rem;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .product-meta i { font-size: 0.7rem; }
+
+        .product-actions {
+            display: flex;
+            gap: 0.4rem;
+            align-items: center;
+            margin-left: 0.8rem;
+            flex-shrink: 0;
+        }
+
+        .btn-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: var(--transition);
+        }
+
+        .btn-icon-delete {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+
+        .btn-icon-delete:hover { background: var(--danger); color: #fff; }
+
+        .btn-icon-ok {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .btn-icon-ok:hover { background: var(--success); color: #fff; }
+
+        .btn-icon-see {
+            background: linear-gradient(135deg, #4ade8033, #facc1533);
+            color: #2d6a1e;
+        }
+
+        .btn-icon-see:hover {
+            background: linear-gradient(135deg, #4ade80, #a3e635, #facc15);
+            color: #1a3a1a;
+        }
+
+        /* ---- PZA Counter ---- */
+        .pza-counter {
+            background: var(--bg);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 0.6rem 1rem;
+            margin-top: 0.6rem;
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+        }
+
+        .pza-counter strong {
+            color: var(--text);
+        }
+
+        /* ---- Cerrar Previo ---- */
+        .cerrar-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 1rem 1.2rem;
+            margin-top: 1rem;
+        }
+
+        .cerrar-title {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            font-size: 0.88rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .cerrar-check {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            line-height: 1.4;
+        }
+
+        .cerrar-check input[type="checkbox"] {
+            margin-top: 0.15rem;
+            accent-color: var(--primary);
+        }
+
+        .btn-cerrar-group {
+            display: flex;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .btn-cerrar-main {
+            flex: 1;
+            padding: 0.55rem 1rem;
+            font-family: var(--font-body);
+            font-size: 0.82rem;
+            font-weight: 500;
+            border: none;
+            background: var(--bg);
+            color: var(--text-muted);
+            cursor: not-allowed;
+            transition: var(--transition);
+        }
+
+        .btn-cerrar-main.enabled {
+            background: var(--bg-card);
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        .btn-cerrar-accent {
+            width: 44px;
+            border: none;
+            background: var(--primary);
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+
+        /* ---- Modal AI ---- */
+        .modal-ai .modal-content {
+            border: none;
+            border-radius: 12px;
+        }
+
+        .modal-ai .modal-body {
+            padding: 2rem 1.8rem 1.5rem;
+            text-align: center;
+        }
+
+        .ai-icon {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.8rem;
+            border-radius: 30px;
+            background: linear-gradient(135deg, #4ade80, #a3e635, #facc15);
+            margin-bottom: 1.2rem;
+        }
+
+        .ai-icon i {
+            font-size: 1.3rem;
+            color: #1a3a1a;
+        }
+
+        .ai-icon span {
+            font-family: var(--font-heading);
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #1a3a1a;
+        }
+
+        .modal-ai h5 {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-ai p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .modal-ai .btn-modal-ok {
+            margin-top: 1rem;
+            padding: 0.5rem 2rem;
+            font-family: var(--font-body);
+            font-size: 0.82rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            background: var(--primary);
+            color: #fff;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .modal-ai .btn-modal-ok:hover {
+            background: var(--primary-light);
+        }
+
+        /* ---- No-doc layout: hide doc panel, expand info ---- */
+        .main-split.no-doc .panel-doc { display: none; }
+        .main-split.no-doc .panel-info {
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
+        }
+        .main-split.no-doc .panel-info-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem;
+        }
+
+        .main-split.no-doc .info-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.2rem 2rem;
+        }
+        .main-split.no-doc .info-section-title {
+            grid-column: 1 / -1;
+        }
+        .main-split.no-doc .kpi-row {
+            grid-column: 1 / -1;
+            grid-template-columns: repeat(4, 1fr);
+        }
+        .main-split.no-doc .info-val {
+            max-width: none;
+        }
+
+        .main-split.no-doc .product-card {
+            padding: 1rem 1.2rem;
+        }
+        .main-split.no-doc .product-sku {
+            font-size: 0.9rem;
+        }
+        .main-split.no-doc .product-meta {
+            gap: 1rem;
+        }
+
+        /* ---- Modal Discrepancias ---- */
+        .modal-discrep .modal-content {
+            border: none;
+            border-radius: 14px;
+        }
+
+        .modal-discrep .modal-header {
+            border-bottom: 1px solid var(--border-light);
+            padding: 1rem 1.3rem;
+        }
+
+        .modal-discrep .modal-header h5 {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .modal-discrep .modal-body {
+            padding: 1.2rem 1.3rem;
+            max-height: 65vh;
+            overflow-y: auto;
+        }
+
+        .discrep-summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 0.8rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .discrep-stat {
+            text-align: center;
+            padding: 0.8rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-light);
+        }
+
+        .discrep-stat-val {
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .discrep-stat-label {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 0.15rem;
+        }
+
+        .discrep-stat.ok { background: var(--success-bg); }
+        .discrep-stat.ok .discrep-stat-val { color: var(--success); }
+
+        .discrep-stat.diff { background: #fff7ed; }
+        .discrep-stat.diff .discrep-stat-val { color: #f97316; }
+
+        .discrep-stat.total { background: var(--info-bg); }
+        .discrep-stat.total .discrep-stat-val { color: var(--info); }
+
+        .discrep-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+
+        .discrep-table thead th {
+            background: #fafaf8;
+            font-weight: 600;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            padding: 0.6rem 0.7rem;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+        }
+
+        .discrep-table tbody td {
+            padding: 0.6rem 0.7rem;
+            border-bottom: 1px solid var(--border-light);
+            vertical-align: middle;
+        }
+
+        .discrep-table tbody tr:last-child td { border-bottom: none; }
+
+        .discrep-status-ok {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--success);
+        }
+
+        .discrep-status-diff {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #f97316;
+        }
+
+        .discrep-detail {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 0.15rem;
+        }
+
+        .discrep-val-change {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.78rem;
+        }
+
+        .discrep-val-change .from {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        .discrep-val-change .arrow {
+            color: #f97316;
+            font-size: 0.7rem;
+        }
+
+        .discrep-val-change .to {
+            font-weight: 600;
+            color: #f97316;
+        }
+
+        .modal-discrep .modal-footer {
+            border-top: 1px solid var(--border-light);
+            padding: 0.8rem 1.3rem;
+        }
+
+        .btn-discrep-ok {
+            font-family: var(--font-body);
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 0.5rem 2rem;
+            border: none;
+            border-radius: 8px;
+            background: var(--primary);
+            color: #fff;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-discrep-ok:hover { background: var(--primary-light); }
+
+        /* AI modal discrepancy alert */
+        .ai-alert {
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            border-radius: 10px;
+            padding: 0.7rem 0.9rem;
+            margin-top: 0.8rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: #9a3412;
+        }
+
+        .ai-alert i { font-size: 1rem; margin-top: 0.1rem; color: #f97316; }
+
+        .btn-ver-discrep {
+            font-family: var(--font-body);
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.45rem 1.3rem;
+            border: 2px solid #f97316;
+            border-radius: 8px;
+            background: #fff;
+            color: #f97316;
+            cursor: pointer;
+            margin-top: 0.8rem;
+            transition: var(--transition);
+        }
+
+        .btn-ver-discrep:hover {
+            background: #f97316;
+            color: #fff;
+        }
+
+        /* ---- FAB ---- */
+        .fab-chat {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #22c55e;
+            border: none;
+            color: #fff;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 3px 12px rgba(34, 197, 94, 0.35);
+            z-index: 50;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="top-bar-left">
+            <a href="dashboard-previos.html" class="btn-back"><i class="bi bi-arrow-left"></i> Volver a Referencias</a>
+            <div>
+                <div class="top-ref" id="topRef">48159145</div>
+                <div class="top-subtitle">Captura de Packing List &middot; Cliente: <span id="topCliente">[9373] ACUITY BRANDS LIGHTING DE MEXICO S DE RL DE CV</span></div>
+            </div>
+        </div>
+        <div class="top-bar-right">
+            <span class="pending-badge" id="topPendientes">0 Pendientes</span>
+            <button class="btn-back" style="border:1px solid var(--border);border-radius:50%;width:32px;height:32px;justify-content:center;"><i class="bi bi-moon"></i></button>
+        </div>
+    </div>
+
+    <!-- Main Split -->
+    <div class="main-split">
+
+        <!-- Left: Document Viewer -->
+        <div class="panel-doc">
+            <div class="doc-selector">
+                <i class="bi bi-file-earmark-text" style="color:var(--text-muted);"></i>
+                <span style="font-size:0.78rem;font-weight:500;color:var(--text-secondary);">Documento:</span>
+                <select id="docSelect">
+                    <option>48159145_20250910170001.pdf</option>
+                </select>
+                <i class="bi bi-check-circle-fill doc-check"></i>
+            </div>
+            <div class="doc-toolbar">
+                <span class="doc-filename" id="docFilename">48159145_20250910170001.pdf</span>
+                <span class="doc-page-info">Página <span id="docPage">1</span> / <span id="docTotalPages">1</span></span>
+                <button title="Alejar" id="btnZoomOut"><i class="bi bi-dash"></i></button>
+                <span style="font-size:0.72rem;min-width:36px;text-align:center;" id="zoomLevel">100%</span>
+                <button title="Acercar" id="btnZoomIn"><i class="bi bi-plus"></i></button>
+                <button title="Girar" id="btnRotate"><i class="bi bi-arrow-clockwise"></i></button>
+                <button title="Página anterior" id="btnPrevPage"><i class="bi bi-chevron-left"></i></button>
+                <button title="Página siguiente" id="btnNextPage"><i class="bi bi-chevron-right"></i></button>
+                <button class="btn-ver-expediente" title="Ver expediente"><i class="bi bi-folder2-open"></i> Ver expediente</button>
+            </div>
+            <div class="doc-viewer" id="docViewer">
+                <img src="../img/pdf/pdf1.png" id="docImg" alt="Documento">
+            </div>
+        </div>
+
+        <!-- Right: Info Panel -->
+        <div class="panel-info">
+            <div class="panel-info-inner">
+
+                <!-- Info del Documento -->
+                <div class="info-section">
+                    <div class="info-section-title"><i class="bi bi-info-circle" style="color:var(--info);"></i> Información del Documento</div>
+                    <div class="info-row">
+                        <span class="info-label">Cliente:</span>
+                        <span class="info-val" id="infoCliente">[9373] ACUITY BRANDS LIGHTING DE MEXICO S DE RL DE CV</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Proveedor:</span>
+                        <span class="info-val" id="infoProveedor">(3717) PROVEEDOR PENDIENTE <button class="btn-edit"><i class="bi bi-pencil"></i></button></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Fecha del Documento:</span>
+                        <span class="info-val" id="infoFecha">10 sept 2025</span>
+                    </div>
+
+                    <div class="kpi-row">
+                        <div class="kpi-mini kpi-capturados">
+                            <div class="kpi-mini-val" id="kpiCapturados">1</div>
+                            <div class="kpi-mini-label">Capturados</div>
+                        </div>
+                        <div class="kpi-mini kpi-pendientes">
+                            <div class="kpi-mini-val" id="kpiPendientes">1</div>
+                            <div class="kpi-mini-label">Pendientes</div>
+                        </div>
+                        <div class="kpi-mini kpi-extra" style="display:none;">
+                            <div class="kpi-mini-val" id="kpiBultos">0</div>
+                            <div class="kpi-mini-label">Bultos</div>
+                        </div>
+                        <div class="kpi-mini kpi-extra" style="display:none;">
+                            <div class="kpi-mini-val" id="kpiLineas">0</div>
+                            <div class="kpi-mini-label">Líneas</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Líneas de Productos -->
+                <div class="lines-header">
+                    <div class="lines-title"><i class="bi bi-list-ul"></i> Líneas de Productos (<span id="totalLines">2</span>)</div>
+                    <button class="btn-agregar">+ Agregar Partida</button>
+                </div>
+
+                <div class="filter-discrep-bar" id="filterDiscrepBar">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <label for="chkFilterDiscrep">
+                        <input type="checkbox" id="chkFilterDiscrep">
+                        Solo discrepancias
+                    </label>
+                    <span class="filter-discrep-count" id="filterDiscrepCount">0</span>
+                </div>
+
+                <div id="productLines">
+                    <!-- Populated by JS -->
+                </div>
+
+                <!-- PZA counter -->
+                <div class="pza-counter">PZA: <strong id="pzaTotal">31</strong></div>
+
+                <!-- Cerrar Previo -->
+                <div class="cerrar-section">
+                    <div class="cerrar-title"><i class="bi bi-check-square" style="color:var(--primary);"></i> Cerrar Previo</div>
+                    <div class="cerrar-check">
+                        <input type="checkbox" id="checkCerrar">
+                        <label for="checkCerrar">He verificado los desgloses de bultos y cantidades totales del previo.</label>
+                    </div>
+                    <div class="btn-cerrar-group">
+                        <button class="btn-cerrar-main" id="btnCerrarPrevio" disabled>Cerrar Previo</button>
+                        <button class="btn-cerrar-accent"><i class="bi bi-chevron-down"></i></button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Split: Etiqueta + Confirmar Partida -->
+    <div class="modal fade modal-split" id="modalSplitDiscrep" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5>
+                        <i class="bi bi-exclamation-triangle-fill" style="color:#f97316;"></i>
+                        Revisar Discrepancia
+                        <span class="badge-id" id="splitBadgeSku"></span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="split-body">
+                    <div class="split-left">
+                        <span class="split-left-badge"><i class="bi bi-stars"></i> Etiqueta AI</span>
+                        <img id="splitImg" src="" alt="Etiqueta">
+                        <div class="split-left-caption"><i class="bi bi-tag"></i> <span id="splitCaption"></span></div>
+                    </div>
+                    <div class="split-right">
+                        <div class="edit-field">
+                            <div class="edit-locked">Bulto * <span class="badge-lock"><i class="bi bi-lock-fill"></i> Bloqueado</span></div>
+                            <select class="w-100" id="splitBulto" disabled><option></option></select>
+                        </div>
+
+                        <div class="edit-field">
+                            <label>Número de Parte *</label>
+                            <input type="text" id="splitNumeroParte">
+                        </div>
+
+                        <div class="edit-field">
+                            <label>Número de Parte Físico <span>(opcional)</span></label>
+                            <input type="text" id="splitPartesFisico" placeholder="Si difiere del número de parte del sistema">
+                        </div>
+
+                        <div class="edit-field">
+                            <label>Descripción <span>(opcional)</span></label>
+                            <textarea id="splitDescripcion"></textarea>
+                        </div>
+
+                        <div class="edit-row">
+                            <div class="edit-field">
+                                <label>Cantidad Recibida *</label>
+                                <input type="number" id="splitCantidad" min="1">
+                                <div class="edit-hint" id="splitCantidadText"></div>
+                            </div>
+                            <div class="edit-field">
+                                <label>Unidad *</label>
+                                <select id="splitUnidad">
+                                    <option value="PZA">[PZA] PIEZA</option>
+                                    <option value="KG">[KG] KILOGRAMO</option>
+                                    <option value="MT">[MT] METRO</option>
+                                    <option value="LT">[LT] LITRO</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="edit-field">
+                            <label>País de Origen *</label>
+                            <select id="splitPais">
+                                <option value="NPO">[NPO] NO PAIS DE ORIGEN</option>
+                                <option value="US">[US] ESTADOS UNIDOS</option>
+                                <option value="CN">[CN] CHINA</option>
+                                <option value="MX">[MX] MEXICO</option>
+                                <option value="DE">[DE] ALEMANIA</option>
+                            </select>
+                        </div>
+
+                        <div class="mms-section">
+                            <div class="mms-header">
+                                <label><i class="bi bi-diamond-half" style="color:var(--text-muted);"></i> Marca, Modelo y Serie</label>
+                                <button title="Limpiar" id="btnMmsClear"><i class="bi bi-eraser"></i></button>
+                            </div>
+                            <div class="edit-field">
+                                <input type="text" id="splitMarca" placeholder="Marca">
+                            </div>
+                            <div class="mms-row">
+                                <div class="edit-field">
+                                    <input type="text" id="splitModelo" placeholder="Modelo">
+                                </div>
+                                <div class="edit-field">
+                                    <input type="text" id="splitSerie" placeholder="Serie">
+                                </div>
+                                <button class="btn-mms-add" id="btnMmsAdd" title="Agregar"><i class="bi bi-plus-lg"></i></button>
+                            </div>
+                        </div>
+
+                        <div class="notes-section">
+                            <div class="edit-field">
+                                <label>Notas Internas</label>
+                                <textarea id="splitNotas" placeholder="Observaciones adicionales..." rows="2"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-cancel" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn-update" id="btnSplitConfirm">Confirmar Partida</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Partida -->
+    <div class="modal fade modal-edit" id="modalEditPartida" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5>Editar Partida <span class="badge-id" id="editBadgeId"><i class="bi bi-pencil-fill"></i> ID: 8740757</span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="edit-field">
+                        <div class="edit-locked">Bulto * <span class="badge-lock"><i class="bi bi-lock-fill"></i> Bloqueado</span></div>
+                        <div class="d-flex gap-2">
+                            <select class="flex-grow-1" id="editBulto" disabled><option></option></select>
+                            <button style="border:1px solid var(--border);border-radius:8px;background:#fff;width:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-muted);"><i class="bi bi-arrow-repeat"></i></button>
+                        </div>
+                        <div class="edit-hint">0 partidas agregadas a este bulto</div>
+                    </div>
+
+                    <div class="edit-field">
+                        <label style="display:flex;align-items:center;gap:0.5rem;">
+                            <i class="bi bi-file-earmark-text"></i> Orden de Compra (PO) *
+                            <span style="font-size:0.62rem;padding:0.1rem 0.4rem;border-radius:4px;background:#ffc107;color:#1a1a1a;font-weight:700;">OpenPO</span>
+                            <span style="margin-left:auto;font-size:0.78rem;color:var(--primary);cursor:pointer;font-weight:500;">+ Agregar PO</span>
+                        </label>
+                    </div>
+
+                    <div class="edit-alert">
+                        <i class="bi bi-check-circle-fill"></i>
+                        Todos los productos del OpenPO han sido capturados. Puede continuar con captura manual.
+                    </div>
+
+                    <div class="edit-field">
+                        <label>Número de Parte *</label>
+                        <div class="d-flex gap-2">
+                            <input type="text" id="editNumeroParte" class="flex-grow-1">
+                            <button style="border:1px solid var(--border);border-radius:8px;background:#fff;width:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-muted);"><i class="bi bi-upc-scan"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="edit-field">
+                        <label>Número de Parte Físico <span>(opcional)</span></label>
+                        <input type="text" id="editPartesFisico" placeholder="Si difiere del número de parte del sistema">
+                    </div>
+
+                    <div class="edit-field">
+                        <label>Descripción <span>(opcional)</span></label>
+                        <textarea id="editDescripcion"></textarea>
+                    </div>
+
+                    <div class="edit-row">
+                        <div class="edit-field">
+                            <label>Cantidad Recibida *</label>
+                            <input type="number" id="editCantidad" min="1">
+                            <div class="edit-hint" id="editCantidadText"></div>
+                        </div>
+                        <div class="edit-field">
+                            <label>Unidad *</label>
+                            <select id="editUnidad">
+                                <option value="PZA">[PZA] PIEZA</option>
+                                <option value="KG">[KG] KILOGRAMO</option>
+                                <option value="MT">[MT] METRO</option>
+                                <option value="LT">[LT] LITRO</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="edit-field">
+                        <label>País de Origen *</label>
+                        <select id="editPais">
+                            <option value="NPO">[NPO] NO PAIS DE ORIGEN</option>
+                            <option value="US">[US] ESTADOS UNIDOS</option>
+                            <option value="CN">[CN] CHINA</option>
+                            <option value="MX">[MX] MEXICO</option>
+                            <option value="DE">[DE] ALEMANIA</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-cancel" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn-update" id="btnUpdatePartida">Actualizar Partida</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal AI Info -->
+    <div class="modal fade modal-ai" id="modalAI" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="ai-icon"><i class="bi bi-stars"></i><span>AI</span><i class="bi bi-stars"></i></div>
+                    <h5>Documento y Etiquetas</h5>
+                    <p>Información extraída con inteligencia artificial.</p>
+                    <div id="aiDiscrepAlert" style="display:none;margin-top:0.5rem;">
+                        <p style="font-size:0.82rem;color:#9a3412;margin:0;"><i class="bi bi-exclamation-triangle-fill" style="color:#f97316;"></i> Mercancía con discrepancias</p>
+                        <button class="btn-ver-discrep" id="btnVerDiscrepancias"><i class="bi bi-search"></i> Ver Discrepancias</button>
+                    </div>
+                    <button class="btn-modal-ok" data-bs-dismiss="modal">Entendido</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Discrepancias -->
+    <div class="modal fade modal-discrep" id="modalDiscrepancias" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5><i class="bi bi-exclamation-triangle-fill" style="color:#f97316;"></i> Discrepancias — Etiquetas vs Packing List</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="discrep-summary">
+                        <div class="discrep-stat ok">
+                            <div class="discrep-stat-val" id="discrepOk">0</div>
+                            <div class="discrep-stat-label">Coincidencias</div>
+                        </div>
+                        <div class="discrep-stat diff">
+                            <div class="discrep-stat-val" id="discrepDiff">0</div>
+                            <div class="discrep-stat-label">Discrepancias</div>
+                        </div>
+                        <div class="discrep-stat total">
+                            <div class="discrep-stat-val" id="discrepTotal">0</div>
+                            <div class="discrep-stat-label">Total Partidas</div>
+                        </div>
+                    </div>
+                    <table class="discrep-table">
+                        <thead>
+                            <tr>
+                                <th>Número de Parte</th>
+                                <th>Campo</th>
+                                <th>Etiqueta</th>
+                                <th>Packing List</th>
+                                <th>Estatus</th>
+                            </tr>
+                        </thead>
+                        <tbody id="discrepTableBody"></tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-discrep-ok" data-bs-dismiss="modal">Entendido, Revisar Manualmente</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAB -->
+    <button class="fab-chat" title="Chat"><i class="bi bi-chat-dots-fill"></i></button>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script>
+    $(document).ready(function () {
+
+        // Read params
+        var params = new URLSearchParams(window.location.search);
+        var ref = params.get('ref') || '48159145';
+        var ia = params.get('ia') || 'No';
+
+        var showDoc = true;
+
+        // Mock data per reference
+        var mockRefs = {
+            '48159145': {
+                cliente: '[9373] ACUITY BRANDS LIGHTING DE MEXICO S DE RL DE CV',
+                proveedor: '(3717) PROVEEDOR PENDIENTE',
+                fecha: '10 sept 2025',
+                capturados: 1,
+                pendientes: 1,
+                bultos: [
+                    {
+                        codigo: '00010048159145',
+                        partidas: [
+                            { sku: 'LDE11U1UMN-JABLK', desc: 'CONTROLADOR LED', pza: 24, npo: 'NPO', po: 'SIN PO', mms: true },
+                            { sku: 'LDE11U1UMN-JABLK', desc: 'CONTROLADOR LED', pza: 7, npo: 'NPO', po: 'SIN PO', mms: false }
+                        ]
+                    }
+                ]
+            },
+            '10081345': {
+                cliente: 'NP STEEL SA DE CV',
+                proveedor: '(---) PROVEEDOR PENDIENTE',
+                fecha: '13 mar 2025',
+                capturados: 3,
+                pendientes: 2,
+                bultos: [
+                    {
+                        codigo: '00110081345',
+                        partidas: [
+                            { sku: 'STEEL-COIL-HR-001', desc: 'BOBINA ACERO HR', pza: 12, npo: 'NPO', po: 'PO-2025-001', mms: true },
+                            { sku: 'STEEL-PLATE-CR-002', desc: 'PLACA ACERO CR', pza: 8, npo: 'NPO', po: 'SIN PO', mms: false },
+                            { sku: 'KIT16639', desc: 'KIT MTR CHG OUT CVHF048', pza: 1, npo: 'US', po: 'PO-2025-003', mms: true }
+                        ]
+                    },
+                    {
+                        codigo: '00110081346',
+                        partidas: [
+                            { sku: '111B-871JC', desc: 'HARTFIELD AUTOMATION CTX-P 002', pza: 4, npo: 'US', po: 'PO-2025-001', mms: false },
+                            { sku: 'VLV-CTRL-500', desc: 'VALVULA CONTROL 500PSI', pza: 6, npo: 'NPO', po: 'SIN PO', mms: true }
+                        ]
+                    }
+                ],
+                discrepancias: [
+                    { sku: 'STEEL-COIL-HR-001', campo: 'Cantidad', etiqueta: '12 PZA', packing: '10 PZA', status: 'diff' },
+                    { sku: 'STEEL-COIL-HR-001', campo: 'País de Origen', etiqueta: 'NPO', packing: 'NPO', status: 'ok' },
+                    { sku: 'STEEL-PLATE-CR-002', campo: 'Cantidad', etiqueta: '8 PZA', packing: '8 PZA', status: 'ok' },
+                    { sku: 'STEEL-PLATE-CR-002', campo: 'Número de Parte', etiqueta: 'STEEL-PLATE-CR-002', packing: 'STEEL-PLATE-CR-002', status: 'ok' },
+                    { sku: 'KIT16639', campo: 'País de Origen', etiqueta: 'US', packing: 'CN', status: 'diff' },
+                    { sku: 'KIT16639', campo: 'Cantidad', etiqueta: '1 PZA', packing: '1 PZA', status: 'ok' },
+                    { sku: '111B-871JC', campo: 'Cantidad', etiqueta: '4 PZA', packing: '3 PZA', status: 'diff' },
+                    { sku: '111B-871JC', campo: 'País de Origen', etiqueta: 'US', packing: 'US', status: 'ok' },
+                    { sku: 'VLV-CTRL-500', campo: 'Número de Parte', etiqueta: 'VLV-CTRL-500', packing: 'VLV-CTRL-500', status: 'ok' },
+                    { sku: 'VLV-CTRL-500', campo: 'Cantidad', etiqueta: '6 PZA', packing: '6 PZA', status: 'ok' }
+                ]
+            }
+        };
+
+        var fallback = {
+            cliente: 'CLIENTE GENÉRICO SA DE CV',
+            proveedor: '(---) PROVEEDOR PENDIENTE',
+            fecha: '13 mar 2025',
+            capturados: 1,
+            pendientes: 1,
+            bultos: [
+                {
+                    codigo: '0001' + ref,
+                    partidas: [
+                        { sku: 'STEEL-COIL-HR-001', desc: 'BOBINA ACERO HR', pza: 12, npo: 'NPO', po: 'PO-2025-001', mms: false },
+                        { sku: 'STEEL-PLATE-CR-002', desc: 'PLACA ACERO CR', pza: 8, npo: 'NPO', po: 'SIN PO', mms: true }
+                    ]
+                }
+            ]
+        };
+
+        var exampleLabels = [
+            '../img/examples/etiq1.png',
+            '../img/examples/etiq2.png',
+            '../img/examples/etiq3.png',
+            '../img/examples/etiq4.png',
+            '../img/examples/etiq5.png'
+        ];
+
+        var data = mockRefs[ref] || fallback;
+
+        // Populate header
+        $('#topRef').text(ref);
+        $('#topCliente').text(data.cliente);
+        $('#topPendientes').text(data.pendientes + ' Pendientes');
+
+        // Populate info
+        $('#infoCliente').text(data.cliente);
+        $('#infoProveedor').html(data.proveedor + ' <button class="btn-edit"><i class="bi bi-pencil"></i></button>');
+        $('#infoFecha').text(data.fecha);
+        $('#kpiCapturados').text(data.capturados);
+        $('#kpiPendientes').text(data.pendientes);
+
+        // Populate product lines
+        var totalLines = 0;
+        var totalPza = 0;
+        var $lines = $('#productLines').empty();
+
+        data.bultos.forEach(function (bulto) {
+            totalLines += bulto.partidas.length;
+
+            var $bultoHdr = $(
+                '<div class="bulto-header">' +
+                    '<i class="bi bi-box-seam" style="color:var(--text-muted);"></i>' +
+                    '<span class="bulto-code">' + bulto.codigo + '</span>' +
+                    '<span class="bulto-badge">' + bulto.partidas.length + ' partidas</span>' +
+                '</div>'
+            );
+            $lines.append($bultoHdr);
+
+            bulto.partidas.forEach(function (p, pIdx) {
+                totalPza += p.pza;
+                var cardId = 'card-' + totalLines + '-' + pIdx;
+                var labelImg = exampleLabels[(totalLines + pIdx) % exampleLabels.length];
+                var cardClass = ia === 'Sí' ? 'product-card pending' : 'product-card confirmed';
+                var seeBtn = ia === 'Sí'
+                    ? '<button class="btn-icon btn-icon-see btn-see-label" data-img="' + labelImg + '" data-sku="' + p.sku + '" title="Ver etiqueta"><i class="bi bi-eye-fill"></i></button>'
+                    : '';
+                var checkIcon = ia === 'Sí' ? 'bi bi-hourglass-split' : 'bi bi-check-lg';
+                var mmsBadge = p.mms ? '<span class="badge-mms"><i class="bi bi-camera-fill"></i> MMS</span>' : '';
+                $lines.append(
+                    '<div class="' + cardClass + '" id="' + cardId + '" data-sku="' + p.sku + '" data-desc="' + p.desc + '" data-pza="' + p.pza + '" data-npo="' + p.npo + '" data-po="' + p.po + '" data-bulto="' + bulto.codigo + '" data-img="' + labelImg + '" data-mms="' + (p.mms ? '1' : '0') + '">' +
+                        '<div class="product-info">' +
+                            '<div class="product-sku">' + p.sku + '</div>' +
+                            '<div class="product-desc">' + p.desc + '</div>' +
+                            '<div class="product-meta">' +
+                                '<span># ' + p.pza + ' PZA</span>' +
+                                '<span><i class="bi bi-globe2"></i> ' + p.npo + '</span>' +
+                                '<span><i class="bi bi-file-text"></i> ' + p.po + '</span>' +
+                            '</div>' +
+                            '<div class="product-badges">' + mmsBadge + '</div>' +
+                        '</div>' +
+                        '<div class="product-actions">' +
+                            seeBtn +
+                            '<button class="btn-icon btn-icon-delete" title="Eliminar"><i class="bi bi-trash3-fill"></i></button>' +
+                            '<button class="btn-icon btn-icon-ok" title="Confirmar"><i class="' + checkIcon + '"></i></button>' +
+                        '</div>' +
+                    '</div>'
+                );
+            });
+        });
+
+        $('#totalLines').text(totalLines);
+        $('#pzaTotal').text(totalPza);
+
+        // Mark product cards with discrepancies
+        var discrepSkus = {};
+        if (data.discrepancias) {
+            data.discrepancias.forEach(function (d) {
+                if (d.status === 'diff') {
+                    if (!discrepSkus[d.sku]) discrepSkus[d.sku] = [];
+                    discrepSkus[d.sku].push(d.campo);
+                }
+            });
+        }
+
+        var discrepCardCount = 0;
+        $('.product-card').each(function () {
+            var sku = $(this).data('sku');
+            if (discrepSkus[sku]) {
+                $(this).addClass('has-discrep');
+                $(this).attr('data-discrep', 'true');
+                var campos = discrepSkus[sku].join(', ');
+                $(this).find('.product-badges').append(
+                    '<span class="discrep-indicator"><i class="bi bi-exclamation-triangle-fill"></i> ' + campos + '</span>'
+                );
+                discrepCardCount++;
+            }
+        });
+
+        if (discrepCardCount > 0) {
+            $('#filterDiscrepBar').addClass('visible');
+            $('#filterDiscrepCount').text(discrepCardCount);
+        }
+
+        // Filter: solo discrepancias
+        $('#chkFilterDiscrep').on('change', function () {
+            var onlyDiscrep = $(this).is(':checked');
+            if (onlyDiscrep) {
+                $('.product-card').not('.has-discrep').hide();
+                $('.bulto-header').each(function () {
+                    var $next = $(this).nextUntil('.bulto-header').filter('.product-card:visible');
+                    if ($next.length === 0) $(this).hide();
+                });
+            } else {
+                $('.product-card').show();
+                $('.bulto-header').show();
+            }
+        });
+
+        // Cerrar previo checkbox
+        $('#checkCerrar').on('change', function () {
+            var checked = $(this).is(':checked');
+            $('#btnCerrarPrevio').prop('disabled', !checked);
+            if (checked) {
+                $('#btnCerrarPrevio').addClass('enabled');
+            } else {
+                $('#btnCerrarPrevio').removeClass('enabled');
+            }
+        });
+
+        $('#btnCerrarPrevio').on('click', function () {
+            if ($(this).prop('disabled')) return;
+            window.location.href = 'dashboard-previos.html';
+        });
+
+        // Document viewer controls
+        var zoom = 100;
+        var rotation = 0;
+
+        $('#btnZoomIn').on('click', function () {
+            zoom = Math.min(zoom + 25, 300);
+            applyTransform();
+        });
+
+        $('#btnZoomOut').on('click', function () {
+            zoom = Math.max(zoom - 25, 50);
+            applyTransform();
+        });
+
+        $('#btnRotate').on('click', function () {
+            rotation = (rotation + 90) % 360;
+            applyTransform();
+        });
+
+        function applyTransform() {
+            $('#docImg').css('transform', 'scale(' + (zoom / 100) + ') rotate(' + rotation + 'deg)');
+            $('#zoomLevel').text(zoom + '%');
+        }
+
+        // See label — show overlay on doc viewer with confirm/correct actions
+        var activeCardId = null;
+
+        function getActiveCard() {
+            return activeCardId ? $('#' + activeCardId) : null;
+        }
+
+        function markCardConfirmed(cardId) {
+            var $card = $('#' + cardId);
+            if (!$card.length) return;
+            $card.removeClass('pending').addClass('confirmed');
+            $card.find('.btn-icon-ok').html('<i class="bi bi-check-lg"></i>');
+        }
+
+        var splitModal = new bootstrap.Modal($('#modalSplitDiscrep')[0]);
+
+        $(document).on('click', '.btn-see-label', function () {
+            var $card = $(this).closest('.product-card');
+            activeCardId = $card.attr('id');
+            var imgSrc = $(this).data('img');
+            var sku = $(this).data('sku');
+            var hasDiscrep = $card.hasClass('has-discrep');
+
+            if (hasDiscrep) {
+                $('#splitImg').attr('src', imgSrc);
+                $('#splitBadgeSku').text(sku);
+                $('#splitCaption').text(sku + ' — Fuente de extracción AI');
+                $('#splitBulto').html('<option value="' + $card.data('bulto') + '">' + $card.data('bulto') + '</option>');
+                $('#splitNumeroParte').val($card.data('sku'));
+                $('#splitDescripcion').val($card.data('desc'));
+                $('#splitCantidad').val($card.data('pza'));
+                $('#splitPais').val($card.data('npo') === 'NPO' ? 'NPO' : $card.data('npo'));
+                $('#splitMarca').val('');
+                $('#splitModelo').val('');
+                $('#splitSerie').val('');
+                $('#splitNotas').val('');
+                splitNumberToWords($card.data('pza'));
+
+                // Resaltar campos con discrepancia
+                var campoMap = {
+                    'Cantidad': 'splitCantidad',
+                    'Número de Parte': 'splitNumeroParte',
+                    'País de Origen': 'splitPais'
+                };
+                $('.split-right .edit-field').removeClass('has-diff');
+                var discrepList = data.discrepancias || [];
+                discrepList.forEach(function (d) {
+                    if (d.sku === sku && d.status === 'diff' && campoMap[d.campo]) {
+                        $('#' + campoMap[d.campo]).closest('.edit-field').addClass('has-diff');
+                    }
+                });
+
+                splitModal.show();
+            } else {
+                $('.label-overlay').remove();
+                var $overlay = $(
+                    '<div class="label-overlay">' +
+                        '<div class="label-overlay-card">' +
+                            '<div class="label-overlay-header">' +
+                                '<div class="label-overlay-badge"><i class="bi bi-stars"></i> Etiqueta AI</div>' +
+                                '<button class="label-overlay-close" title="Cerrar"><i class="bi bi-x-lg"></i></button>' +
+                            '</div>' +
+                            '<div class="label-overlay-body">' +
+                                '<img src="' + imgSrc + '" alt="Etiqueta">' +
+                                '<div class="label-overlay-caption"><i class="bi bi-tag"></i> ' + sku + ' — Fuente de extracción AI</div>' +
+                            '</div>' +
+                            '<div class="label-overlay-footer">' +
+                                '<button class="btn-overlay-confirm"><i class="bi bi-check-circle-fill"></i> Confirmar</button>' +
+                                '<button class="btn-overlay-correct"><i class="bi bi-pencil-square"></i> Corregir</button>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>'
+                );
+                $('#docViewer').append($overlay);
+            }
+        });
+
+        $(document).on('click', '.label-overlay-close', function () {
+            $('.label-overlay').remove();
+            activeCardId = null;
+        });
+
+        // Confirmar — marca la partida como confirmada (check verde)
+        $(document).on('click', '.btn-overlay-confirm', function () {
+            if (activeCardId) {
+                markCardConfirmed(activeCardId);
+            }
+            $('.label-overlay').remove();
+            activeCardId = null;
+        });
+
+        // Corregir — abre modal de edición precargado con datos del producto
+        var editModal = new bootstrap.Modal($('#modalEditPartida')[0]);
+
+        $(document).on('click', '.btn-overlay-correct', function () {
+            if (!activeCardId) return;
+            var $card = getActiveCard();
+            if (!$card || !$card.length) return;
+
+            $('#editBulto').html('<option value="' + $card.data('bulto') + '">' + $card.data('bulto') + '</option>');
+            $('#editNumeroParte').val($card.data('sku'));
+            $('#editDescripcion').val($card.data('desc'));
+            $('#editCantidad').val($card.data('pza'));
+            $('#editPais').val($card.data('npo') === 'NPO' ? 'NPO' : $card.data('npo'));
+            numberToWords($card.data('pza'));
+
+            var btnText = $card.hasClass('has-discrep') ? 'Confirmar Partida' : 'Actualizar Partida';
+            $('#btnUpdatePartida').text(btnText);
+
+            $('.label-overlay').remove();
+            editModal.show();
+        });
+
+        function numberToWords(n) {
+            var words = {
+                1:'UNO',2:'DOS',3:'TRES',4:'CUATRO',5:'CINCO',6:'SEIS',7:'SIETE',8:'OCHO',
+                9:'NUEVE',10:'DIEZ',11:'ONCE',12:'DOCE',13:'TRECE',14:'CATORCE',15:'QUINCE',
+                16:'DIECISEIS',17:'DIECISIETE',18:'DIECIOCHO',19:'DIECINUEVE',20:'VEINTE',
+                21:'VEINTIUNO',22:'VEINTIDOS',23:'VEINTITRES',24:'VEINTICUATRO',25:'VEINTICINCO'
+            };
+            var txt = words[n] || n;
+            $('#editCantidadText').html('<i class="bi bi-globe2"></i> ' + txt);
+        }
+
+        $('#editCantidad').on('input', function () {
+            numberToWords(parseInt($(this).val()) || 0);
+        });
+
+        // Actualizar partida — aplica cambios al product-card y lo marca como confirmado
+        $('#btnUpdatePartida').on('click', function () {
+            if (!activeCardId) { editModal.hide(); return; }
+            var $card = getActiveCard();
+            if (!$card || !$card.length) { editModal.hide(); return; }
+
+            var newSku = $('#editNumeroParte').val();
+            var newDesc = $('#editDescripcion').val();
+            var newPza = parseInt($('#editCantidad').val()) || 0;
+            var newNpo = $('#editPais').val();
+
+            $card.data('sku', newSku);
+            $card.data('desc', newDesc);
+            $card.data('pza', newPza);
+            $card.data('npo', newNpo);
+
+            $card.find('.product-sku').text(newSku);
+            $card.find('.product-desc').text(newDesc);
+            $card.find('.product-meta').html(
+                '<span># ' + newPza + ' PZA</span>' +
+                '<span><i class="bi bi-globe2"></i> ' + newNpo + '</span>' +
+                '<span><i class="bi bi-file-text"></i> ' + ($card.data('po') || 'SIN PO') + '</span>'
+            );
+
+            markCardConfirmed(activeCardId);
+
+            var newTotal = 0;
+            $('.product-card').each(function () {
+                newTotal += parseInt($(this).data('pza')) || 0;
+            });
+            $('#pzaTotal').text(newTotal);
+
+            editModal.hide();
+            activeCardId = null;
+        });
+
+        // Split modal: numberToWords + Confirmar
+        function splitNumberToWords(n) {
+            var words = {
+                1:'UNO',2:'DOS',3:'TRES',4:'CUATRO',5:'CINCO',6:'SEIS',7:'SIETE',8:'OCHO',
+                9:'NUEVE',10:'DIEZ',11:'ONCE',12:'DOCE',13:'TRECE',14:'CATORCE',15:'QUINCE',
+                16:'DIECISEIS',17:'DIECISIETE',18:'DIECIOCHO',19:'DIECINUEVE',20:'VEINTE',
+                21:'VEINTIUNO',22:'VEINTIDOS',23:'VEINTITRES',24:'VEINTICUATRO',25:'VEINTICINCO'
+            };
+            $('#splitCantidadText').html('<i class="bi bi-globe2"></i> ' + (words[n] || n));
+        }
+
+        $('#splitCantidad').on('input', function () {
+            splitNumberToWords(parseInt($(this).val()) || 0);
+        });
+
+        $('#btnMmsClear').on('click', function () {
+            $('#splitMarca, #splitModelo, #splitSerie').val('');
+        });
+
+        $('#btnSplitConfirm').on('click', function () {
+            if (!activeCardId) { splitModal.hide(); return; }
+            var $card = getActiveCard();
+            if (!$card || !$card.length) { splitModal.hide(); return; }
+
+            var newSku = $('#splitNumeroParte').val();
+            var newDesc = $('#splitDescripcion').val();
+            var newPza = parseInt($('#splitCantidad').val()) || 0;
+            var newNpo = $('#splitPais').val();
+
+            $card.data('sku', newSku);
+            $card.data('desc', newDesc);
+            $card.data('pza', newPza);
+            $card.data('npo', newNpo);
+
+            $card.find('.product-sku').text(newSku);
+            $card.find('.product-desc').text(newDesc);
+            $card.find('.product-meta').html(
+                '<span># ' + newPza + ' PZA</span>' +
+                '<span><i class="bi bi-globe2"></i> ' + newNpo + '</span>' +
+                '<span><i class="bi bi-file-text"></i> ' + ($card.data('po') || 'SIN PO') + '</span>'
+            );
+
+            markCardConfirmed(activeCardId);
+
+            var newTotal = 0;
+            $('.product-card').each(function () {
+                newTotal += parseInt($(this).data('pza')) || 0;
+            });
+            $('#pzaTotal').text(newTotal);
+
+            splitModal.hide();
+            activeCardId = null;
+        });
+
+        // Hide document panel for non-10081345 references
+        if (!showDoc) {
+            $('.main-split').addClass('no-doc');
+            $('.kpi-extra').show();
+            $('#kpiBultos').text(data.bultos.length);
+            $('#kpiLineas').text(totalLines);
+        }
+
+        // Discrepancias logic
+        var discrepData = data.discrepancias || [];
+        var discrepModal = null;
+        var okCount = 0;
+        var diffCount = 0;
+
+        if (discrepData.length > 0) {
+            okCount = discrepData.filter(function (d) { return d.status === 'ok'; }).length;
+            diffCount = discrepData.filter(function (d) { return d.status === 'diff'; }).length;
+
+            $('#discrepOk').text(okCount);
+            $('#discrepDiff').text(diffCount);
+            $('#discrepTotal').text(discrepData.length);
+
+            var $tbody = $('#discrepTableBody').empty();
+            discrepData.forEach(function (d) {
+                var statusHtml = d.status === 'ok'
+                    ? '<span class="discrep-status-ok"><i class="bi bi-check-circle-fill"></i> OK</span>'
+                    : '<span class="discrep-status-diff"><i class="bi bi-exclamation-circle-fill"></i> Diferencia</span>';
+                var etiqHtml = d.status === 'diff'
+                    ? '<span class="discrep-val-change"><span class="to">' + d.etiqueta + '</span></span>'
+                    : d.etiqueta;
+                var packHtml = d.status === 'diff'
+                    ? '<span class="discrep-val-change"><span class="from">' + d.packing + '</span></span>'
+                    : d.packing;
+                $tbody.append(
+                    '<tr>' +
+                        '<td><strong>' + d.sku + '</strong></td>' +
+                        '<td>' + d.campo + '</td>' +
+                        '<td>' + etiqHtml + '</td>' +
+                        '<td>' + packHtml + '</td>' +
+                        '<td>' + statusHtml + '</td>' +
+                    '</tr>'
+                );
+            });
+
+            discrepModal = new bootstrap.Modal($('#modalDiscrepancias')[0]);
+        }
+
+        // Show AI modal if ia=Sí
+        if (ia === 'Sí') {
+            if (diffCount > 0) {
+                $('#aiDiscrepAlert').show();
+            }
+            var aiModal = new bootstrap.Modal($('#modalAI')[0]);
+            aiModal.show();
+        }
+
+        // Ver discrepancias button
+        $('#btnVerDiscrepancias').on('click', function () {
+            bootstrap.Modal.getInstance($('#modalAI')[0]).hide();
+            setTimeout(function () {
+                if (discrepModal) discrepModal.show();
+            }, 300);
+        });
+    });
+    </script>
+</body>
+</html>

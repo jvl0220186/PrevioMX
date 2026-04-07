@@ -1,0 +1,141 @@
+================================================================================
+  HISTORIA DE USUARIO — CAPTURA DE ETIQUETAS Y PACKING LIST
+================================================================================
+
+NOMBRE DE LA HISTORIA
+---------------------
+Captura fotográfica de etiquetas de bultos y digitalización de Packing List
+
+
+USUARIOS / ROLES
+-----------------
+- Operador de almacén: Usuario principal. Escanea bultos, toma fotografías de
+  etiquetas y del documento Packing List desde un dispositivo móvil.
+
+- Supervisor: Autoriza el cierre anticipado del proceso de captura del Packing
+  List cuando no se han fotografiado todas las hojas declaradas.
+
+
+DESCRIPCIÓN
+-----------
+Como operador de almacén, necesito una herramienta móvil que me permita escanear
+los bultos de una referencia, capturar fotografías de sus etiquetas y,
+opcionalmente, fotografiar las hojas del documento Packing List, para que toda
+la evidencia sea enviada a procesamiento automático mediante inteligencia
+artificial.
+
+El proceso se compone de dos fases secuenciales:
+
+  FASE 1 — Captura de etiquetas de bultos
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  1. El operador ingresa o escanea el código del bulto (ej. 00010048357845).
+  2. El sistema valida que el bulto exista y muestra la información asociada:
+     código, referencia, cliente y proveedor.
+  3. El operador presiona "Continuar" para iniciar la toma de fotos.
+  4. Se presenta una pantalla tipo cámara donde el operador enfoca la etiqueta
+     del bulto y dispara la captura.
+  5. Tras capturar, puede:
+     a) Tomar otra foto del mismo bulto ("Tomar Otra").
+     b) Pasar al siguiente bulto ("Siguiente Bulto").
+     c) Finalizar la captura de etiquetas ("Cerrar Captura de Etiquetas").
+  6. Al cerrar la captura, se muestra un resumen con las fotos agrupadas por
+     bulto, indicando cantidad total de fotos y de bultos procesados.
+  7. El operador confirma con "Concluir Captura de Etiquetas" para avanzar a
+     la Fase 2.
+
+  FASE 2 — Packing List (opcional)
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  8. El sistema pregunta: "¿Cuenta con Packing List?"
+     - Si responde NO → se envían las fotografías a procesamiento y el flujo
+       regresa al inicio.
+     - Si responde SÍ → continúa al paso 9.
+  9. El sistema pregunta: "¿Desea tomar fotos del documento?"
+     - Si responde NO → se envían las fotografías a procesamiento y el flujo
+       regresa al inicio.
+     - Si responde SÍ → se solicita el número total de hojas del documento.
+  10. El operador indica cuántas hojas tiene el Packing List (valor numérico,
+      entre 1 y 99).
+  11. Se presenta una pantalla tipo cámara optimizada para documentos, ocupando
+      el área máxima de la pantalla, con el botón de disparo en la parte
+      inferior.
+  12. Un contador visible muestra el progreso: "X de Y hoja(s)".
+  13. Tras capturar cada hoja, el operador puede:
+      a) Continuar con la siguiente hoja ("Siguiente Hoja").
+      b) Intentar terminar antes de completar todas las hojas ("Terminar").
+  14. Cuando se captura la última hoja declarada, el sistema avanza
+      automáticamente al procesamiento.
+  15. Al finalizar, se muestra una pantalla de progreso con dos etapas:
+      a) "Generando documento PDF" — barra de progreso animada.
+      b) "Procesando con inteligencia artificial" — mensaje de espera.
+  16. Tras completar, el sistema muestra un mensaje de éxito y regresa al
+      inicio automáticamente.
+
+
+REGLAS DE NEGOCIO
+-----------------
+RN-01   El código de bulto debe tener al menos 14 caracteres y existir en el
+        sistema. Si no es válido, se muestra mensaje de error y no se permite
+        avanzar.
+
+RN-02   La referencia del bulto se obtiene de los últimos 8 dígitos del código.
+        Todos los bultos escaneados en una sesión pertenecen a la misma
+        referencia.
+
+RN-03   Para cada bulto se debe capturar al menos una fotografía de etiqueta
+        antes de poder avanzar al siguiente bulto o cerrar la captura.
+
+RN-04   El resumen de captura agrupa las fotografías por bulto (no por
+        referencia), mostrando: número de bulto, código, cantidad de fotos y
+        miniaturas.
+
+RN-05   La pregunta sobre Packing List solo aparece después de concluir la
+        captura de etiquetas. No puede omitirse; el operador debe responder
+        Sí o No.
+
+RN-06   Si el operador responde negativamente en cualquiera de las preguntas
+        de la Fase 2 (¿Tiene PL? o ¿Desea tomar fotos?), las fotografías de
+        etiquetas ya capturadas se envían a procesamiento normalmente.
+
+RN-07   El número de hojas del Packing List es obligatorio antes de iniciar
+        la captura. Debe ser un valor entero entre 1 y 99.
+
+RN-08   El contador de hojas debe mostrar en todo momento cuántas hojas se han
+        capturado vs. el total declarado (formato: "X de Y").
+
+RN-09   Si el operador intenta terminar la captura del Packing List sin haber
+        fotografiado todas las hojas declaradas, el sistema debe:
+        a) Mostrar un aviso (modal) indicando cuántas hojas faltan.
+        b) Ofrecer la opción de "Seguir capturando" (volver a la cámara).
+        c) Ofrecer la opción de "Autorizar cierre", la cual requiere
+           clave de supervisor.
+
+RN-10   La clave de supervisor es requerida únicamente para autorizar el cierre
+        anticipado del Packing List (hojas incompletas). Si la clave es
+        incorrecta, se muestra error y no se permite continuar.
+
+RN-11   Cuando se captura la última hoja (alcanzando el total declarado), el
+        sistema procede automáticamente a la generación del PDF sin requerir
+        acción adicional del operador.
+
+RN-12   La generación del PDF muestra un progreso visual con las fases:
+        procesamiento de hojas, generación del PDF y finalización. Al
+        completar, transiciona a un estado de "procesamiento AI" antes de
+        redirigir al inicio.
+
+RN-13   Al concluir cualquier camino del flujo (con o sin Packing List), se
+        muestra un mensaje amigable indicando que las fotografías están siendo
+        procesadas y que se notificará cuando estén listas.
+
+RN-14   La página de captura es independiente del resto de la aplicación:
+        no comparte navegación, estilos ni scripts con otras páginas del
+        sistema.
+
+RN-15   La interfaz debe ser completamente responsiva, optimizada para uso
+        en dispositivos móviles. Tema claro con color primario #FF551A.
+
+
+================================================================================
+  Archivo: take-pictures.html
+  Proyecto: PrevioMX_S3
+  Última actualización: Marzo 2026
+================================================================================

@@ -1,0 +1,124 @@
+================================================================================
+DASHBOARD DE PREVIOS — pages/dashboard-previos.html
+================================================================================
+Vista de escritorio (responsive) para supervisar referencias pendientes de
+previo: métricas por estatus, tabla filtrable y acceso al detalle para iniciar
+captura. Los datos son estáticos de demostración (mockData en el mismo archivo).
+
+
+================================================================================
+1. PROPÓSITO Y CONTEXTO
+================================================================================
+- Título de página: "Sistema de Captura de Previos - PrevioMX".
+- Complementa el flujo móvil (take-pictures.html): aquí el usuario de oficina
+  ve el inventario de referencias y puede abrir el detalle de una fila para
+  continuar o revisar el proceso de captura.
+- No hay login en esta pantalla; el navbar muestra un contador fijo de
+  "Pendientes" (336) decorativo.
+
+
+================================================================================
+2. BARRA SUPERIOR (navbar)
+================================================================================
+- Marca: "Sistema de Captura de Previos" / subtítulo "Previos MX".
+- Texto: número de pendientes (valor fijo en HTML de demo).
+- Botón con icono de luna: solo UI (sin lógica de tema oscuro conectada en el
+  script actual).
+
+
+================================================================================
+3. TARJETAS KPI (stat-cards)
+================================================================================
+Cuatro tarjetas en grid (4 columnas en escritorio; 2 o 1 en móvil según ancho):
+
+  a) Sin Documentos        — estilo fondo cálido (stat-sin-docs)
+  b) Procesando Documentos — estilo neutro (stat-procesando)
+  c) Documento Listo       — estilo verde suave (stat-listo)
+  d) Total                 — borde acento primario (stat-total)
+
+Comportamiento (JavaScript):
+- Al hacer clic en una tarjeta se alterna un filtro sobre la columna "Estatus"
+  de la tabla.
+- "Total" limpia el filtro por estatus (muestra todos los registros que pasen
+  búsqueda de texto).
+- Repetir clic en la misma tarjeta activa quita el filtro (ninguna tarjeta
+  seleccionada).
+- Los números grandes de las tarjetas son fijos en el HTML; no se recalculan
+  automáticamente al filtrar (solo la tabla refleja el subconjunto).
+
+
+================================================================================
+4. SECCIÓN "REFERENCIAS PENDIENTES DE PREVIO"
+================================================================================
+- Título de bloque: "Referencias Pendientes de Previo".
+- Búsqueda (#searchInput): filtra en tiempo real sobre un texto concatenado de
+  referencia, bodega, cliente, proveedor, tipo de envío, fecha y estatus
+  (coincidencia parcial, sin distinguir mayúsculas).
+- Botón "opciones seleccionadas" (#btnFilter): presentación solamente; en el
+  código actual no tiene manejador de eventos (no abre panel de filtros).
+
+
+================================================================================
+5. TABLA DE DATOS (#dataTable / #tableBody)
+================================================================================
+Columnas:
+  - Número de Referencia
+  - Bodega
+  - Cliente
+  - Proveedor
+  - Tipo Envío
+  - Fecha de Llegada
+  - Bultos (centrado)
+  - Estatus (con clase visual según valor)
+  - IA (centrado): "Sí" con badge destacado, "No" en gris, o "—" si no aplica
+  - Acción (centrado)
+
+Estatus reconocidos en la demo:
+  - "Sin Documentos"
+  - "Procesando Etiquetas/Documento"
+  - "Documento Listo"
+
+Columna Acción:
+  - Si estatus es "Documento Listo" o "Sin Documentos": botón "Iniciar Captura"
+    (.btn-iniciar) con data-ref y data-ia.
+  - Si estatus es "Procesando Etiquetas/Documento": texto "Procesando" con icono
+    de reloj de arena (sin botón).
+
+Si no hay filas tras filtrar, se muestra una fila única con mensaje
+"No se encontraron registros".
+
+
+================================================================================
+6. NAVEGACIÓN A DETALLE
+================================================================================
+- Clic en "Iniciar Captura":
+    window.location.href = 'detalle-previo.html?ref=' + ref + '&ia=' + ia
+  (ia codificado con encodeURIComponent).
+- Así se abre detalle-previo.html con la referencia y el indicador de IA para
+  continuar el flujo de revisión/captura en esa pantalla.
+
+
+================================================================================
+7. BOTÓN FLOTANTE (FAB)
+================================================================================
+- Esquina inferior derecha, icono de chat (.fab-chat).
+- Sin lógica asociada en el script (solo decorativo en la demo).
+
+
+================================================================================
+8. DATOS DE DEMOSTRACIÓN (mockData)
+================================================================================
+- Arreglo en JavaScript con ~17 filas de ejemplo (referencias 10080354, etc.).
+- Campos por fila: ref, bodega, cliente, proveedor, tipo, fecha, bultos,
+  estatus, ia.
+- En integración real se sustituiría por consumo de API y se recalcularían los
+  KPI a partir del backend.
+
+
+================================================================================
+9. DEPENDENCIAS TÉCNICAS
+================================================================================
+- Bootstrap 5.3.3 (bundle), jQuery 3.7.1, Bootstrap Icons 1.11.3.
+- Sin persistencia local ni sesión en esta página.
+
+Archivo relacionado recomendado para seguir el flujo: pages/detalle-previo.html

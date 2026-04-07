@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - PrevioMX</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+    <div class="bg-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg fixed-top glass-nav">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand brand-glow" href="../index.html">
+                <i class="bi bi-hexagon-fill me-2"></i>PrevioMX
+            </a>
+            <button class="navbar-toggler custom-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+                <span class="toggler-icon"><span></span><span></span><span></span></span>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
+                    <li class="nav-item"><a class="nav-link" href="../index.html"><i class="bi bi-grid-1x2 me-1"></i>Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="dashboard.html"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="mobile.html"><i class="bi bi-phone me-1"></i>Móvil</a></li>
+                    <li class="nav-item"><a class="nav-link" href="components.html"><i class="bi bi-puzzle me-1"></i>Componentes</a></li>
+                    <li class="nav-item"><a class="nav-link" href="take-pictures.html"><i class="bi bi-camera me-1"></i>Fotos</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="container">
+            <span class="badge badge-glass mb-3"><i class="bi bi-speedometer2 me-1"></i>Dashboard</span>
+            <h1>Panel de <span class="gradient-text">Control</span></h1>
+            <p>Vista general de métricas, actividad y rendimiento del sistema.</p>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <section class="container mb-4">
+        <div class="row g-3">
+            <div class="col-6 col-lg-3">
+                <div class="dash-stat-card">
+                    <div class="dash-stat-icon purple"><i class="bi bi-people"></i></div>
+                    <div class="dash-stat-value">2,847</div>
+                    <div class="dash-stat-label">Usuarios</div>
+                    <div class="dash-stat-change up mt-1"><i class="bi bi-arrow-up-short"></i>12.5%</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="dash-stat-card">
+                    <div class="dash-stat-icon teal"><i class="bi bi-cart3"></i></div>
+                    <div class="dash-stat-value">$184K</div>
+                    <div class="dash-stat-label">Ingresos</div>
+                    <div class="dash-stat-change up mt-1"><i class="bi bi-arrow-up-short"></i>8.2%</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="dash-stat-card">
+                    <div class="dash-stat-icon pink"><i class="bi bi-bag-check"></i></div>
+                    <div class="dash-stat-value">1,429</div>
+                    <div class="dash-stat-label">Órdenes</div>
+                    <div class="dash-stat-change down mt-1"><i class="bi bi-arrow-down-short"></i>3.1%</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="dash-stat-card">
+                    <div class="dash-stat-icon yellow"><i class="bi bi-star"></i></div>
+                    <div class="dash-stat-value">4.8</div>
+                    <div class="dash-stat-label">Rating</div>
+                    <div class="dash-stat-change up mt-1"><i class="bi bi-arrow-up-short"></i>0.3</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Charts Row -->
+    <section class="container mb-4">
+        <div class="row g-3">
+            <div class="col-lg-8">
+                <div class="dash-chart-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0"><i class="bi bi-graph-up me-2 text-accent-2"></i>Ventas Mensuales</h6>
+                        <select class="form-select-glass" style="width:auto;padding:0.35rem 2rem 0.35rem 0.75rem;font-size:0.8rem;">
+                            <option>Últimos 12 meses</option>
+                            <option>Últimos 6 meses</option>
+                            <option>Este mes</option>
+                        </select>
+                    </div>
+                    <div class="chart-placeholder" id="salesChart"></div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="dash-chart-card h-100">
+                    <h6><i class="bi bi-pie-chart me-2 text-accent-3"></i>Distribución</h6>
+                    <div class="d-flex flex-column gap-3 mt-4">
+                        <div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <small>Producto A</small><small class="text-accent-1">45%</small>
+                            </div>
+                            <div class="progress" style="height:6px;background:var(--glass-bg);">
+                                <div class="progress-bar" style="width:45%;background:var(--accent-1);border-radius:3px;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <small>Producto B</small><small class="text-accent-2">30%</small>
+                            </div>
+                            <div class="progress" style="height:6px;background:var(--glass-bg);">
+                                <div class="progress-bar" style="width:30%;background:var(--accent-2);border-radius:3px;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <small>Producto C</small><small class="text-accent-3">15%</small>
+                            </div>
+                            <div class="progress" style="height:6px;background:var(--glass-bg);">
+                                <div class="progress-bar" style="width:15%;background:var(--accent-3);border-radius:3px;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <small>Otros</small><small class="text-accent-4">10%</small>
+                            </div>
+                            <div class="progress" style="height:6px;background:var(--glass-bg);">
+                                <div class="progress-bar" style="width:10%;background:var(--accent-4);border-radius:3px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Recent Activity Table -->
+    <section class="container pb-5">
+        <div class="dash-chart-card">
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                <h6 class="mb-0"><i class="bi bi-clock-history me-2 text-accent-1"></i>Actividad Reciente</h6>
+                <input type="text" class="form-control-glass" placeholder="Buscar..." style="max-width:240px;padding:0.4rem 0.8rem;font-size:0.85rem;">
+            </div>
+            <div class="table-responsive">
+                <table class="table table-glass mb-0">
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Acción</th>
+                            <th>Estado</th>
+                            <th>Fecha</th>
+                            <th class="text-end">Monto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Carlos M.</strong></td>
+                            <td>Compra realizada</td>
+                            <td><span class="status-dot active"></span>Completado</td>
+                            <td>13 Mar 2026</td>
+                            <td class="text-end text-accent-2">$1,250.00</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Ana R.</strong></td>
+                            <td>Suscripción renovada</td>
+                            <td><span class="status-dot active"></span>Completado</td>
+                            <td>12 Mar 2026</td>
+                            <td class="text-end text-accent-2">$499.00</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Luis P.</strong></td>
+                            <td>Pago pendiente</td>
+                            <td><span class="status-dot pending"></span>Pendiente</td>
+                            <td>12 Mar 2026</td>
+                            <td class="text-end text-accent-4">$820.00</td>
+                        </tr>
+                        <tr>
+                            <td><strong>María G.</strong></td>
+                            <td>Reembolso solicitado</td>
+                            <td><span class="status-dot inactive"></span>Cancelado</td>
+                            <td>11 Mar 2026</td>
+                            <td class="text-end text-accent-3">-$350.00</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Diego S.</strong></td>
+                            <td>Upgrade de plan</td>
+                            <td><span class="status-dot active"></span>Completado</td>
+                            <td>11 Mar 2026</td>
+                            <td class="text-end text-accent-2">$2,100.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="glass-footer">
+        <div class="container">
+            <div class="row align-items-center py-4">
+                <div class="col-md-6 text-center text-md-start">
+                    <span class="brand-glow"><i class="bi bi-hexagon-fill me-2"></i>PrevioMX</span>
+                    <small class="d-block text-muted mt-1">Prototipos &copy; 2026</small>
+                </div>
+                <div class="col-md-6 text-center text-md-end mt-3 mt-md-0">
+                    <a href="#" class="footer-link me-3"><i class="bi bi-github"></i></a>
+                    <a href="#" class="footer-link me-3"><i class="bi bi-slack"></i></a>
+                    <a href="#" class="footer-link"><i class="bi bi-figma"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="../js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mis Previos - PrevioMX</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF551A;
+            --primary-light: #FF7A4D;
+            --primary-bg: rgba(255, 85, 26, 0.08);
+            --primary-dark: #e04a15;
+            --success: #22c55e;
+            --success-bg: rgba(34, 197, 94, 0.1);
+            --danger: #ef4444;
+            --danger-bg: rgba(239, 68, 68, 0.1);
+            --warning: #f59e0b;
+            --warning-bg: rgba(245, 158, 11, 0.1);
+            --info: #3b82f6;
+            --info-bg: rgba(59, 130, 246, 0.08);
+
+            --bg: #f8f9fb;
+            --bg-card: #ffffff;
+            --border: #e5e7eb;
+            --border-light: #f0f1f3;
+            --text: #1f2937;
+            --text-secondary: #6b7280;
+            --text-muted: #9ca3af;
+
+            --font-heading: 'Space Grotesk', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 18px;
+            --radius-xl: 30px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg);
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+        }
+
+        .mobile-frame-wrapper {
+            display: flex;
+            justify-content: center;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .mobile-frame {
+            width: 100%;
+            max-width: 480px;
+            min-height: 100vh;
+            background: var(--bg);
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        @media (min-width: 768px) {
+            .mobile-frame-wrapper { padding: 2rem 0; min-height: auto; }
+            .mobile-frame {
+                border-radius: 32px;
+                border: 1px solid var(--border);
+                min-height: 780px;
+                max-height: 900px;
+                overflow-y: auto;
+            }
+        }
+
+        /* ---- Top Bar ---- */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-light);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .top-bar-left .tb-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: var(--primary-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 0.95rem;
+        }
+
+        .top-bar-left .tb-text h1 {
+            font-family: var(--font-heading);
+            font-size: 0.92rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .top-bar-left .tb-text span {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+        }
+
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tb-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .tb-btn .tb-dot {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--danger);
+            border: 1.5px solid var(--bg-card);
+        }
+
+        .tb-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-heading);
+            font-weight: 700;
+            font-size: 0.72rem;
+        }
+
+        /* ---- KPI Bar ---- */
+        .kpi-bar {
+            display: flex;
+            gap: 6px;
+            padding: 0.7rem 1rem;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .kpi-bar::-webkit-scrollbar { display: none; }
+
+        .kpi-chip {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0.4rem 0.75rem;
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+
+        .kpi-chip:active { transform: scale(0.97); }
+
+        .kpi-chip.active {
+            border-color: var(--primary);
+            background: var(--primary-bg);
+        }
+
+        .kpi-chip .kc-val {
+            font-family: var(--font-heading);
+            font-weight: 800;
+            font-size: 0.88rem;
+        }
+
+        .kpi-chip .kc-label {
+            font-size: 0.68rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .kpi-chip.active .kc-label { color: var(--primary); }
+
+        .kpi-chip.kc-ai .kc-val { color: var(--info); }
+        .kpi-chip.kc-discrep .kc-val { color: #f97316; }
+        .kpi-chip.kc-cerrado .kc-val { color: var(--success); }
+
+        /* ---- Search Bar ---- */
+        .search-bar {
+            padding: 0 1rem 0.5rem;
+        }
+
+        .search-bar-inner {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0.45rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--bg-card);
+        }
+
+        .search-bar-inner i { color: var(--text-muted); font-size: 0.88rem; }
+
+        .search-bar-inner input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 0.82rem;
+            font-family: var(--font-body);
+            background: transparent;
+            color: var(--text);
+        }
+
+        .search-bar-inner input::placeholder { color: var(--text-muted); }
+
+        /* ---- List ---- */
+        .ref-list {
+            padding: 0 1rem 1rem;
+        }
+
+        .ref-section-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--text-muted);
+            padding: 0.6rem 0 0.35rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .ref-section-label .rsl-count {
+            font-family: var(--font-heading);
+            font-size: 0.68rem;
+            font-weight: 800;
+            color: var(--text-secondary);
+        }
+
+        .ref-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 0.7rem 0.8rem;
+            margin-bottom: 0.45rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .ref-card:active { transform: scale(0.98); box-shadow: 0 0 0 2px var(--primary-bg); }
+
+        .ref-card .rc-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1rem;
+        }
+
+        .ref-card .rc-icon.ai { background: var(--info-bg); color: var(--info); }
+        .ref-card .rc-icon.discrep { background: rgba(249,115,22,0.1); color: #f97316; }
+        .ref-card .rc-icon.cerrado { background: var(--success-bg); color: var(--success); }
+
+        .ref-card .rc-body { flex: 1; min-width: 0; }
+
+        .ref-card .rc-body .rc-ref {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            font-size: 0.82rem;
+            line-height: 1.2;
+        }
+
+        .ref-card .rc-body .rc-meta {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            margin-top: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .ref-card .rc-right {
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .ref-card .rc-right .rc-status {
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: var(--radius-xl);
+            white-space: nowrap;
+        }
+
+        .rc-status.st-ai { background: var(--info-bg); color: var(--info); }
+        .rc-status.st-discrep { background: rgba(249,115,22,0.1); color: #f97316; }
+        .rc-status.st-cerrado { background: var(--success-bg); color: var(--success); }
+
+        .ref-card .rc-right .rc-time {
+            font-size: 0.62rem;
+            color: var(--text-muted);
+            margin-top: 3px;
+        }
+
+        .ref-card .rc-right .rc-arrow {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        /* ---- AI progress indicator ---- */
+        .rc-ai-bar {
+            width: 100%;
+            height: 3px;
+            border-radius: 2px;
+            background: var(--border-light);
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .rc-ai-bar .rc-ai-fill {
+            height: 100%;
+            border-radius: 2px;
+            background: linear-gradient(90deg, var(--info), #60a5fa);
+            animation: aiPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes aiPulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        /* ---- Empty State ---- */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+        }
+
+        .empty-state i { font-size: 2.5rem; color: var(--border); margin-bottom: 0.8rem; }
+        .empty-state p { font-size: 0.82rem; color: var(--text-muted); }
+
+        /* ---- Toast ---- */
+        .toast-container { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 9999; }
+        .toast-msg {
+            padding: 0.55rem 1.1rem;
+            border-radius: var(--radius-xl);
+            font-size: 0.78rem;
+            font-weight: 500;
+            box-shadow: var(--shadow-md);
+            display: none;
+            white-space: nowrap;
+        }
+        .toast-msg.success { background: var(--success); color: #fff; }
+        .toast-msg.warning { background: #f97316; color: #fff; }
+        .toast-msg.info { background: var(--info); color: #fff; }
+
+        /* ---- FAB ---- */
+        .fab-camera {
+            position: fixed;
+            bottom: 1.5rem;
+            right: calc(50% - 200px);
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: var(--primary);
+            border: none;
+            color: #fff;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(255, 85, 26, 0.35);
+            z-index: 40;
+            transition: var(--transition);
+        }
+
+        .fab-camera:active { transform: scale(0.92); }
+
+        @media (max-width: 767px) {
+            .fab-camera { right: 1.2rem; }
+        }
+
+        /* ---- Detail Modal ---- */
+        .modal-ref-detail .modal-dialog {
+            margin: 0;
+            max-width: 100%;
+            min-height: 100vh;
+        }
+
+        .modal-ref-detail .modal-content {
+            border: none;
+            border-radius: 0;
+            min-height: 100vh;
+            background: var(--bg);
+        }
+
+        @media (min-width: 768px) {
+            .modal-ref-detail .modal-dialog {
+                max-width: 480px;
+                margin: 2rem auto;
+                min-height: auto;
+            }
+            .modal-ref-detail .modal-content {
+                border-radius: var(--radius-lg);
+                min-height: 600px;
+                max-height: 850px;
+                overflow-y: auto;
+            }
+        }
+
+        .mrd-topbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0.7rem 1rem;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .mrd-topbar .mrd-back {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            cursor: pointer;
+            color: var(--text);
+        }
+
+        .mrd-topbar .mrd-title {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            font-size: 0.9rem;
+            flex: 1;
+        }
+
+        .mrd-body { padding: 1rem; }
+
+        .mrd-info-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 0.8rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .mrd-info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.35rem 0;
+            font-size: 0.78rem;
+        }
+
+        .mrd-info-row:not(:last-child) { border-bottom: 1px solid var(--border-light); }
+
+        .mrd-info-row .mir-label { color: var(--text-muted); font-size: 0.72rem; }
+        .mrd-info-row .mir-val { font-weight: 600; }
+
+        .mrd-status-card {
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            text-align: center;
+            margin-bottom: 0.8rem;
+        }
+
+        .mrd-status-card .msc-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .mrd-status-card h5 {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .mrd-status-card p { font-size: 0.75rem; color: var(--text-secondary); }
+
+        .mrd-status-card.st-ai { background: var(--info-bg); border: 1px solid rgba(59,130,246,0.15); }
+        .mrd-status-card.st-ai .msc-icon { background: rgba(59,130,246,0.15); color: var(--info); }
+
+        .mrd-status-card.st-discrep { background: rgba(249,115,22,0.08); border: 1px solid rgba(249,115,22,0.15); }
+        .mrd-status-card.st-discrep .msc-icon { background: rgba(249,115,22,0.15); color: #f97316; }
+
+        .mrd-status-card.st-cerrado { background: var(--success-bg); border: 1px solid rgba(34,197,94,0.15); }
+        .mrd-status-card.st-cerrado .msc-icon { background: rgba(34,197,94,0.15); color: var(--success); }
+
+        .mrd-btn-action {
+            width: 100%;
+            padding: 0.7rem;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: var(--transition);
+            margin-bottom: 0.5rem;
+        }
+
+        .mrd-btn-action.primary { background: var(--primary); color: #fff; }
+        .mrd-btn-action.primary:active { background: var(--primary-dark); }
+        .mrd-btn-action.outline { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+
+        /* ---- AI Progress in detail ---- */
+        .ai-progress-detail {
+            margin: 0.8rem 0;
+        }
+
+        .ai-progress-detail .apd-bar {
+            width: 100%;
+            height: 6px;
+            border-radius: 4px;
+            background: var(--border-light);
+            overflow: hidden;
+            margin-bottom: 0.3rem;
+        }
+
+        .ai-progress-detail .apd-fill {
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, var(--info), #60a5fa);
+            transition: width 0.5s;
+        }
+
+        .ai-progress-detail .apd-text {
+            font-size: 0.7rem;
+            color: var(--info);
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="toast-container">
+        <div class="toast-msg" id="toastMsg"></div>
+    </div>
+
+    <div class="mobile-frame-wrapper">
+        <div class="mobile-frame">
+
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <div class="top-bar-left">
+                    <div class="tb-icon"><i class="bi bi-clipboard-data"></i></div>
+                    <div class="tb-text">
+                        <h1>Mis Previos</h1>
+                        <span>FEDEX para el CR 243</span>
+                    </div>
+                </div>
+                <div class="top-bar-right">
+                    <button class="tb-btn">
+                        <i class="bi bi-bell"></i>
+                        <span class="tb-dot"></span>
+                    </button>
+                    <div class="tb-avatar">MG</div>
+                </div>
+            </div>
+
+            <!-- KPI Chips -->
+            <div class="kpi-bar">
+                <div class="kpi-chip active" data-filter="all">
+                    <span class="kc-val" id="kpiTotal">0</span>
+                    <span class="kc-label">Todos</span>
+                </div>
+                <div class="kpi-chip kc-ai" data-filter="ai">
+                    <span class="kc-val" id="kpiAi">0</span>
+                    <span class="kc-label">Procesando AI</span>
+                </div>
+                <div class="kpi-chip kc-discrep" data-filter="discrep">
+                    <span class="kc-val" id="kpiDiscrep">0</span>
+                    <span class="kc-label">Con Discrepancias</span>
+                </div>
+                <div class="kpi-chip kc-cerrado" data-filter="cerrado">
+                    <span class="kc-val" id="kpiCerrado">0</span>
+                    <span class="kc-label">Cerrados</span>
+                </div>
+            </div>
+
+            <!-- Search -->
+            <div class="search-bar">
+                <div class="search-bar-inner">
+                    <i class="bi bi-search"></i>
+                    <input type="text" id="searchInput" placeholder="Buscar referencia, cliente...">
+                </div>
+            </div>
+
+            <!-- Ref List -->
+            <div class="ref-list" id="refList"></div>
+
+        </div>
+    </div>
+
+    <!-- FAB: ir a tomar fotos -->
+    <button class="fab-camera" title="Tomar Fotos" onclick="window.location.href='take-pictures.html'">
+        <i class="bi bi-camera-fill"></i>
+    </button>
+
+    <!-- Modal: Detalle de Referencia -->
+    <div class="modal fade modal-ref-detail" id="modalRefDetail" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="mrd-topbar">
+                    <button class="mrd-back" id="btnRefDetailBack"><i class="bi bi-arrow-left"></i></button>
+                    <span class="mrd-title" id="mrdRef"></span>
+                    <span class="rc-status" id="mrdStatusBadge"></span>
+                </div>
+                <div class="mrd-body">
+                    <div class="mrd-info-card" id="mrdInfoCard"></div>
+                    <div id="mrdStatusArea"></div>
+                    <div id="mrdActions"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script>
+    $(document).ready(function () {
+
+        var mockRefs = [
+            { ref: '10081290', cliente: 'DISTRIBUIDORA DE ACEROS DEL NORTE SA', proveedor: 'CLEVELAND-CLIFFS STEEL LLC', bultos: 2, fecha: '05 mar 2026', tipo: 'DIRECTA FAST', estatus: 'discrep', ia: true, aiPct: 100, discrepancias: 3, time: 'Hace 12 min' },
+            { ref: '10081412', cliente: 'ACEROS Y LAMINADOS SA DE CV', proveedor: 'CLEVELAND-CLIFFS STEEL LLC', bultos: 1, fecha: '11 mar 2026', tipo: 'DIRECTA CON MANIOBRAS', estatus: 'discrep', ia: true, aiPct: 100, discrepancias: 5, time: 'Hace 35 min' },
+            { ref: '10081430', cliente: 'NP STEEL SA DE CV', proveedor: 'CLEVELAND-CLIFFS STEEL LLC', bultos: 1, fecha: '12 mar 2026', tipo: 'DIRECTA CON MANIOBRAS', estatus: 'discrep', ia: true, aiPct: 100, discrepancias: 2, time: 'Hace 1h 20m' },
+            { ref: '10080354', cliente: 'KLOECKNER METALS SERVICE CENTERS DE MEXICO', proveedor: 'NATIONAL MATERIAL COMPANY', bultos: 1, fecha: '28 ene 2026', tipo: 'DIRECTA FAST', estatus: 'ai', ia: true, aiPct: 72, discrepancias: 0, time: 'En proceso...' },
+            { ref: '10080414', cliente: 'NP STEEL SA DE CV', proveedor: 'CLEVELAND-CLIFFS STEEL LLC', bultos: 1, fecha: '30 ene 2026', tipo: 'DIRECTA CON MANIOBRAS', estatus: 'ai', ia: true, aiPct: 45, discrepancias: 0, time: 'En proceso...' },
+            { ref: '10080503', cliente: 'NP STEEL SA DE CV', proveedor: 'NUCOR CORPORATION', bultos: 2, fecha: '01 feb 2026', tipo: 'DIRECTA FAST', estatus: 'ai', ia: true, aiPct: 88, discrepancias: 0, time: 'En proceso...' },
+            { ref: '10081084', cliente: 'NP STEEL SA DE CV', proveedor: 'CLEVELAND-CLIFFS STEEL LLC', bultos: 1, fecha: '26 feb 2026', tipo: 'DIRECTA CON MANIOBRAS', estatus: 'ai', ia: true, aiPct: 15, discrepancias: 0, time: 'En proceso...' },
+            { ref: '10081345', cliente: 'NP STEEL SA DE CV', proveedor: 'NUCOR CORPORATION', bultos: 1, fecha: '07 mar 2026', tipo: 'DIRECTA CON MANIOBRAS', estatus: 'cerrado', ia: true, aiPct: 100, discrepancias: 0, time: 'Hace 2h' },
+            { ref: '10081400', cliente: 'NP STEEL SA DE CV', proveedor: 'STEEL DYNAMICS INC', bultos: 2, fecha: '10 mar 2026', tipo: 'DIRECTA FAST', estatus: 'cerrado', ia: false, aiPct: 100, discrepancias: 0, time: 'Hace 3h' },
+            { ref: '10081425', cliente: 'KLOECKNER METALS SERVICE CENTERS DE MEXICO', proveedor: 'NUCOR CORPORATION', bultos: 3, fecha: '12 mar 2026', tipo: 'DIRECTA FAST', estatus: 'cerrado', ia: false, aiPct: 100, discrepancias: 0, time: 'Ayer' },
+            { ref: '10081203', cliente: 'NP STEEL SA DE CV', proveedor: 'NUCOR CORPORATION', bultos: 1, fecha: '03 mar 2026', tipo: 'DIRECTA CON MANIOBRAS', estatus: 'cerrado', ia: true, aiPct: 100, discrepancias: 0, time: 'Ayer' }
+        ];
+
+        var statusConfig = {
+            ai:      { label: 'Procesando AI',       icon: 'bi-cpu',                    class: 'st-ai',      iconClass: 'ai' },
+            discrep: { label: 'Con Discrepancias',    icon: 'bi-exclamation-circle-fill', class: 'st-discrep', iconClass: 'discrep' },
+            cerrado: { label: 'Cerrado',              icon: 'bi-check-circle-fill',       class: 'st-cerrado', iconClass: 'cerrado' }
+        };
+
+        var activeFilter = 'all';
+
+        function updateKpis() {
+            var counts = { ai: 0, discrep: 0, cerrado: 0 };
+            mockRefs.forEach(function (r) { counts[r.estatus]++; });
+            $('#kpiTotal').text(mockRefs.length);
+            $('#kpiAi').text(counts.ai);
+            $('#kpiDiscrep').text(counts.discrep);
+            $('#kpiCerrado').text(counts.cerrado);
+        }
+
+        function getFiltered() {
+            var q = $('#searchInput').val().toLowerCase();
+            return mockRefs.filter(function (r) {
+                if (activeFilter !== 'all' && r.estatus !== activeFilter) return false;
+                if (q) {
+                    return (r.ref + ' ' + r.cliente + ' ' + r.proveedor).toLowerCase().indexOf(q) !== -1;
+                }
+                return true;
+            });
+        }
+
+        function renderList() {
+            var data = getFiltered();
+            var $list = $('#refList').empty();
+
+            var groups = { discrep: [], ai: [], cerrado: [] };
+            data.forEach(function (r) { groups[r.estatus].push(r); });
+
+            var order = ['discrep', 'ai', 'cerrado'];
+            var sectionLabels = {
+                discrep: '<i class="bi bi-exclamation-circle-fill" style="color:#f97316;"></i> Con Discrepancias — Requieren confirmación',
+                ai: '<i class="bi bi-cpu" style="color:var(--info);"></i> Procesando con AI',
+                cerrado: '<i class="bi bi-check-circle-fill" style="color:var(--success);"></i> Previos Cerrados'
+            };
+
+            order.forEach(function (key) {
+                var items = groups[key];
+                if (items.length === 0) return;
+
+                $list.append(
+                    '<div class="ref-section-label">' + sectionLabels[key] + ' <span class="rsl-count">(' + items.length + ')</span></div>'
+                );
+
+                items.forEach(function (r) {
+                    var cfg = statusConfig[r.estatus];
+                    var aiBarHtml = '';
+                    if (r.estatus === 'ai') {
+                        aiBarHtml = '<div class="rc-ai-bar"><div class="rc-ai-fill" style="width:' + r.aiPct + '%;"></div></div>';
+                    }
+
+                    var metaText = r.cliente;
+                    if (r.estatus === 'discrep') {
+                        metaText = r.discrepancias + ' discrepancia' + (r.discrepancias !== 1 ? 's' : '') + ' · ' + r.bultos + ' bulto(s)';
+                    } else {
+                        metaText = r.bultos + ' bulto(s) · ' + r.cliente;
+                    }
+
+                    $list.append(
+                        '<div class="ref-card" data-ref="' + r.ref + '">' +
+                            '<div class="rc-icon ' + cfg.iconClass + '"><i class="bi ' + cfg.icon + '"></i></div>' +
+                            '<div class="rc-body">' +
+                                '<div class="rc-ref">' + r.ref + '</div>' +
+                                '<div class="rc-meta">' + metaText + '</div>' +
+                                aiBarHtml +
+                            '</div>' +
+                            '<div class="rc-right">' +
+                                '<span class="rc-status ' + cfg.class + '">' + cfg.label + '</span>' +
+                                (r.time ? '<div class="rc-time">' + r.time + '</div>' : '') +
+                            '</div>' +
+                        '</div>'
+                    );
+                });
+            });
+
+            if (data.length === 0) {
+                $list.append(
+                    '<div class="empty-state">' +
+                        '<i class="bi bi-inbox"></i>' +
+                        '<p>No se encontraron referencias</p>' +
+                    '</div>'
+                );
+            }
+        }
+
+        updateKpis();
+        renderList();
+
+        // Filter chips
+        $('.kpi-chip').on('click', function () {
+            var f = $(this).data('filter');
+            $('.kpi-chip').removeClass('active');
+            $(this).addClass('active');
+            activeFilter = f;
+            renderList();
+        });
+
+        // Search
+        $('#searchInput').on('input', function () { renderList(); });
+
+        // Card click -> detail
+        $('#refList').on('click', '.ref-card', function () {
+            var ref = String($(this).data('ref'));
+            var row = mockRefs.find(function (r) { return r.ref === ref; });
+            if (!row) return;
+            openRefDetail(row);
+        });
+
+        function openRefDetail(r) {
+            var cfg = statusConfig[r.estatus];
+            $('#mrdRef').text('Ref. ' + r.ref);
+            $('#mrdStatusBadge').attr('class', 'rc-status ' + cfg.class).text(cfg.label);
+
+            var $info = $('#mrdInfoCard').empty();
+            var rows = [
+                ['Cliente', r.cliente],
+                ['Proveedor', r.proveedor],
+                ['Tipo Envío', r.tipo],
+                ['Fecha Llegada', r.fecha],
+                ['Bultos', r.bultos]
+            ];
+            if (r.ia) rows.push(['AI', '<span class="ia-badge-ai" style="font-size:0.65rem;padding:1px 6px;background:linear-gradient(135deg,#4ade80,#a3e635,#facc15);color:#1a3a1a;border-radius:12px;font-weight:700;"><i class="bi bi-stars"></i> Sí</span>']);
+
+            rows.forEach(function (pair) {
+                $info.append(
+                    '<div class="mrd-info-row">' +
+                        '<span class="mir-label">' + pair[0] + '</span>' +
+                        '<span class="mir-val">' + pair[1] + '</span>' +
+                    '</div>'
+                );
+            });
+
+            var $status = $('#mrdStatusArea').empty();
+            var $actions = $('#mrdActions').empty();
+
+            if (r.estatus === 'ai') {
+                $status.html(
+                    '<div class="mrd-status-card st-ai">' +
+                        '<div class="msc-icon"><i class="bi bi-cpu"></i></div>' +
+                        '<h5>Procesando con Inteligencia Artificial</h5>' +
+                        '<p>Estamos analizando las etiquetas y documentos. Te notificaremos cuando esté listo.</p>' +
+                        '<div class="ai-progress-detail">' +
+                            '<div class="apd-bar"><div class="apd-fill" style="width:' + r.aiPct + '%;"></div></div>' +
+                            '<span class="apd-text">' + r.aiPct + '% completado</span>' +
+                        '</div>' +
+                    '</div>'
+                );
+            } else if (r.estatus === 'discrep') {
+                $status.html(
+                    '<div class="mrd-status-card st-discrep">' +
+                        '<div class="msc-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>' +
+                        '<h5>' + r.discrepancias + ' Discrepancia' + (r.discrepancias !== 1 ? 's' : '') + ' Encontrada' + (r.discrepancias !== 1 ? 's' : '') + '</h5>' +
+                        '<p>Se encontraron diferencias entre las etiquetas y el packing list. Revisa y confirma cada partida.</p>' +
+                    '</div>'
+                );
+                $actions.html(
+                    '<button class="mrd-btn-action primary btn-ir-compulsa" data-ref="' + r.ref + '"><i class="bi bi-search"></i> Revisar Discrepancias</button>' +
+                    '<button class="mrd-btn-action outline"><i class="bi bi-download"></i> Descargar PDF</button>'
+                );
+            } else if (r.estatus === 'cerrado') {
+                $status.html(
+                    '<div class="mrd-status-card st-cerrado">' +
+                        '<div class="msc-icon"><i class="bi bi-check-circle-fill"></i></div>' +
+                        '<h5>Previo Cerrado</h5>' +
+                        '<p>Este previo ha sido procesado y cerrado correctamente. No hay acciones pendientes.</p>' +
+                    '</div>'
+                );
+                $actions.html(
+                    '<button class="mrd-btn-action primary" data-ref="' + r.ref + '"><i class="bi bi-eye"></i> Ver Detalle del Previo</button>' +
+                    '<button class="mrd-btn-action outline"><i class="bi bi-download"></i> Descargar PDF</button>'
+                );
+            }
+
+            var modal = new bootstrap.Modal($('#modalRefDetail')[0]);
+            modal.show();
+        }
+
+        $('#btnRefDetailBack').on('click', function () {
+            var inst = bootstrap.Modal.getInstance($('#modalRefDetail')[0]);
+            if (inst) inst.hide();
+        });
+
+        $(document).on('click', '.btn-ir-compulsa', function () {
+            var ref = String($(this).data('ref'));
+            var inst = bootstrap.Modal.getInstance($('#modalRefDetail')[0]);
+            if (inst) inst.hide();
+            setTimeout(function () {
+                window.location.href = 'take-pictures.html?compulsa=' + ref;
+            }, 300);
+        });
+
+        function showToast(msg, type) {
+            var $t = $('#toastMsg');
+            $t.text(msg).attr('class', 'toast-msg ' + (type || 'info')).fadeIn(200);
+            setTimeout(function () { $t.fadeOut(300); }, 2800);
+        }
+    });
+    </script>
+</body>
+</html>
