@@ -1,0 +1,4 @@
+enum ResultadoRrnaRevision {
+  cumple,
+  noCumple,
+}

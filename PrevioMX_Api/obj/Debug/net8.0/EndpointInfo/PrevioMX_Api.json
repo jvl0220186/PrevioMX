@@ -334,6 +334,18 @@
         }
       }
     },
+    "/health": {
+      "get": {
+        "tags": [
+          "PrevioMX_Api"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/Protected/test": {
       "get": {
         "tags": [

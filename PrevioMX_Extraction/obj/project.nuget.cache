@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "M/cJByvJVDM=",
+  "success": true,
+  "projectFilePath": "C:\\GitHub\\PrevioMX\\PrevioMX_Extraction\\PrevioMX_Extraction.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\julopez.mty\\.nuget\\packages\\amazon.lambda.core\\2.8.1\\amazon.lambda.core.2.8.1.nupkg.sha512",
+    "C:\\Users\\julopez.mty\\.nuget\\packages\\amazon.lambda.serialization.systemtextjson\\2.4.5\\amazon.lambda.serialization.systemtextjson.2.4.5.nupkg.sha512",
+    "C:\\Users\\julopez.mty\\.nuget\\packages\\microsoft.netcore.app.crossgen2.win-x64\\10.0.5\\microsoft.netcore.app.crossgen2.win-x64.10.0.5.nupkg.sha512"
+  ],
+  "logs": []
+}

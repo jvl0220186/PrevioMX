@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -7,6 +8,15 @@ using PrevioMX_Api.Business;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Detrás de ngrok/proxy: la petición llega como HTTP local pero el cliente usó HTTPS.
+// Sin esto, UseHttpsRedirection() redirige a https://localhost:... y el móvil/ngrok falla (p. ej. 503).
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 // Configurar CORS para permitir peticiones del frontend
 builder.Services.AddCors(options =>
@@ -196,6 +206,9 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
+// Debe ir antes de UseHttpsRedirection y del resto del pipeline.
+app.UseForwardedHeaders();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -203,7 +216,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// No usar UseHttpsRedirection: detrás de ngrok/IIS el TLS lo termina el proxy. Kestrel recibe HTTP local;
+// redirigir a https://localhost rompe móviles y suele manifestarse como 503 vía ngrok.
 
 // IMPORTANTE: UseCors debe ir antes de Authentication
 app.UseCors("AllowFrontend");
@@ -211,6 +225,9 @@ app.UseCors("AllowFrontend");
 // IMPORTANTE: UseAuthentication debe ir antes de UseAuthorization
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Diagnóstico túnel: GET https://TU_DOMINIO.ngrok-free.dev/health (con header ngrok-skip-browser-warning)
+app.MapGet("/health", () => Results.Json(new { status = "ok", utc = DateTime.UtcNow }));
 
 app.MapControllers();
 

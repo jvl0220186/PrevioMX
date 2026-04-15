@@ -24,12 +24,15 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
+  <!-- Referencias locales (carpeta DLL). En SDK-style suele editarse el .csproj; VS a veces no deja “Examinar” como en .NET Framework. -->
   <ItemGroup>
-    <Reference Include="onecore.security.encryptvr">
-      <HintPath>..\..\..\DLL\onecore.security.encryptvr.dll</HintPath>
-    </Reference>
     <Reference Include="onecore.security.services">
-      <HintPath>..\..\..\Apostol\Dev\ApostolWeb\ApostolWeb\onecore.security.services.dll</HintPath>
+      <HintPath>$(MSBuildThisFileDirectory)DLL\onecore.security.services.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="onecore.security.encryptvr">
+      <HintPath>$(MSBuildThisFileDirectory)DLL\onecore.security.encryptvr.dll</HintPath>
+      <Private>true</Private>
     </Reference>
   </ItemGroup>
 
