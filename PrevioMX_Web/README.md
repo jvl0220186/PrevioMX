@@ -1,114 +1,176 @@
 # PrevioMX Web
 
-Aplicación web desarrollada en React + JavaScript para conectar con la API .NET Core de PrevioMX.
+Aplicacion React + Vite para consultar pendientes, capturar previos, validar partidas y
+cerrar/reabrir previos contra la API .NET de PrevioMX.
 
-## Características
+## Caracteristicas
 
-- ✅ Autenticación JWT
-- ✅ Arquitectura separada (vistas, componentes, servicios, estilos)
-- ✅ Rutas protegidas
-- ✅ Interceptores de Axios para manejo de tokens
-- ✅ Context API para gestión de estado de autenticación
+- Autenticacion JWT con token persistido en `localStorage`.
+- Rutas protegidas para Dashboard y Captura.
+- Cliente Axios con `baseURL`, timeout, headers e interceptores centralizados.
+- Flujo de captura con partidas, OpenPO, Standard Pack, MMS y validaciones de marca/modelo.
+- Visor PDF con OCR mediante `pdfjs-dist` y `tesseract.js`.
 
-## Estructura del Proyecto
+## Estructura del proyecto
 
 ```
 PrevioMX_Web/
 ├── src/
-│   ├── components/          # Componentes reutilizables
-│   │   ├── auth/           # Componentes de autenticación
-│   │   ├── common/         # Componentes comunes (Loading, etc.)
-│   │   └── layout/         # Componentes de layout (Header, etc.)
-│   ├── config/             # Configuraciones
-│   ├── contexts/           # Context API (AuthContext)
-│   ├── routes/             # Configuración de rutas
-│   ├── services/           # Servicios de API
-│   ├── styles/             # Estilos globales
-│   └── views/              # Vistas/páginas
-├── package.json
-├── vite.config.js
-└── README.md
+│   ├── components/
+│   │   ├── auth/              # Formulario de login
+│   │   ├── capture/           # Formulario de partidas y visor PDF/OCR
+│   │   ├── common/            # Dropdowns, loading, toast, proveedores
+│   │   ├── dashboard/         # Tabla y tarjetas de dashboard
+│   │   └── layout/            # Header
+│   ├── config/                # API_CONFIG y URL base
+│   ├── contexts/              # AuthProvider/AuthContext
+│   ├── routes/                # Rutas publicas y protegidas
+│   ├── services/              # auth.service, api.service, previo.service
+│   ├── styles/                # Estilos globales y por vista
+│   └── views/                 # LoginView, DashboardView, CaptureView
+├── public/web.config          # Reglas IIS para SPA
+├── vite.config.js             # Base /PrevioMX/ y worker PDF
+└── package.json
 ```
 
-## Instalación
+## Instalacion
 
-1. Instalar dependencias:
 ```bash
 npm install
 ```
 
-2. Configurar variables de entorno:
+Configura la URL base de la API si no quieres usar los valores por defecto:
 
-   **Opción A: Archivo único `.env` (recomendado para empezar)**
-   ```bash
-   # Crear archivo .env en la raíz del proyecto
-   VITE_API_BASE_URL=http://localhost:5000/api
-   ```
+```bash
+# .env.development o .env.production
+VITE_API_BASE_URL=https://localhost:5001
+```
 
-   **Opción B: Archivos específicos por ambiente (recomendado para producción)**
-   
-   Para desarrollo, crear `.env.development`:
-   ```bash
-   VITE_API_BASE_URL=http://localhost:5000/api
-   ```
-   
-   Para producción, crear `.env.production`:
-   ```bash
-   VITE_API_BASE_URL=https://api.tudominio.com/api
-   ```
+Notas:
 
-   > **Nota**: Los archivos `.env` NO se commitean al repositorio (están en `.gitignore`). 
-   > Vite carga automáticamente `.env.development` en `npm run dev` y `.env.production` en `npm run build`.
+- `api.service.js` agrega rutas como `/api/Auth/login`; por eso `VITE_API_BASE_URL` debe
+  apuntar al host/base de la API, no necesariamente terminar en `/api`.
+- En desarrollo, si no hay variable de entorno, `api.config.js` usa
+  `https://localhost:5001`.
+- En produccion, si no hay variable de entorno, usa `http://192.168.6.185/PrevioMX/Api`.
+- `vite.config.js` configura `base: '/PrevioMX/'`; las rutas generadas asumen despliegue
+  bajo ese subdirectorio.
 
 ## Desarrollo
 
-Ejecutar el servidor de desarrollo:
 ```bash
 npm run dev
 ```
 
-La aplicación estará disponible en `http://localhost:3000`
+Vite levanta la aplicacion en `http://localhost:5173` por defecto. El servidor Vite
+tambien proxya `/api` hacia `VITE_API_BASE_URL` o `http://localhost:5001`.
 
 ## Build
 
-Generar build de producción:
 ```bash
 npm run build
 ```
 
-**Importante para producción:**
-- Asegúrate de tener `.env.production` configurado con la URL correcta de tu API
-- O configura las variables de entorno en tu plataforma de deployment (Vercel, Netlify, etc.)
-- El build incluirá las variables del `.env.production` en el código compilado
+Durante el build, el plugin `copyPdfWorker` copia
+`node_modules/pdfjs-dist/build/pdf.worker.min.mjs` a `dist/pdf.worker.min.mjs`. Esto es
+necesario para que el visor PDF funcione en IIS usando la base `/PrevioMX/`.
 
-## Autenticación
+## Autenticacion
 
-La aplicación utiliza JWT para autenticación. El token se almacena en `localStorage` y se incluye automáticamente en todas las peticiones mediante interceptores de Axios.
+El login llama a:
 
-### Endpoints esperados en la API:
+```http
+POST /api/Auth/login
+```
 
-- `POST /api/auth/login` - Iniciar sesión
-- `POST /api/auth/register` - Registrar usuario
-- `POST /api/auth/refresh` - Refrescar token
-
-### Formato de respuesta esperado:
+Body:
 
 ```json
 {
-  "token": "jwt_token_here",
+  "usuario": "YROSALES.MTY",
+  "password": "..."
+}
+```
+
+Respuesta usada por el frontend:
+
+```json
+{
+  "token": "jwt",
+  "refreshToken": "valor-generado",
   "user": {
-    "id": 1,
-    "email": "user@example.com",
-    "name": "Usuario"
+    "idUsuario": "YRO",
+    "usuario": "yrosales.mty",
+    "correoElectronico": "yrosales.mty@grupoei.com.mx",
+    "equipo": "MANCHESTER",
+    "grupoId": "73F29156-9DF7-4F96-BA4F-693ACDD75590",
+    "lider": "yrosales.mty"
   }
 }
 ```
 
-## Estructura de Archivos
+`api.service.js` agrega `Authorization: Bearer {token}` a cada request autenticado. Si el
+JWT esta expirado o la API responde `401/403`, limpia `token`, `user` y `captureData` y
+redirige al login. La validacion de token Team Leader es la excepcion: sus `401/403` se
+devuelven al formulario para mostrar el error.
 
-- **Vistas**: Cada vista tiene su propio archivo JSX y CSS
-- **Componentes**: Separados por funcionalidad (auth, layout, common)
-- **Servicios**: Lógica de negocio y comunicación con API
-- **Contextos**: Estado global de la aplicación
-- **Estilos**: CSS separado por componente/vista
+> Nota: `auth.service.js` conserva metodos `register` y `refreshToken`, pero la API actual
+> no implementa registro ni refresh funcional en `AuthService`.
 
+## Flujo Dashboard -> Captura
+
+1. `DashboardView` lee `user.equipo` de `localStorage` y llama a
+   `previoService.getPendientes(equipo)`.
+2. Al seleccionar un pendiente, guarda `captureData` en `localStorage` y navega a
+   `/capture/:reference`.
+3. `CaptureView` combina `captureData` con `getDetalleEntrada(reference)`, catalogos de
+   unidades (`getCatalogo(1)`) y paises (`getCatalogo(2)`).
+4. Si el previo es OpenPO (`esOpenPO`/`esOpenpo`), carga `getDetallePOs(reference)`.
+5. El cierre muestra un modal para `discrepancia` y `aplicaNom144`, y llama a
+   `validarCierrePrevio(reference, discrepancia, aplicaNom144)`.
+
+## Captura de partidas
+
+`AddPartidasForm` concentra las reglas de alta/edicion/eliminacion:
+
+- Valida clasificacion y Standard Pack con `POST /api/Clasificacion/validar-post`.
+- Registra partidas con `POST /api/Visualization/registrar-partida`.
+- Actualiza partidas con `PUT /api/Visualization/actualizar-partida`.
+- Elimina partidas con `DELETE /api/Visualization/eliminar-partida`.
+- Valida marca/modelo con `validar-marca` y `validar-modelo`.
+- En OpenPO permite agregar PO/packing mediante `agregar-openpo`.
+
+Cuando Standard Pack trae `isSpmms` se muestra el bloque MMS; cuando trae `isRrmms`, MMS
+es obligatorio. Si OpenPO y Standard Pack difieren en unidad o pais, el usuario elige que
+valor usar; elegir OpenPO puede requerir validacion por Team Leader.
+
+## Reapertura de previos cerrados
+
+Si una busqueda del Dashboard no aparece en pendientes, se consulta
+`existePrevioCerrado(referencia)`. Si existe, el modal pide usuario/password y llama a
+`puedeReabrirPrevio`. Cuando la API responde `puedeRegenerar: true`, el frontend llama a
+`reabrePrevio`, guarda el resultado como `captureData` y abre `/capture/{referencia}`.
+
+## PDF y OCR
+
+`PdfOcrViewer`:
+
+- Renderiza PDFs con `pdfjs-dist`.
+- Usa `tesseract.js` con idioma `spa` para OCR sobre una seleccion del canvas.
+- En produccion usa el worker `BASE_URL + 'pdf.worker.min.mjs'`.
+- Si el PDF viene de otro origen, usa
+  `/api/Visualization/pdf-proxy?url={urlCodificada}` desde la API configurada.
+
+El proxy de PDF solo acepta HTTPS para hosts `grupoei.com.mx`, `aduax.com` y
+`*.amazonaws.com`.
+
+## Troubleshooting
+
+- **Login redirige inmediatamente:** revisa expiracion del JWT, `JwtSettings` de API y que
+  el reloj del equipo no este desfasado.
+- **Requests duplican `/api`:** revisa `VITE_API_BASE_URL`; el servicio ya agrega rutas
+  `/api/...`.
+- **PDF no carga en produccion:** confirma que `dist/pdf.worker.min.mjs` fue copiado y que
+  el host del PDF esta permitido por el proxy.
+- **OpenPO no muestra productos:** valida que `detalle-pos/{idEntrada}` devuelva `items`
+  con `po`, `idProducto`, `um` y `paisOrigen`.
