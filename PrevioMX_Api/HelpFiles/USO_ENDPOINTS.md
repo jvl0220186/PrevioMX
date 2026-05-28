@@ -1,24 +1,28 @@
-# Guía de Uso de Endpoints
+# Guia de uso de endpoints
 
-## Endpoints Públicos (No requieren autenticación)
+Esta guia muestra el flujo minimo para usar la API desde un cliente externo. Para el
+detalle completo de captura y visualizacion, consulta
+`HelpFiles/VISUALIZACION_ENDPOINTS.md`.
 
-### POST /api/auth/login
+## 1. Login
 
-Iniciar sesión y obtener token JWT.
+`POST /api/Auth/login` no requiere JWT.
 
-**Request:**
-```json
-{
-  "usuario": "YROSALES.MTY",
-  "password": "123"
-}
+```bash
+curl -X POST "https://localhost:5001/api/Auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "usuario": "YROSALES.MTY",
+    "password": "..."
+  }'
 ```
 
-**Response (200 OK):**
+Respuesta esperada:
+
 ```json
 {
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "refreshToken": "refresh_token_here",
+  "token": "eyJhbGciOi...",
+  "refreshToken": "valor-generado",
   "user": {
     "idUsuario": "YRO",
     "usuario": "yrosales.mty",
@@ -30,99 +34,134 @@ Iniciar sesión y obtener token JWT.
 }
 ```
 
-## Endpoints Protegidos (Requieren autenticación JWT)
+Guarda `token` para las peticiones protegidas. Guarda `user.equipo` si necesitas consultar
+pendientes.
 
-### GET /WeatherForecast
+## 2. Enviar el JWT
 
-Obtener pronóstico del tiempo. **Requiere token JWT válido.**
+Todos los endpoints de `Visualization`, `Catalogos`, `Clasificacion` y `Protected`
+requieren:
 
-**Headers requeridos:**
-```
+```http
 Authorization: Bearer {token}
 ```
 
-**Ejemplo con cURL:**
-```bash
-curl -X GET "https://localhost:5001/WeatherForecast" \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-```
-
-**Ejemplo con JavaScript/Fetch:**
-```javascript
-const token = "tu_token_aqui";
-
-const response = await fetch('https://localhost:5001/WeatherForecast', {
-  method: 'GET',
-  headers: {
-    'Authorization': `Bearer ${token}`
-  }
-});
-
-const data = await response.json();
-```
-
-**Ejemplo con Postman:**
-1. Ve a la pestaña "Authorization"
-2. Selecciona "Bearer Token"
-3. Pega tu token en el campo "Token"
-4. Realiza la petición
-
-## Flujo Completo
-
-### Paso 1: Obtener Token
+Ejemplo:
 
 ```bash
-# Login
-curl -X POST "https://localhost:5001/api/auth/login" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "usuario": "YROSALES.MTY",
-    "password": "123"
-  }'
-```
+TOKEN="eyJhbGciOi..."
 
-### Paso 2: Usar el Token
-
-```bash
-# Guardar el token de la respuesta anterior
-TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-
-# Usar el token para acceder a endpoints protegidos
-curl -X GET "https://localhost:5001/WeatherForecast" \
+curl -X GET "https://localhost:5001/api/Visualization/pendientes/MANCHESTER" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
-## Errores Comunes
+## 3. Flujo de consulta y captura
 
-### Error 401 Unauthorized
+### Consultar pendientes
 
-**Causa:** No se envió el token o el token es inválido/expirado.
+```bash
+curl -X GET "https://localhost:5001/api/Visualization/pendientes/MANCHESTER" \
+  -H "Authorization: Bearer $TOKEN"
+```
 
-**Solución:**
-1. Verifica que estés enviando el header `Authorization: Bearer {token}`
-2. Verifica que el token no haya expirado (por defecto expira en 60 minutos)
-3. Obtén un nuevo token haciendo login nuevamente
+### Consultar detalle de entrada
 
-### Error 403 Forbidden
+```bash
+curl -X GET "https://localhost:5001/api/Visualization/detalle-entrada/REF123" \
+  -H "Authorization: Bearer $TOKEN"
+```
 
-**Causa:** El token es válido pero no tienes permisos para acceder al recurso.
+### Cargar catalogos usados por captura
 
-**Solución:** Verifica los permisos del usuario en el sistema.
+```bash
+# 1 = unidades, 2 = paises
+curl -X GET "https://localhost:5001/api/Catalogos/1" \
+  -H "Authorization: Bearer $TOKEN"
 
-## En Swagger UI
+curl -X GET "https://localhost:5001/api/Catalogos/2" \
+  -H "Authorization: Bearer $TOKEN"
+```
 
-1. Abre Swagger UI: `https://localhost:5001/swagger`
-2. Ejecuta `/api/auth/login` para obtener el token
-3. Copia el `token` de la respuesta
-4. Haz clic en el botón **"Authorize"** (🔒) en la parte superior
-5. Pega el token en el formato: `Bearer {tu_token}`
-6. Haz clic en "Authorize" y luego "Close"
-7. Ahora puedes probar los endpoints protegidos (aparecerán con un candado 🔒)
+### Validar clasificacion y Standard Pack
 
-## Notas Importantes
+```bash
+curl -X POST "https://localhost:5001/api/Clasificacion/validar-post" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "idEntrada": "REF123",
+    "idProducto": "NP-001"
+  }'
+```
 
-- El token JWT tiene una expiración configurada (por defecto 60 minutos)
-- Si el token expira, necesitarás hacer login nuevamente
-- El token debe enviarse en cada petición a endpoints protegidos
-- El formato del header es: `Authorization: Bearer {token}` (con espacio después de "Bearer")
+La respuesta puede incluir `clasificacion`, `descripcion`, `isSpum`, `spUm`, `isSppo`,
+`spPo`, `isSpmms`, `spMms`, `spCantidades` e `isRrmms`.
 
+### Registrar partida
+
+```bash
+curl -X POST "https://localhost:5001/api/Visualization/registrar-partida" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "idBulto": "BULTO-1",
+    "referencia": "REF123",
+    "idProveedor": "PROV1",
+    "idProducto": "NP-001",
+    "um": "PZA",
+    "cantidad": "10",
+    "subCantidad": "1",
+    "paisOrigen": "MEX",
+    "comentarios": "",
+    "usuario": "YROSALES.MTY",
+    "ocCompra": "PO123",
+    "noParteFisico": "NP-001",
+    "mms": ""
+  }'
+```
+
+### Cerrar previo
+
+```bash
+curl -X GET "https://localhost:5001/api/Visualization/validar-cierre-previo/REF123/false/false" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+El usuario que cierra el previo se toma del claim `NameIdentifier` del JWT.
+
+## Endpoints operativos relevantes
+
+| Uso | Endpoint |
+| --- | --- |
+| Proveedores paginados | `POST /api/Catalogos/catalogo-proveedores` |
+| Detalle OpenPO | `GET /api/Visualization/detalle-pos/{idEntrada}` |
+| Agregar OpenPO | `POST /api/Visualization/agregar-openpo` |
+| Validar token Team Leader | `POST /api/Protected/valida-token-teamleader` |
+| Verificar previo cerrado | `GET /api/Visualization/existe-previo-cerrado/{referencia}` |
+| Validar reapertura | `POST /api/Visualization/puede-reabrir-previo` |
+| Reabrir previo | `GET /api/Visualization/reabre-previo/{referencia}` |
+| Proxy de PDF | `GET /api/Visualization/pdf-proxy?url={url}` |
+
+## Errores comunes
+
+### 401 Unauthorized
+
+El token no se envio, esta expirado o no usa el formato `Bearer {token}`.
+
+### 403 Forbidden en `pdf-proxy`
+
+La URL del PDF no es HTTPS o el host no esta permitido por
+`VisualizationController.GetPdfProxy`.
+
+### Register/refresh
+
+`POST /api/Auth/register` y `POST /api/Auth/refresh` existen en el controlador, pero el
+servicio actual no los implementa. Para renovar sesion, hacer login nuevamente.
+
+## Swagger
+
+1. Abre `https://localhost:5001/swagger`.
+2. Ejecuta `POST /api/Auth/login`.
+3. Copia `token`.
+4. Presiona **Authorize** e ingresa `Bearer {token}`.
+5. Prueba los endpoints protegidos.

@@ -1,118 +1,93 @@
-# Formato Correcto del Token JWT
+# Formato correcto del token JWT
 
-## Problema Común: Token con Firma Inválida
+Si la API responde `401` o "firma invalida", primero revisa el formato del header
+`Authorization`.
 
-Si recibes el error "El token de autenticación tiene una firma inválida", verifica el formato del header `Authorization`.
+## Formato correcto
 
-## Formato Correcto
-
-### ✅ CORRECTO
-
-```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```http
+Authorization: Bearer eyJhbGciOi...
 ```
 
-**Características:**
-- Sin comillas alrededor del token
-- Un espacio después de "Bearer"
-- El token completo sin espacios ni saltos de línea
+Caracteristicas:
 
-### ❌ INCORRECTO
+- Sin comillas alrededor del token.
+- Un solo espacio despues de `Bearer`.
+- Token completo, sin saltos de linea ni texto adicional.
+- No incluir `refreshToken` en el header.
 
-```
-Authorization: Bearer "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+## Formatos incorrectos
+
+```http
+Authorization: Bearer "eyJhbGciOi..."
+Authorization: "Bearer eyJhbGciOi..."
+Authorization: Bearer  eyJhbGciOi...
+Authorization: Bearer eyJhbGciOi..., "refreshToken": "..."
 ```
 
-```
-Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-```
-
-```
-Authorization: Bearer  eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-(Múltiples espacios)
-
-## Ejemplos por Herramienta
+## Ejemplos por herramienta
 
 ### cURL
 
 ```bash
-curl -X GET "https://localhost:5001/WeatherForecast" \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+curl -X GET "https://localhost:5001/api/Visualization/pendientes/MANCHESTER" \
+  -H "Authorization: Bearer eyJhbGciOi..."
 ```
 
 ### JavaScript/Fetch
 
 ```javascript
-const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."; // Sin "Bearer " aquí
+const token = 'eyJhbGciOi...'
 
-fetch('https://localhost:5001/WeatherForecast', {
+const response = await fetch('https://localhost:5001/api/Visualization/pendientes/MANCHESTER', {
   headers: {
-    'Authorization': `Bearer ${token}` // "Bearer " se agrega aquí
+    Authorization: `Bearer ${token}`
   }
-});
+})
 ```
-
-### Postman
-
-1. Ve a la pestaña **Headers**
-2. Agrega:
-   - **Key**: `Authorization`
-   - **Value**: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`
-   - (Sin comillas en el valor)
-
-O usa la pestaña **Authorization**:
-1. Selecciona **Bearer Token**
-2. Pega el token (sin "Bearer", Postman lo agrega automáticamente)
 
 ### Axios
 
 ```javascript
-const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+const token = 'eyJhbGciOi...'
 
-axios.get('https://localhost:5001/WeatherForecast', {
+axios.get('https://localhost:5001/api/Visualization/pendientes/MANCHESTER', {
   headers: {
-    'Authorization': `Bearer ${token}`
+    Authorization: `Bearer ${token}`
   }
-});
+})
 ```
 
-## Verificación del Token
+### Postman
 
-Para verificar que tu token es válido, puedes decodificarlo en [jwt.io](https://jwt.io):
+Opcion recomendada:
 
-1. Pega tu token completo
-2. Verifica que:
-   - El algoritmo sea `HS256`
-   - El `iss` (issuer) sea `PrevioMX_API`
-   - El `aud` (audience) sea `PrevioMX_Web`
-   - El `exp` (expiration) no haya pasado
+1. Abre la pestaña **Authorization**.
+2. Selecciona **Bearer Token**.
+3. Pega el token sin escribir `Bearer`.
 
-## Solución de Problemas
+Opcion manual:
 
-### Error: "Firma inválida"
+1. Abre **Headers**.
+2. Agrega `Authorization`.
+3. Usa `Bearer eyJhbGciOi...` como valor.
 
-**Causas posibles:**
-1. El `SecretKey` usado para generar el token es diferente al usado para validarlo
-2. El token tiene caracteres extra (espacios, comillas, saltos de línea)
-3. El token está truncado o corrupto
+## Verificacion del token
 
-**Solución:**
-1. Verifica que `appsettings.json` tenga el mismo `SecretKey` que se usó para generar el token
-2. Asegúrate de copiar el token completo sin espacios adicionales
-3. Genera un nuevo token haciendo login nuevamente
+Puedes decodificar el JWT para inspeccionar:
 
-### Error: "Token expirado"
+- `alg`: `HS256`.
+- `iss`: `PrevioMX_API`.
+- `aud`: `PrevioMX_Web`.
+- `exp`: debe estar en el futuro.
+- Claims esperados: `NameIdentifier`, `Email`, `Name`, `Equipo`, `GrupoId`, `Lider`.
 
-**Solución:**
-- El token tiene una expiración de 60 minutos por defecto
-- Haz login nuevamente para obtener un nuevo token
+No compartas tokens reales en tickets, commits ni capturas de pantalla.
 
-### Error: "Issuer o Audience inválido"
+## Troubleshooting
 
-**Solución:**
-- Verifica que el token haya sido generado con:
-  - `Issuer`: `PrevioMX_API`
-  - `Audience`: `PrevioMX_Web`
-- Estos valores deben coincidir con los configurados en `appsettings.json`
-
+- **Firma invalida**: la `SecretKey` configurada no coincide o el token fue truncado.
+- **Token expirado**: vuelve a hacer login; refresh no esta implementado funcionalmente.
+- **Issuer/Audience invalido**: revisa `JwtSettings` en `appsettings.json`.
+- **401 en un endpoint de negocio**: confirma que el controlador requiere `[Authorize]` y
+  que el header llega a la API/proxy sin ser filtrado.
