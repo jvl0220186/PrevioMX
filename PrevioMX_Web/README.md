@@ -1,114 +1,131 @@
 # PrevioMX Web
 
-Aplicación web desarrollada en React + JavaScript para conectar con la API .NET Core de PrevioMX.
+SPA React + Vite para visualizar pendientes de previo, capturar partidas de packing list, trabajar entradas OpenPO y cerrar previos contra la API .NET de PrevioMX.
 
-## Características
+## Funcionalidad principal
 
-- ✅ Autenticación JWT
-- ✅ Arquitectura separada (vistas, componentes, servicios, estilos)
-- ✅ Rutas protegidas
-- ✅ Interceptores de Axios para manejo de tokens
-- ✅ Context API para gestión de estado de autenticación
+- Login JWT contra `POST /api/Auth/login`.
+- Rutas protegidas con React Router y `AuthProvider`.
+- Dashboard de pendientes por equipo.
+- Captura de partidas, Standard Pack, MMS, multibulto y OpenPO.
+- Visualizacion de PDF con OCR por region usando PDF.js y Tesseract.
+- Interceptor Axios para agregar JWT y redirigir al login cuando el token expira.
 
-## Estructura del Proyecto
+## Estructura
 
-```
+```text
 PrevioMX_Web/
+├── docs/
+│   └── FLUJO_CAPTURA.md
+├── public/
+│   └── web.config
 ├── src/
-│   ├── components/          # Componentes reutilizables
-│   │   ├── auth/           # Componentes de autenticación
-│   │   ├── common/         # Componentes comunes (Loading, etc.)
-│   │   └── layout/         # Componentes de layout (Header, etc.)
-│   ├── config/             # Configuraciones
-│   ├── contexts/           # Context API (AuthContext)
-│   ├── routes/             # Configuración de rutas
-│   ├── services/           # Servicios de API
-│   ├── styles/             # Estilos globales
-│   └── views/              # Vistas/páginas
+│   ├── components/
+│   │   ├── auth/
+│   │   ├── capture/
+│   │   ├── common/
+│   │   ├── dashboard/
+│   │   └── layout/
+│   ├── config/
+│   ├── contexts/
+│   ├── routes/
+│   ├── services/
+│   ├── styles/
+│   └── views/
 ├── package.json
-├── vite.config.js
-└── README.md
+└── vite.config.js
 ```
 
-## Instalación
+## Instalacion
 
-1. Instalar dependencias:
 ```bash
 npm install
 ```
 
-2. Configurar variables de entorno:
+Configura `VITE_API_BASE_URL` solo si necesitas sobreescribir la URL por defecto:
 
-   **Opción A: Archivo único `.env` (recomendado para empezar)**
-   ```bash
-   # Crear archivo .env en la raíz del proyecto
-   VITE_API_BASE_URL=http://localhost:5000/api
-   ```
-
-   **Opción B: Archivos específicos por ambiente (recomendado para producción)**
-   
-   Para desarrollo, crear `.env.development`:
-   ```bash
-   VITE_API_BASE_URL=http://localhost:5000/api
-   ```
-   
-   Para producción, crear `.env.production`:
-   ```bash
-   VITE_API_BASE_URL=https://api.tudominio.com/api
-   ```
-
-   > **Nota**: Los archivos `.env` NO se commitean al repositorio (están en `.gitignore`). 
-   > Vite carga automáticamente `.env.development` en `npm run dev` y `.env.production` en `npm run build`.
-
-## Desarrollo
-
-Ejecutar el servidor de desarrollo:
 ```bash
-npm run dev
+VITE_API_BASE_URL=https://localhost:5001
 ```
 
-La aplicación estará disponible en `http://localhost:3000`
+Importante: la variable debe apuntar a la raiz de la API. No agregues `/api`, porque los servicios ya usan rutas como `/api/Visualization/...`.
 
-## Build
+Si no se define la variable, `src/config/api.config.js` usa:
 
-Generar build de producción:
+- Desarrollo: `https://localhost:5001`
+- Produccion: `http://192.168.6.185/PrevioMX/Api`
+
+## Scripts
+
 ```bash
-npm run build
+npm run dev      # servidor Vite, normalmente http://localhost:5173
+npm run build    # build de produccion
+npm run preview  # preview local del build
+npm run lint     # ESLint
 ```
 
-**Importante para producción:**
-- Asegúrate de tener `.env.production` configurado con la URL correcta de tu API
-- O configura las variables de entorno en tu plataforma de deployment (Vercel, Netlify, etc.)
-- El build incluirá las variables del `.env.production` en el código compilado
+## Configuracion de Vite e IIS
 
-## Autenticación
+- `vite.config.js` define `base: '/PrevioMX/'`; el build espera publicarse bajo ese subdirectorio.
+- El plugin local copia `node_modules/pdfjs-dist/build/pdf.worker.min.mjs` a `dist/pdf.worker.min.mjs`.
+- `public/web.config` permite servir `.mjs` en IIS y reescribe rutas SPA hacia `index.html`.
+- El proxy dev de Vite enruta `/api` hacia `VITE_API_BASE_URL` o `http://localhost:5001`.
 
-La aplicación utiliza JWT para autenticación. El token se almacena en `localStorage` y se incluye automáticamente en todas las peticiones mediante interceptores de Axios.
+## Autenticacion y sesion
 
-### Endpoints esperados en la API:
-
-- `POST /api/auth/login` - Iniciar sesión
-- `POST /api/auth/register` - Registrar usuario
-- `POST /api/auth/refresh` - Refrescar token
-
-### Formato de respuesta esperado:
+La respuesta de login esperada contiene:
 
 ```json
 {
-  "token": "jwt_token_here",
+  "token": "jwt",
+  "refreshToken": "refresh_token",
   "user": {
-    "id": 1,
-    "email": "user@example.com",
-    "name": "Usuario"
+    "idUsuario": "YRO",
+    "usuario": "yrosales.mty",
+    "correoElectronico": "usuario@dominio",
+    "equipo": "MANCHESTER",
+    "grupoId": "guid",
+    "lider": "usuario"
   }
 }
 ```
 
-## Estructura de Archivos
+El frontend guarda `token` y `user` en `localStorage`. `api.service.js`:
 
-- **Vistas**: Cada vista tiene su propio archivo JSX y CSS
-- **Componentes**: Separados por funcionalidad (auth, layout, common)
-- **Servicios**: Lógica de negocio y comunicación con API
-- **Contextos**: Estado global de la aplicación
-- **Estilos**: CSS separado por componente/vista
+- agrega `Authorization: Bearer {token}`;
+- decodifica el JWT para detectar expiracion;
+- elimina `token`, `user` y `captureData` al redirigir al login;
+- no redirige automaticamente cuando falla la validacion de token Team Leader.
+
+`POST /api/Auth/register` y `POST /api/Auth/refresh` estan expuestos por la API, pero no estan implementados en `AuthService`; no deben usarse como flujos productivos.
+
+## Flujo operativo
+
+Consulta `docs/FLUJO_CAPTURA.md` para la secuencia completa:
+
+```text
+/dashboard
+  -> getPendientes(equipo)
+  -> localStorage.captureData
+  -> /capture/:reference
+  -> getDetalleEntrada + catalogos + proveedor
+  -> registrar/actualizar/eliminar partidas
+  -> validar-cierre-previo
+```
+
+## Endpoints consumidos
+
+La capa `src/services/previo.service.js` consume principalmente:
+
+- `GET /api/Visualization/pendientes/{equipo}`
+- `GET /api/Visualization/detalle-entrada/{idEntrada}`
+- `GET /api/Catalogos/1` y `GET /api/Catalogos/2`
+- `POST /api/Clasificacion/validar-post`
+- `POST /api/Protected/valida-token-teamleader`
+- `POST /api/Visualization/registrar-partida`
+- `PUT /api/Visualization/actualizar-partida`
+- `DELETE /api/Visualization/eliminar-partida`
+- `GET /api/Visualization/validar-cierre-previo/{idEntrada}/{discrepancia}/{aplicaNom144}`
+
+La referencia completa de API esta en `../PrevioMX_Api/HelpFiles/ENDPOINTS_DOMINIO.md`.
 

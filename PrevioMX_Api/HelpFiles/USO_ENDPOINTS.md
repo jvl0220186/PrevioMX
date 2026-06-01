@@ -1,5 +1,7 @@
 # Guía de Uso de Endpoints
 
+> Para los endpoints reales de negocio (pendientes, captura, OpenPO, catalogos, clasificacion, cierre y reapertura), consulta `ENDPOINTS_DOMINIO.md`. Esta guia conserva el flujo basico de autenticacion y Swagger.
+
 ## Endpoints Públicos (No requieren autenticación)
 
 ### POST /api/auth/login
@@ -32,9 +34,7 @@ Iniciar sesión y obtener token JWT.
 
 ## Endpoints Protegidos (Requieren autenticación JWT)
 
-### GET /WeatherForecast
-
-Obtener pronóstico del tiempo. **Requiere token JWT válido.**
+Los controllers de dominio (`Visualization`, `Catalogos`, `Clasificacion` y `Protected`) requieren JWT. Ejemplo con un endpoint usado por el dashboard:
 
 **Headers requeridos:**
 ```
@@ -43,7 +43,7 @@ Authorization: Bearer {token}
 
 **Ejemplo con cURL:**
 ```bash
-curl -X GET "https://localhost:5001/WeatherForecast" \
+curl -X GET "https://localhost:5001/api/Visualization/pendientes/MANCHESTER" \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```
 
@@ -51,7 +51,7 @@ curl -X GET "https://localhost:5001/WeatherForecast" \
 ```javascript
 const token = "tu_token_aqui";
 
-const response = await fetch('https://localhost:5001/WeatherForecast', {
+const response = await fetch('https://localhost:5001/api/Visualization/pendientes/MANCHESTER', {
   method: 'GET',
   headers: {
     'Authorization': `Bearer ${token}`
@@ -88,7 +88,7 @@ curl -X POST "https://localhost:5001/api/auth/login" \
 TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 
 # Usar el token para acceder a endpoints protegidos
-curl -X GET "https://localhost:5001/WeatherForecast" \
+curl -X GET "https://localhost:5001/api/Visualization/pendientes/MANCHESTER" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -125,4 +125,5 @@ curl -X GET "https://localhost:5001/WeatherForecast" \
 - Si el token expira, necesitarás hacer login nuevamente
 - El token debe enviarse en cada petición a endpoints protegidos
 - El formato del header es: `Authorization: Bearer {token}` (con espacio después de "Bearer")
+- `POST /api/Auth/register` y `POST /api/Auth/refresh` estan expuestos, pero el servicio actual no los implementa.
 
