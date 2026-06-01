@@ -160,4 +160,3 @@ OCR:
 - Si el PDF falla en IIS con el worker, revisar que `web.config` incluya MIME `.mjs` y rewrite SPA.
 - Si la sesion expira, `api.service.js` elimina `token`, `user` y `captureData`.
 - `getClasificacion()` en `previo.service.js` usa un endpoint GET que no existe; el flujo activo usa `validarPost()`.
-

@@ -66,4 +66,3 @@ El frontend agrega el header `Authorization` al proxy cuando usa una URL de otro
 - `previoService.getClasificacion(idEntrada, idProducto)` apunta a `GET /api/Clasificacion/{idEntrada}/{idProducto}`, pero el controller solo expone `POST /api/Clasificacion/validar` y `POST /api/Clasificacion/validar-post`. El flujo actual usa `validarPost`.
 - `validar-cuarentenas` existe en API y servicio de backend, pero no tiene consumidor web directo en `previo.service.js`.
 - `WeatherForecast` y `Protected/test` son endpoints de prueba; no describen el flujo operativo de PrevioMX.
-

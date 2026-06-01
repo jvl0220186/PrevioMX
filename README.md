@@ -68,4 +68,3 @@ npm run dev
 - El build copia `pdf.worker.min.mjs` a `dist/` para PDF.js.
 - `PrevioMX_Web/public/web.config` configura IIS para servir `.mjs` y reescribir rutas SPA hacia `index.html`.
 - El proxy de PDF de la API (`GET /api/Visualization/pdf-proxy`) solo acepta URLs HTTPS de hosts permitidos por el controller.
-
