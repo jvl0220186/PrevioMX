@@ -1,92 +1,64 @@
-# Cómo Usar Autenticación JWT en Swagger UI
+# Autenticacion JWT en Swagger UI
 
-## Pasos para Autenticarse en Swagger
+Swagger se habilita en desarrollo desde `Program.cs`. La URL local habitual es
+`https://localhost:5001/swagger`.
 
-### Paso 1: Obtener el Token
+## 1. Obtener token
 
-1. Abre Swagger UI: `http://localhost:8888/swagger`
-2. Busca el endpoint `POST /api/auth/login`
-3. Haz clic en "Try it out"
-4. Ingresa tus credenciales:
-   ```json
-   {
-     "usuario": "YROSALES.MTY",
-     "password": "123"
-   }
-   ```
-5. Haz clic en "Execute"
-6. En la respuesta, **copia SOLO el valor del campo `token`** (sin comillas)
+Ejecuta `POST /api/Auth/login`:
 
-**Ejemplo de respuesta:**
 ```json
 {
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "refreshToken": "itvKoqerI7o8Gdmi1UbNFUJa666ZkJJOAjlsnX5K6pthnMBPPFwm...",
-  "user": { ... }
+  "usuario": "YROSALES.MTY",
+  "password": "password"
 }
 ```
 
-**Copia esto:** `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` (solo el token, sin comillas)
+En la respuesta copia solo el valor de `token`, sin comillas:
 
-### Paso 2: Autorizar en Swagger
-
-1. En la parte superior de Swagger UI, busca el botón **"Authorize"** (🔒)
-2. Haz clic en "Authorize"
-3. En el campo que aparece, ingresa: `Bearer {tu_token}`
-
-**⚠️ IMPORTANTE:**
-- NO pongas solo "Bearer Token" (esas palabras literales)
-- NO pongas solo el token sin "Bearer"
-- Debes poner: `Bearer ` (con espacio) seguido del token completo
-
-**Ejemplo correcto:**
-```
-Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IllSTyIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6Inlyb3NhbGVzLm10eUBncnVwb2VpLmNvbS5teCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJ5cm9zYWxlcy5tdHkiLCJFcXVpcG8iOiJNQU5DSEVTVEVSIiwiR3J1cG9JZCI6IjczRjI5MTU2LTlERjctNEY5Ni1CQTRGLTY5M0FDREQ3NTU5MCIsIkxpZGVyIjoieXJvc2FsZXMubXR5IiwianRpIjoiMTUyMTJjYTYtZDllZi00NDQwLThjYmQtZTU0Yzc0ZGU1NzdlIiwiZXhwIjoxNzY0MzY4NjcyLCJpc3MiOiJQcmV2aW9NWF9BUEkiLCJhdWQiOiJQcmV2aW9NWF9XZWIifQ.w96Vs2ZCq181ZYGMToDaBxbA5zhfeZd7gPPDycYmlIw
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIs...",
+  "refreshToken": "base64-refresh-token",
+  "user": {
+    "idUsuario": "123",
+    "usuario": "YROSALES.MTY",
+    "equipo": "MANCHESTER"
+  }
+}
 ```
 
-4. Haz clic en "Authorize"
-5. Haz clic en "Close"
+## 2. Autorizar Swagger
 
-### Paso 3: Probar Endpoints Protegidos
+1. Haz clic en **Authorize**.
+2. Escribe `Bearer ` seguido del token completo.
+3. Confirma con **Authorize** y cierra el modal.
 
-Ahora los endpoints protegidos (como `/WeatherForecast`) deberían funcionar. Verás un candado 🔒 al lado de los endpoints que requieren autenticación.
+Formato:
 
-## Errores Comunes
+```text
+Bearer eyJhbGciOiJIUzI1NiIs...
+```
 
-### ❌ Error: "Se requiere autenticación..."
+No uses las palabras literales `Bearer Token`, no pegues el JSON completo y no
+incluyas el `refreshToken`.
 
-**Causa:** No pusiste el token o el formato es incorrecto.
+## 3. Probar endpoints protegidos
 
-**Solución:**
-- Asegúrate de copiar el token completo (puede ser muy largo)
-- Verifica que hayas puesto `Bearer ` (con espacio) antes del token
-- No pongas comillas alrededor del token
+Usa endpoints de negocio reales, por ejemplo:
 
-### ❌ Error: "Token de autenticación tiene una firma inválida"
+- `GET /api/Visualization/pendientes/{equipo}`
+- `GET /api/Visualization/detalle-entrada/{idEntrada}`
+- `GET /api/Catalogos/{catalogo}`
+- `POST /api/Clasificacion/validar-post`
 
-**Causa:** El token fue generado con un SecretKey diferente.
+Consulta [USO_ENDPOINTS.md](USO_ENDPOINTS.md) para bodies y parametros.
 
-**Solución:**
-- Obtén un nuevo token haciendo login nuevamente
-- Verifica que el `SecretKey` en `appsettings.json` sea el correcto
+## Errores comunes
 
-### ❌ Error: "Bearer Token" literal
-
-**Causa:** Pusiste las palabras "Bearer Token" en lugar del token real.
-
-**Solución:**
-- Debes poner: `Bearer ` seguido del token que obtuviste del login
-- El token es una cadena muy larga que empieza con `eyJ...`
-
-## Verificar que Funciona
-
-1. Después de autorizar, intenta ejecutar `GET /WeatherForecast`
-2. Si funciona, verás un código `200 OK` con los datos
-3. Si ves `401 Unauthorized`, revisa los pasos anteriores
-
-## Notas
-
-- El token expira en 60 minutos
-- Si el token expira, necesitarás hacer login nuevamente y re-autorizar
-- Puedes verificar si estás autorizado viendo el candado 🔒 en los endpoints protegidos
-
+| Sintoma | Causa probable | Accion |
+| --- | --- | --- |
+| `Se requiere autenticacion` | No se autorizo Swagger o falta `Bearer`. | Repetir el paso de autorizacion. |
+| Firma invalida | Token truncado o `SecretKey` distinta. | Hacer login nuevamente y revisar configuracion. |
+| Token expirado | `exp` ya vencio. | Hacer login nuevamente; refresh no esta implementado. |
+| 401 en Team Leader | Token de aprobacion incorrecto. | Revisar el token capturado para esa aprobacion. |

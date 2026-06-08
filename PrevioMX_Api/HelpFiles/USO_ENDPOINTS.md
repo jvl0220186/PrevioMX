@@ -1,128 +1,244 @@
-# Guía de Uso de Endpoints
+# Guia de uso de endpoints
 
-## Endpoints Públicos (No requieren autenticación)
+Esta guia describe los endpoints que usa el frontend de PrevioMX. La fuente de
+verdad es el codigo en `Controllers/*` y el cliente
+`PrevioMX_Web/src/services/previo.service.js`.
 
-### POST /api/auth/login
+## Convenciones
 
-Iniciar sesión y obtener token JWT.
+- Base local comun: `https://localhost:5001`
+- Base de produccion usada por el frontend si no hay `VITE_API_BASE_URL`:
+  `http://192.168.6.185/PrevioMX/Api`
+- Salvo `/api/Auth/*`, todos los endpoints requieren:
 
-**Request:**
+```http
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+El token JWT se obtiene con login y se guarda en `localStorage` en el frontend.
+
+## Autenticacion
+
+### POST `/api/Auth/login`
+
+Autentica al usuario con `CSP_PMX_Login` y genera un JWT.
+
 ```json
 {
   "usuario": "YROSALES.MTY",
-  "password": "123"
+  "password": "password"
 }
 ```
 
-**Response (200 OK):**
+Respuesta exitosa:
+
 ```json
 {
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "refreshToken": "refresh_token_here",
+  "token": "eyJhbGciOiJIUzI1NiIs...",
+  "refreshToken": "base64-refresh-token",
   "user": {
-    "idUsuario": "YRO",
-    "usuario": "yrosales.mty",
-    "correoElectronico": "yrosales.mty@grupoei.com.mx",
+    "idUsuario": "123",
+    "usuario": "YROSALES.MTY",
+    "correoElectronico": "usuario@dominio.com",
     "equipo": "MANCHESTER",
     "grupoId": "73F29156-9DF7-4F96-BA4F-693ACDD75590",
-    "lider": "yrosales.mty"
+    "lider": "TEAMLEADER"
   }
 }
 ```
 
-## Endpoints Protegidos (Requieren autenticación JWT)
+Notas:
 
-### GET /WeatherForecast
+- `401` indica credenciales invalidas.
+- `POST /api/Auth/register` y `POST /api/Auth/refresh` existen en el
+  controlador, pero `AuthService` todavia los marca como no implementados y
+  devuelve `null`.
 
-Obtener pronóstico del tiempo. **Requiere token JWT válido.**
+## Flujo de captura
 
-**Headers requeridos:**
-```
-Authorization: Bearer {token}
-```
-
-**Ejemplo con cURL:**
-```bash
-curl -X GET "https://localhost:5001/WeatherForecast" \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-```
-
-**Ejemplo con JavaScript/Fetch:**
-```javascript
-const token = "tu_token_aqui";
-
-const response = await fetch('https://localhost:5001/WeatherForecast', {
-  method: 'GET',
-  headers: {
-    'Authorization': `Bearer ${token}`
-  }
-});
-
-const data = await response.json();
+```text
+login -> pendientes por equipo -> detalle de entrada/catalogos/documentos
+      -> validar clasificacion/marca/modelo/cuarentenas
+      -> registrar, actualizar o eliminar partida
+      -> validar cierre previo
+      -> reabrir previo si aplica
 ```
 
-**Ejemplo con Postman:**
-1. Ve a la pestaña "Authorization"
-2. Selecciona "Bearer Token"
-3. Pega tu token en el campo "Token"
-4. Realiza la petición
+### 1. Pendientes por equipo
 
-## Flujo Completo
+`GET /api/Visualization/pendientes/{equipo}`
 
-### Paso 1: Obtener Token
+Usado por el dashboard para listar referencias pendientes del equipo del
+usuario. Ejecuta `CSP_PMX_ObtenerPendientes`.
 
 ```bash
-# Login
-curl -X POST "https://localhost:5001/api/auth/login" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "usuario": "YROSALES.MTY",
-    "password": "123"
-  }'
-```
-
-### Paso 2: Usar el Token
-
-```bash
-# Guardar el token de la respuesta anterior
-TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-
-# Usar el token para acceder a endpoints protegidos
-curl -X GET "https://localhost:5001/WeatherForecast" \
+curl "$API/api/Visualization/pendientes/MANCHESTER" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
-## Errores Comunes
+La respuesta tiene forma:
 
-### Error 401 Unauthorized
+```json
+{
+  "items": [
+    {
+      "idEntrada": "12345",
+      "cliente": "Cliente",
+      "proveedor": "Proveedor",
+      "bultos": 10,
+      "estatus": "Pendiente",
+      "documentos": [
+        { "documento": "factura.pdf", "rutaDocumento": "https://..." }
+      ],
+      "esOpenpo": false
+    }
+  ]
+}
+```
 
-**Causa:** No se envió el token o el token es inválido/expirado.
+### 2. Detalle y POs de una entrada
 
-**Solución:**
-1. Verifica que estés enviando el header `Authorization: Bearer {token}`
-2. Verifica que el token no haya expirado (por defecto expira en 60 minutos)
-3. Obtén un nuevo token haciendo login nuevamente
+| Metodo | Ruta | Uso | Stored procedure |
+| --- | --- | --- | --- |
+| GET | `/api/Visualization/detalle-entrada/{idEntrada}` | Partidas capturadas o esperadas de una referencia | `CSP_PMX_DetalleEntrada` |
+| GET | `/api/Visualization/detalle-pos/{idEntrada}` | Detalle de POs para entradas OpenPO | `CSP_PMX_DetallePOs` |
+| GET | `/api/Visualization/proveedor-previo/{referencia}` | Proveedor asociado al previo | `csp_PMX_GetProveedorPrevio` |
 
-### Error 403 Forbidden
+### 3. Catalogos
 
-**Causa:** El token es válido pero no tienes permisos para acceder al recurso.
+| Metodo | Ruta | Body | Uso |
+| --- | --- | --- | --- |
+| GET | `/api/Catalogos/{catalogo}` | N/A | Catalogos simples; por ejemplo paises y unidades de medida. |
+| POST | `/api/Catalogos/catalogo-proveedores` | `{ "filtro": "", "pageNumber": 1, "pageSize": 20 }` | Busqueda paginada de proveedores. |
 
-**Solución:** Verifica los permisos del usuario en el sistema.
+`GET /api/Catalogos/{catalogo}` ejecuta `CSP_PMX_Catalogos`; el catalogo
+paginado ejecuta `csp_PMX_ProveedoresListarPaginado`.
 
-## En Swagger UI
+### 4. Validaciones de producto y captura
 
-1. Abre Swagger UI: `https://localhost:5001/swagger`
-2. Ejecuta `/api/auth/login` para obtener el token
-3. Copia el `token` de la respuesta
-4. Haz clic en el botón **"Authorize"** (🔒) en la parte superior
-5. Pega el token en el formato: `Bearer {tu_token}`
-6. Haz clic en "Authorize" y luego "Close"
-7. Ahora puedes probar los endpoints protegidos (aparecerán con un candado 🔒)
+| Metodo | Ruta | Body o parametros | Stored procedure |
+| --- | --- | --- | --- |
+| POST | `/api/Clasificacion/validar` | `{ "idEntrada": "12345", "idProducto": "ABC" }` | `CSP_PMX_ValidarClasificacion` |
+| POST | `/api/Clasificacion/validar-post` | Mismo body; usado por el formulario de captura | `CSP_PMX_ValidarClasificacion` |
+| POST | `/api/Visualization/validar-marca` | `{ "referencia": "12345", "idProducto": "ABC", "marca": "Marca" }` | `csp_PMX_ValidaMarca` |
+| POST | `/api/Visualization/validar-modelo` | `{ "referencia": "12345", "idProducto": "ABC", "modelo": "Modelo" }` | `csp_PMX_ValidaModelo` |
+| POST | `/api/Visualization/validar-cuarentenas` | `{ "idEntrada": "12345", "idUsuario": "123" }` | `CSP_PMX_ValidarCuarentenas` |
+| POST | `/api/Protected/valida-token-teamleader` | `{ "usuario": "lider", "token": "123456" }` | `SP_FEA_ValidarTokenTeamleader_Result` |
 
-## Notas Importantes
+`/api/Protected/valida-token-teamleader` puede responder `401` cuando el token
+de aprobacion no es correcto; el interceptor del frontend no redirige al login
+para esta ruta especifica.
 
-- El token JWT tiene una expiración configurada (por defecto 60 minutos)
-- Si el token expira, necesitarás hacer login nuevamente
-- El token debe enviarse en cada petición a endpoints protegidos
-- El formato del header es: `Authorization: Bearer {token}` (con espacio después de "Bearer")
+### 5. Registro, actualizacion y eliminacion de partidas
 
+#### POST `/api/Visualization/registrar-partida`
+
+Ejecuta `csp_PMX_RegistrarPartida`.
+
+```json
+{
+  "idBulto": "1",
+  "referencia": "12345",
+  "idProveedor": "987",
+  "idProducto": "ABC-001",
+  "um": "PZA",
+  "cantidad": "10",
+  "subCantidad": "1",
+  "paisOrigen": "MX",
+  "comentarios": "Sin observaciones",
+  "usuario": "YROSALES.MTY",
+  "ocCompra": "PO123",
+  "noParteFisico": "ABC-001",
+  "mms": "MMS"
+}
+```
+
+#### PUT `/api/Visualization/actualizar-partida`
+
+Ejecuta `csp_PMX_ActualizarPartida`. Usa el mismo contrato de registro mas
+`id` numerico de la partida.
+
+#### DELETE `/api/Visualization/eliminar-partida`
+
+Axios envia el body en la opcion `data` del request.
+
+```json
+{
+  "id": 10,
+  "idBulto": "1",
+  "referencia": "12345",
+  "idProducto": "ABC-001"
+}
+```
+
+Los tres endpoints devuelven:
+
+```json
+{
+  "estatus": true,
+  "msg": "Operacion realizada"
+}
+```
+
+### 6. OpenPO
+
+`POST /api/Visualization/agregar-openpo`
+
+Ejecuta `csp_PMX_AgregarOpenPO`.
+
+```json
+{
+  "referencia": "12345",
+  "po": "PO123",
+  "packing": "PACKING-1"
+}
+```
+
+### 7. Cierre y reapertura de previo
+
+| Metodo | Ruta | Uso | Stored procedure |
+| --- | --- | --- | --- |
+| GET | `/api/Visualization/validar-cierre-previo/{idEntrada}/{discrepancia}/{aplicaNom144}` | Valida si la referencia puede cerrarse. El `idUsuario` se toma del JWT. | `CSP_PMX_ValidarCierrePrevio` |
+| GET | `/api/Visualization/existe-previo-cerrado/{referencia}` | Verifica si existe previo cerrado para reabrir. | `csp_PMX_ExistePrevioCerrado` |
+| POST | `/api/Visualization/puede-reabrir-previo` | Valida credenciales de usuario autorizado. Body: `{ "usuario": "...", "password": "..." }`. | `sp_previo_TL` |
+| GET | `/api/Visualization/reabre-previo/{referencia}` | Reabre y devuelve datos tipo pendiente. | `csp_PMX_ReabrirPrevio` |
+
+`validar-cierre-previo` responde `404` si el procedure no devuelve resultado y
+`401` si el token no contiene el identificador de usuario.
+
+## Proxy PDF y OCR
+
+`GET /api/Visualization/pdf-proxy?url={urlCodificada}`
+
+`PdfOcrViewer` usa este endpoint cuando el PDF esta en un origen distinto al de
+la SPA. Restricciones verificadas en `VisualizationController`:
+
+- La URL debe ser absoluta y `https`.
+- Hosts permitidos: `grupoei.com.mx`, subdominios de `grupoei.com.mx`,
+  `aduax.com`, subdominios de `aduax.com` y subdominios `*.amazonaws.com`.
+- `403` significa host no permitido.
+- `502` significa error o timeout al obtener el PDF remoto.
+
+El frontend adjunta el JWT tambien al proxy si existe token en `localStorage`.
+
+## Errores comunes
+
+| Codigo | Causa probable | Accion |
+| --- | --- | --- |
+| 400 | Faltan parametros requeridos o body invalido | Revisar nombres de propiedades contra los DTOs en `PrevioMX_Api/DTO`. |
+| 401 | Token faltante, expirado, invalido o validacion Team Leader fallida | Renovar login; para Team Leader revisar el token capturado. |
+| 403 | Acceso prohibido o host PDF no permitido | Confirmar permisos o dominio del documento. |
+| 404 | El procedure no devolvio datos para la referencia/producto | Validar referencia, producto o estado del previo. |
+| 500 | Excepcion de API o SQL Server | Revisar logs de API y resultado del stored procedure. |
+| 502 | El proxy PDF no pudo descargar el documento externo | Verificar URL, disponibilidad del host remoto y timeout. |
+
+## Swagger
+
+En desarrollo:
+
+1. Abre `https://localhost:5001/swagger`.
+2. Ejecuta `POST /api/Auth/login`.
+3. Copia `token`.
+4. Usa **Authorize** con `Bearer <token>`.
+5. Prueba endpoints protegidos.
