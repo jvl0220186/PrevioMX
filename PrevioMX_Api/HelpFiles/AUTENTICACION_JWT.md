@@ -1,295 +1,148 @@
-# Autenticación JWT en PrevioMX API
+# Autenticacion JWT en PrevioMX API
 
-## Descripción
+La API protege los endpoints de negocio con JWT Bearer. El unico flujo de
+autenticacion implementado actualmente es login contra el stored procedure
+`CSP_PMX_Login`; el token resultante se usa para consultar dashboard, captura,
+catalogos, clasificacion y operaciones de previo.
 
-La API de PrevioMX está configurada para usar autenticación JWT (JSON Web Tokens) para proteger los endpoints y autenticar usuarios.
+## Configuracion
 
-## Configuración
-
-### appsettings.json
-
-La configuración de JWT se encuentra en `appsettings.json`:
+`Program.cs` lee la seccion `JwtSettings`:
 
 ```json
 {
   "JwtSettings": {
-    "SecretKey": "TuClaveSecretaSuperSeguraParaJWT_Minimo32Caracteres_2024",
+    "SecretKey": "<clave-minimo-32-caracteres>",
     "Issuer": "PrevioMX_API",
     "Audience": "PrevioMX_Web",
-    "ExpirationMinutes": 60,
+    "ExpirationMinutes": 1440,
     "RefreshTokenExpirationDays": 7
   }
 }
 ```
 
-**⚠️ IMPORTANTE**: En producción, cambia la `SecretKey` por una clave segura y guárdala en variables de entorno o un gestor de secretos.
+Notas operativas:
 
-## Endpoints de Autenticación
+- `SecretKey` debe ser la misma al generar y validar tokens.
+- En ambientes compartidos o produccion, no guardar secretos reales en el
+  repositorio; usar variables de entorno, secret manager o configuracion del
+  host.
+- La validacion usa `ClockSkew = TimeSpan.Zero`, por lo que la expiracion se
+  aplica sin margen adicional.
+- CORS permite los origenes locales `http://localhost:5173`,
+  `http://localhost:3000` y `http://localhost:5000`.
 
-### 1. Registrar Usuario
+## Endpoints publicos
 
-**POST** `/api/auth/register`
+### POST `/api/Auth/login`
 
-**Body:**
+Body:
+
 ```json
 {
-  "email": "usuario@example.com",
-  "password": "contraseña123",
-  "name": "Nombre Usuario"
+  "usuario": "YROSALES.MTY",
+  "password": "password"
 }
 ```
 
-**Respuesta exitosa (200):**
+Comportamiento:
+
+1. `AuthService.LoginAsync` llama `AuthDbContext.LoginAsync`.
+2. `AuthDbContext` ejecuta `CSP_PMX_Login @P_USUARIO, @P_PASSWORD`.
+3. Si hay resultado, `JwtService.GenerateToken` emite el JWT.
+4. La respuesta incluye `token`, `refreshToken` generado en memoria y datos de
+   usuario.
+
+Respuesta exitosa:
+
 ```json
 {
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "refreshToken": "refresh_token_here",
+  "token": "eyJhbGciOiJIUzI1NiIs...",
+  "refreshToken": "base64-refresh-token",
   "user": {
-    "id": 1,
-    "email": "usuario@example.com",
-    "name": "Nombre Usuario"
+    "idUsuario": "123",
+    "usuario": "YROSALES.MTY",
+    "correoElectronico": "usuario@dominio.com",
+    "equipo": "MANCHESTER",
+    "grupoId": "73F29156-9DF7-4F96-BA4F-693ACDD75590",
+    "lider": "TEAMLEADER"
   }
 }
 ```
 
-### 2. Iniciar Sesión
+`401 Unauthorized` indica que el procedure no devolvio usuario.
 
-**POST** `/api/auth/login`
+### POST `/api/Auth/register`
 
-**Body:**
-```json
-{
-  "email": "usuario@example.com",
-  "password": "contraseña123"
-}
+La ruta existe, pero no esta implementada en `AuthService.RegisterAsync`. El
+servicio registra un warning y devuelve `null`, por lo que el controlador
+responde conflicto.
+
+### POST `/api/Auth/refresh`
+
+La ruta existe, pero no esta implementada en `AuthService.RefreshTokenAsync`.
+Aunque el login devuelve un `refreshToken`, la aplicacion actual no lo persiste
+ni lo usa para renovar sesion.
+
+## Claims del token
+
+`JwtService` agrega estos claims desde `LoginResultDto`:
+
+| Claim | Fuente | Uso conocido |
+| --- | --- | --- |
+| `ClaimTypes.NameIdentifier` | `IdUsuario` | `validar-cierre-previo` lo usa como `@ID_USUARIO`. |
+| `ClaimTypes.Email` | `CorreoElectronico` | Diagnostico y endpoints protegidos de prueba. |
+| `ClaimTypes.Name` | `Usuario` | Identidad legible del usuario. |
+| `Equipo` | `Equipo` | El frontend consulta pendientes por equipo del usuario. |
+| `GrupoId` | `GrupoId` | Disponible para reglas de autorizacion futuras. |
+| `Lider` | `Lider` | Disponible para flujos de aprobacion. |
+| `jti` | GUID generado | Identificador unico del token. |
+
+## Uso en peticiones protegidas
+
+```http
+Authorization: Bearer <token>
 ```
 
-**Respuesta exitosa (200):**
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "refreshToken": "refresh_token_here",
-  "user": {
-    "id": 1,
-    "email": "usuario@example.com",
-    "name": "Nombre Usuario"
-  }
-}
-```
-
-**Respuesta de error (401):**
-```json
-{
-  "message": "Credenciales inválidas"
-}
-```
-
-### 3. Refrescar Token
-
-**POST** `/api/auth/refresh`
-
-**Body:**
-```json
-{
-  "refreshToken": "refresh_token_here"
-}
-```
-
-**Respuesta exitosa (200):**
-```json
-{
-  "token": "nuevo_token_jwt",
-  "refreshToken": "nuevo_refresh_token",
-  "user": {
-    "id": 1,
-    "email": "usuario@example.com",
-    "name": "Nombre Usuario"
-  }
-}
-```
-
-## Uso del Token JWT
-
-### En Peticiones HTTP
-
-Una vez obtenido el token, inclúyelo en el header `Authorization` de todas las peticiones protegidas:
-
-```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-### En Swagger
-
-1. Ejecuta el endpoint `/api/auth/login` o `/api/auth/register`
-2. Copia el `token` de la respuesta
-3. Haz clic en el botón **"Authorize"** (🔒) en la parte superior de Swagger
-4. Ingresa: `Bearer {tu_token}` (reemplaza `{tu_token}` con el token real)
-5. Haz clic en **"Authorize"** y luego en **"Close"**
-6. Ahora puedes probar los endpoints protegidos
-
-## Proteger Endpoints
-
-Para proteger un controlador o endpoint, usa el atributo `[Authorize]`:
-
-```csharp
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-
-[ApiController]
-[Route("api/[controller]")]
-[Authorize] // Requiere autenticación JWT
-public class MiController : ControllerBase
-{
-    [HttpGet]
-    public IActionResult Get()
-    {
-        // Obtener información del usuario autenticado
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
-        
-        return Ok(new { userId, userEmail });
-    }
-}
-```
-
-### Proteger un Endpoint Específico
-
-```csharp
-[HttpGet("public")]
-public IActionResult GetPublic()
-{
-    // Este endpoint es público
-    return Ok("Público");
-}
-
-[HttpGet("private")]
-[Authorize] // Este endpoint requiere autenticación
-public IActionResult GetPrivate()
-{
-    return Ok("Privado");
-}
-```
-
-## Estructura del Proyecto
-
-```
-PrevioMX_Api/
-├── Controllers/
-│   ├── AuthController.cs          # Endpoints de autenticación
-│   └── ProtectedController.cs     # Ejemplo de controlador protegido
-├── Models/
-│   ├── DTOs/
-│   │   ├── LoginRequest.cs
-│   │   ├── RegisterRequest.cs
-│   │   ├── AuthResponse.cs
-│   │   └── RefreshTokenRequest.cs
-│   └── User.cs
-├── Services/
-│   ├── IJwtService.cs
-│   ├── JwtService.cs
-│   ├── IAuthService.cs
-│   └── AuthService.cs
-├── Program.cs                      # Configuración de JWT
-└── appsettings.json                # Configuración de JWT
-```
-
-## Servicios
-
-### JwtService
-
-Servicio responsable de:
-- Generar tokens JWT
-- Generar refresh tokens
-- Validar tokens expirados
-
-### AuthService
-
-Servicio responsable de:
-- Autenticar usuarios (login)
-- Registrar nuevos usuarios
-- Refrescar tokens
-
-**Nota**: Actualmente usa almacenamiento en memoria. En producción, reemplaza con Entity Framework o tu base de datos preferida.
-
-## Seguridad
-
-### Recomendaciones para Producción
-
-1. **Clave Secreta**: Usa una clave secreta fuerte (mínimo 32 caracteres) y guárdala en variables de entorno
-2. **HTTPS**: Siempre usa HTTPS en producción
-3. **Almacenamiento de Contraseñas**: Reemplaza el hash SHA256 simple con BCrypt o PasswordHasher de ASP.NET Identity
-4. **Base de Datos**: Reemplaza el almacenamiento en memoria con una base de datos real
-5. **Refresh Tokens**: Implementa revocación de refresh tokens
-6. **Rate Limiting**: Implementa límites de tasa para prevenir ataques de fuerza bruta
-7. **Validación**: Agrega validación más robusta de emails y contraseñas
-
-### Variables de Entorno
-
-Para producción, configura la clave secreta en variables de entorno:
+Ejemplo:
 
 ```bash
-# En appsettings.Production.json o variables de entorno
-JwtSettings__SecretKey=tu_clave_secreta_super_segura_aqui
+API=https://localhost:5001
+
+TOKEN=$(curl -s "$API/api/Auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"usuario":"YROSALES.MTY","password":"password"}' \
+  | jq -r '.token')
+
+curl "$API/api/Visualization/pendientes/MANCHESTER" \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
-## Ejemplo de Uso con HttpClient (C#)
+En el frontend, `api.service.js`:
 
-```csharp
-var client = new HttpClient();
-client.BaseAddress = new Uri("https://api.tudominio.com");
+- Lee `token` desde `localStorage`.
+- Decodifica `exp` para redirigir al login si ya expiro.
+- Adjunta `Authorization: Bearer <token>` a cada request.
+- Limpia `token`, `user` y `captureData` ante 401/403, excepto para
+  `/api/Protected/valida-token-teamleader`, donde el 401 puede ser una
+  aprobacion rechazada y no una sesion invalida.
 
-// Login
-var loginRequest = new { email = "usuario@example.com", password = "contraseña123" };
-var loginResponse = await client.PostAsJsonAsync("/api/auth/login", loginRequest);
-var authData = await loginResponse.Content.ReadFromJsonAsync<AuthResponse>();
+## Swagger
 
-// Usar el token en peticiones protegidas
-client.DefaultRequestHeaders.Authorization = 
-    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", authData.Token);
-
-// Hacer petición protegida
-var protectedResponse = await client.GetAsync("/api/protected/test");
-```
-
-## Ejemplo de Uso con JavaScript/Fetch
-
-```javascript
-// Login
-const loginResponse = await fetch('http://localhost:5000/api/auth/login', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    email: 'usuario@example.com',
-    password: 'contraseña123'
-  })
-});
-
-const authData = await loginResponse.json();
-
-// Usar el token en peticiones protegidas
-const protectedResponse = await fetch('http://localhost:5000/api/protected/test', {
-  headers: {
-    'Authorization': `Bearer ${authData.token}`
-  }
-});
-```
+1. Ejecutar la API en ambiente de desarrollo.
+2. Abrir `https://localhost:5001/swagger`.
+3. Probar `POST /api/Auth/login`.
+4. Copiar `token`.
+5. Usar **Authorize** con `Bearer <token>`.
+6. Ejecutar endpoints protegidos.
 
 ## Troubleshooting
 
-### Error: "JWT SecretKey no configurada"
-
-Asegúrate de que `appsettings.json` tenga la sección `JwtSettings` con `SecretKey`.
-
-### Error: 401 Unauthorized
-
-- Verifica que el token esté incluido en el header `Authorization`
-- Verifica que el formato sea: `Bearer {token}`
-- Verifica que el token no haya expirado
-- Verifica que la clave secreta sea la misma en la generación y validación
-
-### Error: "Token inválido"
-
-- El token puede estar malformado
-- El token puede haber sido firmado con una clave diferente
-- El token puede haber expirado
-
+| Sintoma | Causa probable | Accion |
+| --- | --- | --- |
+| `JWT SecretKey no configurada` | Falta `JwtSettings:SecretKey`. | Configurar la clave en `appsettings`, variable de entorno o host. |
+| `401` con token faltante | No se envio header `Authorization`. | Usar `Authorization: Bearer <token>`. |
+| `401` por firma invalida | `SecretKey` distinta entre emision y validacion. | Revisar configuracion efectiva del ambiente. |
+| `401` por expiracion | `exp` del JWT ya paso. | Hacer login nuevamente; refresh no esta implementado. |
+| `401` en Team Leader | Token de aprobacion incorrecto. | Revisar token capturado; no necesariamente invalida la sesion principal. |
+| `validar-cierre-previo` devuelve 401 | El JWT no trae `NameIdentifier`. | Revisar salida de `CSP_PMX_Login` y `JwtService.GenerateToken`. |
