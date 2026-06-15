@@ -4,8 +4,8 @@
 
 ### Paso 1: Obtener el Token
 
-1. Abre Swagger UI: `http://localhost:8888/swagger`
-2. Busca el endpoint `POST /api/auth/login`
+1. Abre Swagger UI en el ambiente de la API, por ejemplo `https://localhost:5001/swagger`
+2. Busca el endpoint `POST /api/Auth/login`
 3. Haz clic en "Try it out"
 4. Ingresa tus credenciales:
    ```json
@@ -49,11 +49,11 @@ Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9y
 
 ### Paso 3: Probar Endpoints Protegidos
 
-Ahora los endpoints protegidos (como `/WeatherForecast`) deberían funcionar. Verás un candado 🔒 al lado de los endpoints que requieren autenticación.
+Ahora los endpoints protegidos (por ejemplo `/api/Visualization/pendientes/{equipo}`) deberían funcionar. Verás un candado 🔒 al lado de los endpoints que requieren autenticación.
 
 ## Errores Comunes
 
-### ❌ Error: "Se requiere autenticación..."
+### Error: "Se requiere autenticación..."
 
 **Causa:** No pusiste el token o el formato es incorrecto.
 
@@ -62,7 +62,7 @@ Ahora los endpoints protegidos (como `/WeatherForecast`) deberían funcionar. Ve
 - Verifica que hayas puesto `Bearer ` (con espacio) antes del token
 - No pongas comillas alrededor del token
 
-### ❌ Error: "Token de autenticación tiene una firma inválida"
+### Error: "Token de autenticación tiene una firma inválida"
 
 **Causa:** El token fue generado con un SecretKey diferente.
 
@@ -70,7 +70,7 @@ Ahora los endpoints protegidos (como `/WeatherForecast`) deberían funcionar. Ve
 - Obtén un nuevo token haciendo login nuevamente
 - Verifica que el `SecretKey` en `appsettings.json` sea el correcto
 
-### ❌ Error: "Bearer Token" literal
+### Error: "Bearer Token" literal
 
 **Causa:** Pusiste las palabras "Bearer Token" en lugar del token real.
 
@@ -80,13 +80,15 @@ Ahora los endpoints protegidos (como `/WeatherForecast`) deberían funcionar. Ve
 
 ## Verificar que Funciona
 
-1. Después de autorizar, intenta ejecutar `GET /WeatherForecast`
+1. Después de autorizar, intenta ejecutar `GET /api/Visualization/pendientes/{equipo}`
+   con un equipo valido del usuario.
 2. Si funciona, verás un código `200 OK` con los datos
 3. Si ves `401 Unauthorized`, revisa los pasos anteriores
 
 ## Notas
 
-- El token expira en 60 minutos
+- El token expira segun `JwtSettings:ExpirationMinutes` (`1440` minutos en el
+  `appsettings.json` versionado)
 - Si el token expira, necesitarás hacer login nuevamente y re-autorizar
 - Puedes verificar si estás autorizado viendo el candado 🔒 en los endpoints protegidos
 

@@ -37,7 +37,7 @@ Authorization: Bearer  eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ### cURL
 
 ```bash
-curl -X GET "https://localhost:5001/WeatherForecast" \
+curl -X GET "https://localhost:5001/api/Visualization/pendientes/MANCHESTER" \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```
 
@@ -46,7 +46,7 @@ curl -X GET "https://localhost:5001/WeatherForecast" \
 ```javascript
 const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."; // Sin "Bearer " aquí
 
-fetch('https://localhost:5001/WeatherForecast', {
+fetch('https://localhost:5001/api/Visualization/pendientes/MANCHESTER', {
   headers: {
     'Authorization': `Bearer ${token}` // "Bearer " se agrega aquí
   }
@@ -70,7 +70,7 @@ O usa la pestaña **Authorization**:
 ```javascript
 const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
 
-axios.get('https://localhost:5001/WeatherForecast', {
+axios.get('https://localhost:5001/api/Visualization/pendientes/MANCHESTER', {
   headers: {
     'Authorization': `Bearer ${token}`
   }
@@ -105,7 +105,8 @@ Para verificar que tu token es válido, puedes decodificarlo en [jwt.io](https:/
 ### Error: "Token expirado"
 
 **Solución:**
-- El token tiene una expiración de 60 minutos por defecto
+- El token usa la expiracion configurada en `JwtSettings:ExpirationMinutes`
+  (`1440` minutos en el `appsettings.json` versionado)
 - Haz login nuevamente para obtener un nuevo token
 
 ### Error: "Issuer o Audience inválido"

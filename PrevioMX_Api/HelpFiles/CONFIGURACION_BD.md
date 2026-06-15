@@ -1,228 +1,135 @@
-# Configuración de Base de Datos SQL Server
+# Configuracion de base de datos SQL Server
 
-## Descripción
+PrevioMX API se conecta a SQL Server con Entity Framework Core, pero no usa un
+modelo relacional administrado por migraciones para el flujo principal. La
+mayoria de operaciones llaman stored procedures desde `Business/AuthDbContext.cs`.
 
-La API de PrevioMX está configurada para usar Entity Framework Core con SQL Server para el almacenamiento de datos de autenticación.
+## Configuracion
 
-## Configuración de la Cadena de Conexión
-
-### appsettings.json
-
-La cadena de conexión se configura en `appsettings.json`:
+La cadena se lee desde `ConnectionStrings:DefaultConnection`:
 
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost;Database=PrevioMX_DB;User Id=sa;Password=YourPassword123;TrustServerCertificate=True;"
+    "DefaultConnection": "Server=servidor-sql;Database=Aduasis;User Id=usuario;Password=***;TrustServerCertificate=True;Application Name=PrevioMX_API;"
   }
 }
 ```
 
-### Parámetros de la Cadena de Conexión
+Parametros comunes:
 
-- **Server**: Nombre del servidor SQL Server (ej: `localhost`, `localhost\\SQLEXPRESS`, `servidor.dominio.com`)
-- **Database**: Nombre de la base de datos (ej: `PrevioMX_DB`)
-- **User Id**: Usuario de SQL Server (ej: `sa`)
-- **Password**: Contraseña del usuario
-- **TrustServerCertificate**: `True` para desarrollo local (permite certificados no confiables)
+| Parametro | Descripcion |
+| --- | --- |
+| `Server` | Host o instancia de SQL Server. |
+| `Database` | Base con los stored procedures de PrevioMX; en el archivo versionado apunta a `Aduasis`. |
+| `User Id` / `Password` | Credenciales de SQL Server. |
+| `TrustServerCertificate` | Puede ser util en desarrollo; en produccion preferir certificados validos. |
+| `Application Name` | Identifica conexiones de la API en SQL Server. |
 
-### Ejemplos de Cadenas de Conexión
+En ambientes compartidos o productivos, configura la cadena por variables de
+entorno:
 
-#### SQL Server Local (instancia por defecto)
-```
-Server=localhost;Database=PrevioMX_DB;User Id=sa;Password=TuPassword;TrustServerCertificate=True;
-```
-
-#### SQL Server Local (instancia nombrada)
-```
-Server=localhost\\SQLEXPRESS;Database=PrevioMX_DB;User Id=sa;Password=TuPassword;TrustServerCertificate=True;
-```
-
-#### SQL Server con Autenticación de Windows
-```
-Server=localhost;Database=PrevioMX_DB;Integrated Security=True;TrustServerCertificate=True;
-```
-
-#### SQL Server en Red
-```
-Server=192.168.1.100,1433;Database=PrevioMX_DB;User Id=usuario;Password=password;TrustServerCertificate=True;
-```
-
-#### Azure SQL Database
-```
-Server=tcp:servidor.database.windows.net,1433;Database=PrevioMX_DB;User Id=usuario@servidor;Password=password;Encrypt=True;TrustServerCertificate=False;
-```
-
-## Crear la Base de Datos
-
-### Opción 1: Usando Migraciones de Entity Framework (Recomendado)
-
-1. **Instalar herramientas de EF Core** (si no están instaladas):
-   ```bash
-   dotnet tool install --global dotnet-ef
-   ```
-
-2. **Crear la migración inicial**:
-   ```bash
-   dotnet ef migrations add InitialCreate --project PrevioMX_Api
-   ```
-
-3. **Aplicar la migración a la base de datos**:
-   ```bash
-   dotnet ef database update --project PrevioMX_Api
-   ```
-
-### Opción 2: Crear Manualmente en SQL Server
-
-Ejecuta el siguiente script SQL en SQL Server Management Studio:
-
-```sql
--- Crear la base de datos
-CREATE DATABASE PrevioMX_DB;
-GO
-
-USE PrevioMX_DB;
-GO
-
--- Crear la tabla Users
-CREATE TABLE [dbo].[Users] (
-    [Id] INT IDENTITY(1,1) PRIMARY KEY,
-    [Email] NVARCHAR(255) NOT NULL UNIQUE,
-    [Name] NVARCHAR(255) NOT NULL,
-    [PasswordHash] NVARCHAR(500) NOT NULL,
-    [RefreshToken] NVARCHAR(500) NULL,
-    [RefreshTokenExpiryTime] DATETIME2 NULL,
-    [CreatedAt] DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
-    [UpdatedAt] DATETIME2 NULL
-);
-GO
-
--- Crear índice único en Email
-CREATE UNIQUE INDEX IX_Users_Email ON [Users]([Email]);
-GO
-```
-
-## Estructura de la Tabla Users
-
-| Columna | Tipo | Descripción |
-|---------|------|-------------|
-| Id | INT | Identificador único (Primary Key, Identity) |
-| Email | NVARCHAR(255) | Email del usuario (único, requerido) |
-| Name | NVARCHAR(255) | Nombre del usuario (requerido) |
-| PasswordHash | NVARCHAR(500) | Hash de la contraseña (requerido) |
-| RefreshToken | NVARCHAR(500) | Token de refresco (opcional) |
-| RefreshTokenExpiryTime | DATETIME2 | Fecha de expiración del refresh token (opcional) |
-| CreatedAt | DATETIME2 | Fecha de creación (requerido) |
-| UpdatedAt | DATETIME2 | Fecha de última actualización (opcional) |
-
-## Configuración por Ambiente
-
-### Desarrollo (appsettings.Development.json)
-
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost;Database=PrevioMX_DB_Dev;User Id=sa;Password=DevPassword123;TrustServerCertificate=True;"
-  }
-}
-```
-
-### Producción
-
-Para producción, usa variables de entorno o Azure Key Vault:
-
-**Variables de Entorno:**
 ```bash
-ConnectionStrings__DefaultConnection=Server=prod-server;Database=PrevioMX_DB;User Id=prod-user;Password=SecurePassword;TrustServerCertificate=False;
+ConnectionStrings__DefaultConnection="Server=servidor-sql;Database=Aduasis;User Id=previo_api;Password=***;TrustServerCertificate=False;Application Name=PrevioMX_API;"
 ```
 
-**O en appsettings.Production.json:**
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=prod-server;Database=PrevioMX_DB;User Id=prod-user;Password=SecurePassword;TrustServerCertificate=False;"
-  }
-}
+## Registro en la API
+
+`Program.cs` registra:
+
+```csharp
+builder.Services.AddDbContext<AuthDbContext>(options =>
+    options.UseSqlServer(connectionString));
 ```
 
-## Verificación
+Los servicios de dominio (`AuthService`, `CatalogosService`,
+`VisualizationService`, `ClasificacionService`) reciben `AuthDbContext` y llaman
+metodos que ejecutan stored procedures.
 
-Para verificar que la conexión funciona:
+## Migraciones
 
-1. Ejecuta la aplicación:
+No hay migraciones EF Core versionadas para crear la base de datos de negocio.
+No ejecutes `dotnet ef database update` esperando crear el esquema productivo de
+PrevioMX. Si se agregan tablas o SPs, coordina los scripts SQL con el equipo DBA
+y actualiza `STORED_PROCEDURES.md` con las firmas usadas por la API.
+
+`AuthDbContext` declara `DbSet<User>` y mapea `Users` para compatibilidad con
+metodos heredados de registro/refresh, pero esos flujos no estan implementados
+actualmente en `AuthService`.
+
+## Verificacion de conectividad
+
+1. Configura `ConnectionStrings:DefaultConnection`.
+2. Ejecuta la API:
+
    ```bash
-   dotnet run
+   dotnet run --project PrevioMX_Api
    ```
 
-2. Intenta registrar un usuario usando el endpoint `/api/auth/register`
+3. Prueba login con un usuario valido:
 
-3. Si hay errores de conexión, verifica:
-   - Que SQL Server esté ejecutándose
-   - Que la cadena de conexión sea correcta
-   - Que el usuario tenga permisos para crear/leer/escribir en la base de datos
-   - Que el firewall permita la conexión
+   ```bash
+   curl -X POST "https://localhost:5001/api/Auth/login" \
+     -H "Content-Type: application/json" \
+     -d '{"usuario":"YROSALES.MTY","password":"123"}'
+   ```
+
+4. Con el token, prueba un endpoint de negocio:
+
+   ```bash
+   curl "https://localhost:5001/api/Visualization/pendientes/MANCHESTER" \
+     -H "Authorization: Bearer $TOKEN"
+   ```
+
+Si login falla por credenciales, la conexion puede estar bien pero
+`CSP_PMX_Login` no devolvio usuario. Si falla con excepcion SQL, revisar cadena,
+red, permisos y disponibilidad del SP.
+
+## Permisos requeridos
+
+El usuario de base de datos debe poder ejecutar los stored procedures listados
+en `STORED_PROCEDURES.md`. Como minimo para el flujo principal:
+
+- `CSP_PMX_Login`
+- `CSP_PMX_ObtenerPendientes`
+- `CSP_PMX_DetalleEntrada`
+- `CSP_PMX_Catalogos`
+- `CSP_PMX_ValidarClasificacion`
+- `csp_PMX_RegistrarPartida`
+- `csp_PMX_ActualizarPartida`
+- `csp_PMX_EliminarPartida`
+- `CSP_PMX_ValidarCierrePrevio`
 
 ## Troubleshooting
 
-### Error: "Cannot open database"
+### `Cannot open database`
 
-- Verifica que la base de datos exista
-- Verifica que el usuario tenga permisos
-- Verifica que el nombre de la base de datos sea correcto
+- Verifica nombre de base de datos.
+- Confirma permisos del usuario.
+- Revisa si el ambiente espera otra cadena efectiva por variables de entorno.
 
-### Error: "Login failed for user"
+### `Login failed for user`
 
-- Verifica el usuario y contraseña
-- Verifica que el usuario tenga permisos en SQL Server
+- Verifica usuario/password de SQL Server.
+- Revisa bloqueo o expiracion de la cuenta.
+- Evita usar `sa` en produccion; usa un usuario con permisos minimos.
 
-### Error: "A network-related or instance-specific error"
+### Error de red o instancia inaccesible
 
-- Verifica que SQL Server esté ejecutándose
-- Verifica que el puerto 1433 esté abierto
-- Verifica la configuración del firewall
+- Confirma host, puerto e instancia.
+- Verifica firewall y conectividad desde el servidor de API.
+- Para instancias nombradas, usa el formato correcto del proveedor SQL Server.
 
-### Error: "The server was not found or was not accessible"
+### Error por columna inexistente
 
-- Verifica el nombre del servidor
-- Verifica la conectividad de red
-- Para instancias nombradas, usa: `Server=localhost\\SQLEXPRESS`
+El API lee columnas por nombre en `AuthDbContext`. Compara el resultset del SP
+con `STORED_PROCEDURES.md` y con el metodo C# correspondiente.
 
 ## Seguridad
 
-### Recomendaciones para Producción
-
-1. **No commitees contraseñas**: Usa variables de entorno o Azure Key Vault
-2. **Usa usuarios con permisos mínimos**: No uses `sa` en producción
-3. **Habilita encriptación**: Para conexiones remotas, usa `Encrypt=True`
-4. **Desactiva TrustServerCertificate**: En producción, usa certificados válidos
-5. **Usa connection pooling**: Entity Framework Core lo maneja automáticamente
-6. **Implementa retry logic**: Para manejar errores temporales de conexión
-
-## Migraciones Adicionales
-
-Si necesitas modificar el esquema de la base de datos:
-
-1. Modifica el modelo `User` o agrega nuevas entidades
-2. Crea una nueva migración:
-   ```bash
-   dotnet ef migrations add NombreDeLaMigracion --project PrevioMX_Api
-   ```
-3. Aplica la migración:
-   ```bash
-   dotnet ef database update --project PrevioMX_Api
-   ```
-
-## Rollback de Migraciones
-
-Para revertir una migración:
-
-```bash
-dotnet ef database update NombreMigracionAnterior --project PrevioMX_Api
-```
-
-Para eliminar la última migración (sin aplicarla):
-
-```bash
-dotnet ef migrations remove --project PrevioMX_Api
-```
+- No publiques secretos en commits; usa variables de entorno o un gestor de
+  secretos.
+- Usa usuarios SQL con permisos minimos de `EXECUTE`.
+- Prefiere `Encrypt=True` y certificados validos para conexiones remotas.
+- Rota credenciales si una cadena queda expuesta.
 

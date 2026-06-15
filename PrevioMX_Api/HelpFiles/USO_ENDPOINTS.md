@@ -1,12 +1,17 @@
-# Guía de Uso de Endpoints
+# Guia de uso de endpoints
 
-## Endpoints Públicos (No requieren autenticación)
+Esta guia resume los endpoints implementados en `PrevioMX_Api/Controllers`.
+Salvo `AuthController`, todos los controladores usan `[Authorize]` y requieren
+un JWT Bearer valido.
 
-### POST /api/auth/login
+## Autenticacion
 
-Iniciar sesión y obtener token JWT.
+### POST `/api/Auth/login`
 
-**Request:**
+Inicia sesion contra el stored procedure `CSP_PMX_Login` y devuelve un JWT.
+
+**Request**
+
 ```json
 {
   "usuario": "YROSALES.MTY",
@@ -14,11 +19,12 @@ Iniciar sesión y obtener token JWT.
 }
 ```
 
-**Response (200 OK):**
+**Response 200**
+
 ```json
 {
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "refreshToken": "refresh_token_here",
+  "token": "eyJhbGciOiJIUzI1NiIs...",
+  "refreshToken": "base64-generado-en-memoria",
   "user": {
     "idUsuario": "YRO",
     "usuario": "yrosales.mty",
@@ -30,99 +36,168 @@ Iniciar sesión y obtener token JWT.
 }
 ```
 
-## Endpoints Protegidos (Requieren autenticación JWT)
+`POST /api/Auth/register` y `POST /api/Auth/refresh` existen en el controlador,
+pero `AuthService` aun no los implementa y devuelve `null`. El flujo soportado
+para renovar sesion es volver a ejecutar login.
 
-### GET /WeatherForecast
+## Header requerido
 
-Obtener pronóstico del tiempo. **Requiere token JWT válido.**
-
-**Headers requeridos:**
-```
+```http
 Authorization: Bearer {token}
+Content-Type: application/json
 ```
 
-**Ejemplo con cURL:**
-```bash
-curl -X GET "https://localhost:5001/WeatherForecast" \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-```
-
-**Ejemplo con JavaScript/Fetch:**
-```javascript
-const token = "tu_token_aqui";
-
-const response = await fetch('https://localhost:5001/WeatherForecast', {
-  method: 'GET',
-  headers: {
-    'Authorization': `Bearer ${token}`
-  }
-});
-
-const data = await response.json();
-```
-
-**Ejemplo con Postman:**
-1. Ve a la pestaña "Authorization"
-2. Selecciona "Bearer Token"
-3. Pega tu token en el campo "Token"
-4. Realiza la petición
-
-## Flujo Completo
-
-### Paso 1: Obtener Token
+Ejemplo:
 
 ```bash
-# Login
-curl -X POST "https://localhost:5001/api/auth/login" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "usuario": "YROSALES.MTY",
-    "password": "123"
-  }'
-```
+TOKEN="eyJhbGciOiJIUzI1NiIs..."
 
-### Paso 2: Usar el Token
-
-```bash
-# Guardar el token de la respuesta anterior
-TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-
-# Usar el token para acceder a endpoints protegidos
-curl -X GET "https://localhost:5001/WeatherForecast" \
+curl "https://localhost:5001/api/Visualization/pendientes/MANCHESTER" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
-## Errores Comunes
+## Visualization
 
-### Error 401 Unauthorized
+Controlador: `VisualizationController`. Servicio: `VisualizationService`.
+Acceso a datos: `AuthDbContext`.
 
-**Causa:** No se envió el token o el token es inválido/expirado.
+| Metodo | Ruta | Uso | Stored procedure principal |
+| --- | --- | --- | --- |
+| GET | `/api/Visualization/pendientes/{equipo}` | Lista referencias pendientes para el equipo del usuario. | `CSP_PMX_ObtenerPendientes` |
+| GET | `/api/Visualization/detalle-entrada/{idEntrada}` | Detalle de bultos/partidas de una referencia. | `CSP_PMX_DetalleEntrada` |
+| GET | `/api/Visualization/detalle-pos/{idEntrada}` | Productos asociados a entradas OpenPO. | `CSP_PMX_DetallePOs` |
+| POST | `/api/Visualization/registrar-partida` | Crea una partida capturada. | `csp_PMX_RegistrarPartida` |
+| PUT | `/api/Visualization/actualizar-partida` | Actualiza una partida existente. | `csp_PMX_ActualizarPartida` |
+| DELETE | `/api/Visualization/eliminar-partida` | Elimina una partida por `id`, bulto, referencia y producto. | `csp_PMX_EliminarPartida` |
+| POST | `/api/Visualization/agregar-openpo` | Agrega PO/packing a una referencia OpenPO. | `csp_PMX_AgregarOpenPO` |
+| GET | `/api/Visualization/validar-cierre-previo/{idEntrada}/{discrepancia}/{aplicaNom144}` | Valida y cierra previo usando el usuario del token. | `CSP_PMX_ValidarCierrePrevio` |
+| POST | `/api/Visualization/validar-cuarentenas` | Valida cuarentenas por entrada y usuario. | `CSP_PMX_ValidarCuarentenas` |
+| POST | `/api/Visualization/validar-marca` | Valida marca capturada para referencia/producto. | `csp_PMX_ValidaMarca` |
+| POST | `/api/Visualization/validar-modelo` | Valida modelo capturado para referencia/producto. | `csp_PMX_ValidaModelo` |
+| GET | `/api/Visualization/existe-previo-cerrado/{referencia}` | Comprueba si una referencia cerrada puede mostrarse para reapertura. | `csp_PMX_ExistePrevioCerrado` |
+| POST | `/api/Visualization/puede-reabrir-previo` | Valida credenciales especiales para reabrir previo. | `sp_previo_TL` |
+| GET | `/api/Visualization/reabre-previo/{referencia}` | Reabre el previo y devuelve datos para navegar a captura. | `csp_PMX_ReabrirPrevio` |
+| GET | `/api/Visualization/proveedor-previo/{referencia}` | Obtiene proveedor actual asociado a una referencia. | `csp_PMX_GetProveedorPrevio` |
+| GET | `/api/Visualization/pdf-proxy?url={url}` | Descarga PDFs externos permitidos para evitar CORS en la web. | HTTP externo, sin SP |
 
-**Solución:**
-1. Verifica que estés enviando el header `Authorization: Bearer {token}`
-2. Verifica que el token no haya expirado (por defecto expira en 60 minutos)
-3. Obtén un nuevo token haciendo login nuevamente
+### Ejemplos de requests de captura
 
-### Error 403 Forbidden
+Registrar partida:
 
-**Causa:** El token es válido pero no tienes permisos para acceder al recurso.
+```json
+{
+  "idBulto": "BULTO-1",
+  "referencia": "ENTRADA-123",
+  "idProveedor": "PROV-1",
+  "idProducto": "ABC-123",
+  "um": "PZA",
+  "cantidad": "10",
+  "subCantidad": "1",
+  "paisOrigen": "MEX",
+  "comentarios": "Capturado en previo",
+  "usuario": "yrosales.mty",
+  "ocCompra": "PO-123",
+  "noParteFisico": "ABC-123",
+  "mms": "MMS-1"
+}
+```
 
-**Solución:** Verifica los permisos del usuario en el sistema.
+Cerrar previo:
 
-## En Swagger UI
+```bash
+curl "https://localhost:5001/api/Visualization/validar-cierre-previo/ENTRADA-123/false/true" \
+  -H "Authorization: Bearer $TOKEN"
+```
 
-1. Abre Swagger UI: `https://localhost:5001/swagger`
-2. Ejecuta `/api/auth/login` para obtener el token
-3. Copia el `token` de la respuesta
-4. Haz clic en el botón **"Authorize"** (🔒) en la parte superior
-5. Pega el token en el formato: `Bearer {tu_token}`
-6. Haz clic en "Authorize" y luego "Close"
-7. Ahora puedes probar los endpoints protegidos (aparecerán con un candado 🔒)
+La API toma `idUsuario` desde el claim `ClaimTypes.NameIdentifier`; no debe
+enviarse manualmente en la URL.
 
-## Notas Importantes
+## Catalogos
 
-- El token JWT tiene una expiración configurada (por defecto 60 minutos)
-- Si el token expira, necesitarás hacer login nuevamente
-- El token debe enviarse en cada petición a endpoints protegidos
-- El formato del header es: `Authorization: Bearer {token}` (con espacio después de "Bearer")
+Controlador: `CatalogosController`.
+
+| Metodo | Ruta | Uso | Stored procedure |
+| --- | --- | --- | --- |
+| GET | `/api/Catalogos/{catalogo}` | Devuelve items de catalogo por ID. La web usa `1` para unidades y `2` para paises. | `CSP_PMX_Catalogos` |
+| POST | `/api/Catalogos/catalogo-proveedores` | Busca proveedores con filtro y paginacion. | `csp_PMX_ProveedoresListarPaginado` |
+
+Ejemplo de proveedores:
+
+```json
+{
+  "filtro": "acme",
+  "pageNumber": 1,
+  "pageSize": 20
+}
+```
+
+## Clasificacion
+
+Controlador: `ClasificacionController`.
+
+| Metodo | Ruta | Uso | Stored procedure |
+| --- | --- | --- | --- |
+| POST | `/api/Clasificacion/validar` | Valida clasificacion por entrada/producto. | `CSP_PMX_ValidarClasificacion` |
+| POST | `/api/Clasificacion/validar-post` | Variante POST usada por el formulario de captura. | `CSP_PMX_ValidarClasificacion` |
+
+```json
+{
+  "idEntrada": "ENTRADA-123",
+  "idProducto": "ABC-123"
+}
+```
+
+La respuesta puede incluir clasificacion, descripcion y campos de Standard Pack
+(`isSpum`, `spUm`, `isSppo`, `spPo`, `isSpmms`, `spMms`, `spCantidades`,
+`isRrmms`).
+
+## Protected
+
+| Metodo | Ruta | Uso | Stored procedure |
+| --- | --- | --- | --- |
+| GET | `/api/Protected/test` | Endpoint de diagnostico JWT. Devuelve claims basicos. | N/A |
+| POST | `/api/Protected/valida-token-teamleader` | Valida token de Team Leader para operaciones especiales de captura. | `SP_FEA_ValidarTokenTeamleader_Result` |
+
+Request:
+
+```json
+{
+  "usuario": "yrosales.mty",
+  "token": "123456"
+}
+```
+
+Si el stored procedure responde `correcto: true`, la API devuelve `200` con
+`usuarioAprobo`; de lo contrario responde `401`.
+
+## Proxy PDF
+
+`GET /api/Visualization/pdf-proxy?url={url}` solo acepta URLs HTTPS. Los hosts
+permitidos por codigo son:
+
+- `grupoei.com.mx` y subdominios
+- `aduax.com` y subdominios
+- subdominios que terminen en `.amazonaws.com`
+
+El endpoint requiere JWT como cualquier otro endpoint de `Visualization`. El
+frontend lo usa automaticamente cuando el PDF esta en un origen distinto al de
+la app.
+
+## Errores comunes
+
+- `401 Unauthorized`: falta el header `Authorization`, el token esta expirado o
+  la firma no coincide con `JwtSettings:SecretKey`.
+- `403 Forbidden` en `pdf-proxy`: la URL no es HTTPS o el host no esta en la
+  lista permitida.
+- `404` en validaciones: el stored procedure no devolvio datos para los
+  parametros enviados.
+- `500`: error en API o stored procedure; revisar logs de .NET y SQL Server.
+
+## Swagger UI
+
+1. Abre Swagger en el ambiente de API, por ejemplo `https://localhost:5001/swagger`.
+2. Ejecuta `POST /api/Auth/login`.
+3. Copia el campo `token`.
+4. Usa **Authorize** con el formato `Bearer {token}`.
+5. Prueba los endpoints protegidos.
 
