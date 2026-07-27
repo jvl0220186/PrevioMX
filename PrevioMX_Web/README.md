@@ -1,114 +1,182 @@
 # PrevioMX Web
 
-Aplicación web desarrollada en React + JavaScript para conectar con la API .NET Core de PrevioMX.
+Aplicación React + Vite para operar el flujo de previo: dashboard de referencias pendientes, captura de partidas, validaciones de producto (Standard Pack / MMS), cierre/reapertura y visualización de PDFs con OCR por región.
 
-## Características
+Guía detallada de captura: [`docs/FLUJO_CAPTURA.md`](docs/FLUJO_CAPTURA.md).
 
-- ✅ Autenticación JWT
-- ✅ Arquitectura separada (vistas, componentes, servicios, estilos)
-- ✅ Rutas protegidas
-- ✅ Interceptores de Axios para manejo de tokens
-- ✅ Context API para gestión de estado de autenticación
+## Stack
 
-## Estructura del Proyecto
+- React 18
+- Vite 5
+- React Router 6
+- Axios
+- `pdfjs-dist` para render de PDF
+- `tesseract.js` para OCR en idioma `spa`
 
-```
+## Estructura
+
+```text
 PrevioMX_Web/
-├── src/
-│   ├── components/          # Componentes reutilizables
-│   │   ├── auth/           # Componentes de autenticación
-│   │   ├── common/         # Componentes comunes (Loading, etc.)
-│   │   └── layout/         # Componentes de layout (Header, etc.)
-│   ├── config/             # Configuraciones
-│   ├── contexts/           # Context API (AuthContext)
-│   ├── routes/             # Configuración de rutas
-│   ├── services/           # Servicios de API
-│   ├── styles/             # Estilos globales
-│   └── views/              # Vistas/páginas
-├── package.json
-├── vite.config.js
-└── README.md
+|-- src/
+|   |-- components/
+|   |   |-- auth/
+|   |   |-- capture/
+|   |   |-- common/
+|   |   `-- dashboard/
+|   |-- config/
+|   |-- contexts/
+|   |-- routes/
+|   |-- services/
+|   `-- views/
+|-- docs/
+|-- public/
+|-- vite.config.js
+`-- package.json
 ```
 
-## Instalación
+## Configuración local
 
 1. Instalar dependencias:
-```bash
-npm install
-```
 
-2. Configurar variables de entorno:
-
-   **Opción A: Archivo único `.env` (recomendado para empezar)**
    ```bash
-   # Crear archivo .env en la raíz del proyecto
-   VITE_API_BASE_URL=http://localhost:5000/api
+   npm install
    ```
 
-   **Opción B: Archivos específicos por ambiente (recomendado para producción)**
-   
-   Para desarrollo, crear `.env.development`:
+2. Configurar la URL de API (opcional):
+
    ```bash
-   VITE_API_BASE_URL=http://localhost:5000/api
-   ```
-   
-   Para producción, crear `.env.production`:
-   ```bash
-   VITE_API_BASE_URL=https://api.tudominio.com/api
+   VITE_API_BASE_URL=https://localhost:5001
    ```
 
-   > **Nota**: Los archivos `.env` NO se commitean al repositorio (están en `.gitignore`). 
-   > Vite carga automáticamente `.env.development` en `npm run dev` y `.env.production` en `npm run build`.
+   Si no se define, `src/config/api.config.js` usa:
 
-## Desarrollo
+   - Desarrollo: `https://localhost:5001`
+   - Producción (fallback de código): `http://192.168.6.185/PrevioMX/Api`
 
-Ejecutar el servidor de desarrollo:
-```bash
-npm run dev
-```
+   El archivo `.env.production` del repo apunta a `https://preproduccion.grupoei.com.mx/PrevioMXApi`.
 
-La aplicación estará disponible en `http://localhost:3000`
+   > No agregues `/api` al final: los servicios ya incluyen `/api/...` en cada ruta.
+
+3. Levantar Vite:
+
+   ```bash
+   npm run dev
+   ```
+
+   URL local: `http://localhost:5173`.
+
+4. Levantar la API .NET en paralelo:
+
+   ```bash
+   dotnet run --project ../PrevioMX_Api/PrevioMX_Api.csproj --launch-profile https
+   ```
+
+   CORS permite `http://localhost:5173` según `Program.cs`.
 
 ## Build
 
-Generar build de producción:
 ```bash
 npm run build
 ```
 
-**Importante para producción:**
-- Asegúrate de tener `.env.production` configurado con la URL correcta de tu API
-- O configura las variables de entorno en tu plataforma de deployment (Vercel, Netlify, etc.)
-- El build incluirá las variables del `.env.production` en el código compilado
+`vite.config.js` publica con `base: '/PrevioMX/'`. Durante `closeBundle`, copia `pdf.worker.min.mjs` a `dist/` para IIS.
 
-## Autenticación
+## Autenticación y sesión
 
-La aplicación utiliza JWT para autenticación. El token se almacena en `localStorage` y se incluye automáticamente en todas las peticiones mediante interceptores de Axios.
+- Login: `POST /api/Auth/login`.
+- Se guardan `token` y `user` en `localStorage`.
+- `api.service.js` agrega `Authorization: Bearer {token}` y valida `exp` antes de cada request.
+- Si el token expira o llega un 401/403 (salvo Team Leader), limpia `token`, `user` y `captureData`, y redirige al login.
+- `register` / `refresh` existen en la API pero no están implementados en `AuthService`.
 
-### Endpoints esperados en la API:
+## Rutas principales
 
-- `POST /api/auth/login` - Iniciar sesión
-- `POST /api/auth/register` - Registrar usuario
-- `POST /api/auth/refresh` - Refrescar token
+| Ruta | Vista | Propósito |
+| --- | --- | --- |
+| `/` | `LoginView` | Autenticación inicial |
+| `/dashboard` | `DashboardView` | Pendientes, filtros, reapertura |
+| `/capture/:reference` | `CaptureView` | Captura, OpenPO, MMS, cierre, PDF/OCR |
 
-### Formato de respuesta esperado:
+## Flujo de dashboard
 
-```json
-{
-  "token": "jwt_token_here",
-  "user": {
-    "id": 1,
-    "email": "user@example.com",
-    "name": "Usuario"
-  }
-}
+1. Lee `user.equipo` desde `localStorage`.
+2. Llama `GET /api/Visualization/pendientes/{equipo}`.
+3. Al seleccionar una referencia, guarda `captureData` y navega a captura.
+
+### Reapertura
+
+Cuando la búsqueda deja la tabla vacía:
+
+1. `GET /api/Visualization/existe-previo-cerrado/{referencia}`
+2. Modal de credenciales -> `POST /api/Visualization/puede-reabrir-previo`
+3. Si `puedeRegenerar === true` -> `GET /api/Visualization/reabre-previo/{referencia}`
+4. Guarda `captureData` y navega a captura.
+
+Las credenciales se validan con `sp_previo_TL` (no asumir igualdad con el login).
+
+## Flujo de captura
+
+Al entrar a `/capture/:reference`:
+
+1. Recupera `captureData`.
+2. Carga `detalle-entrada`, catálogos `1`/`2` y `proveedor-previo`.
+3. Si `esOpenPO`, carga `detalle-pos`.
+4. Operaciones:
+   - Crear: `POST /api/Visualization/registrar-partida`
+   - Editar: `PUT /api/Visualization/actualizar-partida`
+   - Eliminar: `DELETE /api/Visualization/eliminar-partida`
+   - Agregar OpenPO: `POST /api/Visualization/agregar-openpo`
+5. Valida producto con `POST /api/Clasificacion/validar-post`.
+
+### Standard Pack y MMS
+
+- `isSpmms`: muestra bloque Marca/Modelo/Serie (opcional si no hay `isRrmms`).
+- `isRrmms`: exige que el número de series capturadas coincida con la cantidad.
+- Formato enviado: `marca|modelo|serie~marca2|modelo2|serie2`.
+- Conflictos OpenPO vs Standard Pack pueden requerir token Team Leader (`POST /api/Protected/valida-token-teamleader`).
+
+Detalle completo en [`docs/FLUJO_CAPTURA.md`](docs/FLUJO_CAPTURA.md).
+
+## Cierre de previo
+
+Tras confirmar la verificación de desgloses:
+
+```text
+GET /api/Visualization/validar-cierre-previo/{reference}/{discrepancia}/{aplicaNom144}
 ```
 
-## Estructura de Archivos
+El usuario se toma del JWT en backend. Si `estatus` es true, vuelve al dashboard.
 
-- **Vistas**: Cada vista tiene su propio archivo JSX y CSS
-- **Componentes**: Separados por funcionalidad (auth, layout, common)
-- **Servicios**: Lógica de negocio y comunicación con API
-- **Contextos**: Estado global de la aplicación
-- **Estilos**: CSS separado por componente/vista
+## PDF y OCR
 
+`PdfOcrViewer` permite paginar, zoom, rotar, abrir en nueva pestaña y OCR por región.
+
+Cross-origin usa:
+
+```text
+GET /api/Visualization/pdf-proxy?url={urlCodificada}
+```
+
+Hosts permitidos: `grupoei.com.mx`, `aduax.com`, `.amazonaws.com` y subdominios.
+
+### Pitfalls
+
+- Si el PDF falla en producción, verifica `dist/pdf.worker.min.mjs` y base `/PrevioMX/`.
+- `pdf-proxy` 403: host no permitido.
+- OCR vacío: aumenta zoom o amplía la región.
+- `getClasificacion()` en `previo.service.js` usa un GET inexistente; el flujo activo es `validarPost()`.
+
+## Servicios
+
+- `auth.service.js`: login/logout.
+- `api.service.js`: Axios, JWT, redirección y excepción Team Leader.
+- `previo.service.js`: catálogos, pendientes, captura, OpenPO, marca/modelo, cierre y reapertura.
+
+## Comandos
+
+```bash
+npm run dev
+npm run build
+npm run preview
+npm run lint
+```
