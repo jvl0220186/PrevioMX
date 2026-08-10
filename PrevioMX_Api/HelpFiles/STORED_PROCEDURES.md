@@ -1,410 +1,116 @@
-# Stored Procedures para Autenticación
+# Stored procedures usados por PrevioMX
 
-## Descripción
+La API no usa tablas EF tradicionales para la mayoría de operaciones de negocio. `AuthDbContext` ejecuta stored procedures de SQL Server y mapea resultsets a DTOs.
 
-La API de PrevioMX utiliza stored procedures para todas las operaciones de base de datos relacionadas con autenticación. A continuación se listan los stored procedures que deben crearse en la base de datos SQL Server.
+Inventario verificado contra `PrevioMX_Api/Business/AuthDbContext.cs`.
 
-## Stored Procedures Requeridos
+## Reglas generales
 
-### 1. sp_GetUserByEmail
+- Connection string requerida: `ConnectionStrings:DefaultConnection`.
+- El usuario SQL necesita `EXECUTE` sobre los procedimientos listados.
+- Los nombres de columnas del resultset deben coincidir con los accesos del código (`DbDataReader` / `SqlQueryRaw`).
+- Los métodos que abren la conexión manualmente hacen `CloseAsync()` en `finally`.
 
-Obtiene un usuario por su email.
+## Autenticación
 
-**Parámetros:**
-- `@Email` NVARCHAR(255) - Email del usuario
+| Procedimiento | Método C# | Endpoint | Parámetros | Resultset esperado |
+| --- | --- | --- | --- | --- |
+| `CSP_PMX_Login` | `LoginAsync` | `POST /api/Auth/login` | `@P_USUARIO`, `@P_PASSWORD` | `IdUsuario`, `Usuario`, `CorreoElectronico`, `Equipo`, `GrupoId`, `Lider` |
 
-**Retorna:**
-- ResultSet con los campos: Id, Email, Name, PasswordHash, RefreshToken, RefreshTokenExpiryTime, CreatedAt, UpdatedAt
+Notas:
 
-**Script SQL:**
-```sql
-CREATE PROCEDURE [dbo].[sp_GetUserByEmail]
-    @Email NVARCHAR(255)
-AS
-BEGIN
-    SET NOCOUNT ON;
-    
-    SELECT 
-        Id,
-        Email,
-        Name,
-        PasswordHash,
-        RefreshToken,
-        RefreshTokenExpiryTime,
-        CreatedAt,
-        UpdatedAt
-    FROM Users
-    WHERE Email = @Email;
-END
-GO
+- `AuthService.LoginAsync` es el único flujo de autenticación operativo.
+- El JWT se genera después de recibir `LoginResultDto`.
+
+### Helpers de usuario no activos
+
+`AuthDbContext` contiene helpers para `sp_RegisterUser`, `sp_UpdateRefreshToken`, `sp_GetUserByRefreshToken` y `sp_EmailExists`, pero `AuthService.RegisterAsync` / `RefreshTokenAsync` devuelven `null`. `POST /api/Auth/register` y `POST /api/Auth/refresh` no son funcionales.
+
+## Catálogos
+
+| Procedimiento | Método C# | Endpoint | Parámetros | Resultset |
+| --- | --- | --- | --- | --- |
+| `CSP_PMX_Catalogos` | `GetCatalogosAsync` | `GET /api/Catalogos/{catalogo}` | `@P_CATALOGO` | `c_value`, `c_text` |
+| `csp_PMX_ProveedoresListarPaginado` | `GetCatalogoProveedoresPaginadoAsync` | `POST /api/Catalogos/catalogo-proveedores` | `@Filtro`, `@PageNumber`, `@PageSize` | `c_value`, `c_text`, `TotalRows` |
+
+Uso frontend: catálogo `1` = unidades, `2` = países.
+
+## Dashboard y detalle
+
+| Procedimiento | Método C# | Endpoint | Parámetros | Columnas relevantes |
+| --- | --- | --- | --- | --- |
+| `CSP_PMX_ObtenerPendientes` | `GetPendientesAsync` | `GET /api/Visualization/pendientes/{equipo}` | `@EQUIPO` | `id_entrada`, bodega/cliente/proveedor, `bultos`, `estatus`, `ruta_documento`, `es_openpo`, ... |
+| `CSP_PMX_DetalleEntrada` | `GetDetalleEntradaAsync` | `GET /api/Visualization/detalle-entrada/{idEntrada}` | `@ID_ENTRADA` | partidas + `EsOpenPO` + `MMS` |
+| `CSP_PMX_DetallePOs` | `GetDetallePOsAsync` | `GET /api/Visualization/detalle-pos/{idEntrada}` | `@ID_ENTRADA` | `po`, `id_producto`, `cantidad`, `um`, `pais_origen`, ... |
+
+- `ruta_documento` puede traer varias URLs separadas por `|`.
+- `EsOpenPO = true` activa la consulta a `CSP_PMX_DetallePOs`.
+
+## Captura y mantenimiento de partidas
+
+| Procedimiento | Método C# | Endpoint | Parámetros |
+| --- | --- | --- | --- |
+| `csp_PMX_RegistrarPartida` | `RegistrarPartidaAsync` | `POST /api/Visualization/registrar-partida` | `@idbulto`, `@Referencia`, `@id_proveedor`, `@id_producto`, `@UM`, `@cantidad`, `@sub_cantidad`, `@pais_origen`, `@Comentarios`, `@Usuario`, `@oc_compra`, `@noparte_fisico`, `@mms` |
+| `csp_PMX_ActualizarPartida` | `ActualizarPartidaAsync` | `PUT /api/Visualization/actualizar-partida` | `@id` + mismos campos de registro |
+| `csp_PMX_EliminarPartida` | `EliminarPartidaAsync` | `DELETE /api/Visualization/eliminar-partida` | `@id`, `@idbulto`, `@Referencia`, `@id_producto` |
+| `csp_PMX_AgregarOpenPO` | `AgregarOpenPOAsync` | `POST /api/Visualization/agregar-openpo` | `@Referencia`, `@po`, `@packing` |
+
+Resultset esperado:
+
+```text
+estatus bit
+msg varchar/nvarchar
 ```
 
----
+Validaciones en controller:
 
-### 2. sp_RegisterUser
+- Registrar: `IdBulto` e `IdProducto` requeridos.
+- Actualizar: `Id > 0`, `IdBulto` e `IdProducto` requeridos.
+- Eliminar: `IdBulto`, `Referencia` e `IdProducto` requeridos.
+- Agregar OpenPO: `Referencia`, `Po` y `Packing` requeridos.
 
-Registra un nuevo usuario en el sistema.
+### Formato de `@mms`
 
-**Parámetros:**
-- `@Email` NVARCHAR(255) - Email del usuario
-- `@Name` NVARCHAR(255) - Nombre del usuario
-- `@PasswordHash` NVARCHAR(500) - Hash de la contraseña
-- `@RefreshToken` NVARCHAR(500) - Token de refresco
-- `@RefreshTokenExpiryTime` DATETIME2 - Fecha de expiración del refresh token
-- `@CreatedAt` DATETIME2 - Fecha de creación
+Cadena construida en `AddPartidasForm`:
 
-**Retorna:**
-- ResultSet con el usuario creado (Id, Email, Name, PasswordHash, RefreshToken, RefreshTokenExpiryTime, CreatedAt, UpdatedAt)
-
-**Script SQL:**
-```sql
-CREATE PROCEDURE [dbo].[sp_RegisterUser]
-    @Email NVARCHAR(255),
-    @Name NVARCHAR(255),
-    @PasswordHash NVARCHAR(500),
-    @RefreshToken NVARCHAR(500),
-    @RefreshTokenExpiryTime DATETIME2,
-    @CreatedAt DATETIME2
-AS
-BEGIN
-    SET NOCOUNT ON;
-    
-    -- Verificar si el email ya existe
-    IF EXISTS (SELECT 1 FROM Users WHERE Email = @Email)
-    BEGIN
-        RETURN;
-    END
-    
-    -- Insertar nuevo usuario
-    INSERT INTO Users (Email, Name, PasswordHash, RefreshToken, RefreshTokenExpiryTime, CreatedAt)
-    VALUES (@Email, @Name, @PasswordHash, @RefreshToken, @RefreshTokenExpiryTime, @CreatedAt);
-    
-    -- Retornar el usuario creado
-    SELECT 
-        Id,
-        Email,
-        Name,
-        PasswordHash,
-        RefreshToken,
-        RefreshTokenExpiryTime,
-        CreatedAt,
-        UpdatedAt
-    FROM Users
-    WHERE Id = SCOPE_IDENTITY();
-END
-GO
+```text
+marca1|modelo1|serie1~marca2|modelo2|serie2
 ```
 
----
+Vacía cuando no hay series. Si `is_rrmms = true`, el frontend exige tantas series como la cantidad capturada.
 
-### 3. sp_UpdateRefreshToken
+## Validaciones de producto y cierre
 
-Actualiza el refresh token de un usuario.
+| Procedimiento | Método C# | Endpoint | Parámetros | Resultset |
+| --- | --- | --- | --- | --- |
+| `CSP_PMX_ValidarClasificacion` | `GetValidarClasificacionAsync` | `POST /api/Clasificacion/validar` y `POST /api/Clasificacion/validar-post` | `@ID_ENTRADA`, `@ID_PRODUCTO` | `clasificacion`, `descripcion`, `is_spum`, `sp_um`, `is_sppo`, `sp_po`, `is_spmms`, `sp_mms`, `sp_cantidades`, `is_rrmms` |
+| `CSP_PMX_ValidarCierrePrevio` | `GetValidarCierrePrevioAsync` | `GET /api/Visualization/validar-cierre-previo/{idEntrada}/{discrepancia}/{aplicaNom144}` | `@ID_ENTRADA`, `@ID_USUARIO`, `@DISCREPANCIA`, `@APLICA_NOM144` | `estatus`, `bultos_totales`, `bultos_previo`, `msg` |
+| `CSP_PMX_ValidarCuarentenas` | `ValidarCuarentenasAsync` | `POST /api/Visualization/validar-cuarentenas` | `@ID_ENTRADA`, `@ID_USUARIO` | `EXITO`, `MENSAJE` |
+| `csp_PMX_ValidaMarca` | `ValidarMarcaAsync` | `POST /api/Visualization/validar-marca` | `@Referencia`, `@id_producto`, `@marca_registro` | `Valido` |
+| `csp_PMX_ValidaModelo` | `ValidarModeloAsync` | `POST /api/Visualization/validar-modelo` | `@Referencia`, `@id_producto`, `@modelo_registro` | `Valido` |
+| `SP_FEA_ValidarTokenTeamleader_Result` | `ValidarTokenTeamleaderAsync` | `POST /api/Protected/valida-token-teamleader` | `@usuario`, `@token` | `Correcto`, `Mensaje`, `UsuarioAprobo` |
 
-**Parámetros:**
-- `@UserId` INT - ID del usuario
-- `@RefreshToken` NVARCHAR(500) - Nuevo refresh token
-- `@RefreshTokenExpiryTime` DATETIME2 - Nueva fecha de expiración
-- `@UpdatedAt` DATETIME2 - Fecha de actualización
+Notas MMS / Standard Pack:
 
-**Retorna:**
-- Número de filas afectadas
+- `is_spmms`: el UI muestra badges/alertas MMS; la captura es opcional si `is_rrmms` es false.
+- `is_rrmms`: el UI exige que el número de series = cantidad.
+- En cierre de previo, `@ID_USUARIO` sale del claim `ClaimTypes.NameIdentifier`.
 
-**Script SQL:**
-```sql
-CREATE PROCEDURE [dbo].[sp_UpdateRefreshToken]
-    @UserId INT,
-    @RefreshToken NVARCHAR(500),
-    @RefreshTokenExpiryTime DATETIME2,
-    @UpdatedAt DATETIME2
-AS
-BEGIN
-    SET NOCOUNT ON;
-    
-    UPDATE Users
-    SET 
-        RefreshToken = @RefreshToken,
-        RefreshTokenExpiryTime = @RefreshTokenExpiryTime,
-        UpdatedAt = @UpdatedAt
-    WHERE Id = @UserId;
-END
-GO
-```
+## Reapertura de previo
 
----
+| Procedimiento | Método C# | Endpoint | Parámetros | Resultset |
+| --- | --- | --- | --- | --- |
+| `csp_PMX_ExistePrevioCerrado` | `GetExistePrevioCerradoAsync` | `GET /api/Visualization/existe-previo-cerrado/{referencia}` | `@referencia` | `estatus`, `msg` |
+| `csp_PMX_GetProveedorPrevio` | `GetProveedorPrevioAsync` | `GET /api/Visualization/proveedor-previo/{referencia}` | `@referencia` | `idProveedor`, `proveedor`, `estatus`, `msg` |
+| `sp_previo_TL` | `PuedeReabrirPrevio` | `POST /api/Visualization/puede-reabrir-previo` | `@usuario`, `@password`, `@REIMPRESION = 0` | fila presente => `puedeRegenerar = true` (hardcoded); `LUsuario` se deja vacío |
+| `csp_PMX_ReabrirPrevio` | `ReabrePrevio` | `GET /api/Visualization/reabre-previo/{referencia}` | `@referencia` | shape de `PendienteDto` (solo primera fila) |
 
-### 4. sp_GetUserByRefreshToken
+`CSP_PMX_ValidarCuarentenas` está expuesto por API, pero el frontend actual no lo invoca.
 
-Obtiene un usuario por su refresh token.
+## Checklist al agregar un nuevo stored procedure
 
-**Parámetros:**
-- `@RefreshToken` NVARCHAR(500) - Refresh token
-
-**Retorna:**
-- ResultSet con los campos: Id, Email, Name, PasswordHash, RefreshToken, RefreshTokenExpiryTime, CreatedAt, UpdatedAt
-
-**Script SQL:**
-```sql
-CREATE PROCEDURE [dbo].[sp_GetUserByRefreshToken]
-    @RefreshToken NVARCHAR(500)
-AS
-BEGIN
-    SET NOCOUNT ON;
-    
-    SELECT 
-        Id,
-        Email,
-        Name,
-        PasswordHash,
-        RefreshToken,
-        RefreshTokenExpiryTime,
-        CreatedAt,
-        UpdatedAt
-    FROM Users
-    WHERE RefreshToken = @RefreshToken;
-END
-GO
-```
-
----
-
-### 5. sp_EmailExists
-
-Verifica si un email ya existe en la base de datos.
-
-**Parámetros:**
-- `@Email` NVARCHAR(255) - Email a verificar
-- `@Result` BIT OUTPUT - Resultado (1 si existe, 0 si no existe)
-
-**Retorna:**
-- Parámetro de salida @Result
-
-**Script SQL:**
-```sql
-CREATE PROCEDURE [dbo].[sp_EmailExists]
-    @Email NVARCHAR(255),
-    @Result BIT OUTPUT
-AS
-BEGIN
-    SET NOCOUNT ON;
-    
-    IF EXISTS (SELECT 1 FROM Users WHERE Email = @Email)
-        SET @Result = 1;
-    ELSE
-        SET @Result = 0;
-END
-GO
-```
-
----
-
-## Script Completo de Creación
-
-Ejecuta este script completo para crear todos los stored procedures:
-
-```sql
--- =============================================
--- Stored Procedures para Autenticación PrevioMX
--- =============================================
-
--- 1. sp_GetUserByEmail
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_GetUserByEmail]') AND type in (N'P', N'PC'))
-    DROP PROCEDURE [dbo].[sp_GetUserByEmail]
-GO
-
-CREATE PROCEDURE [dbo].[sp_GetUserByEmail]
-    @Email NVARCHAR(255)
-AS
-BEGIN
-    SET NOCOUNT ON;
-    
-    SELECT 
-        Id,
-        Email,
-        Name,
-        PasswordHash,
-        RefreshToken,
-        RefreshTokenExpiryTime,
-        CreatedAt,
-        UpdatedAt
-    FROM Users
-    WHERE Email = @Email;
-END
-GO
-
--- 2. sp_RegisterUser
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_RegisterUser]') AND type in (N'P', N'PC'))
-    DROP PROCEDURE [dbo].[sp_RegisterUser]
-GO
-
-CREATE PROCEDURE [dbo].[sp_RegisterUser]
-    @Email NVARCHAR(255),
-    @Name NVARCHAR(255),
-    @PasswordHash NVARCHAR(500),
-    @RefreshToken NVARCHAR(500),
-    @RefreshTokenExpiryTime DATETIME2,
-    @CreatedAt DATETIME2
-AS
-BEGIN
-    SET NOCOUNT ON;
-    
-    -- Verificar si el email ya existe
-    IF EXISTS (SELECT 1 FROM Users WHERE Email = @Email)
-    BEGIN
-        RETURN;
-    END
-    
-    -- Insertar nuevo usuario
-    INSERT INTO Users (Email, Name, PasswordHash, RefreshToken, RefreshTokenExpiryTime, CreatedAt)
-    VALUES (@Email, @Name, @PasswordHash, @RefreshToken, @RefreshTokenExpiryTime, @CreatedAt);
-    
-    -- Retornar el usuario creado
-    SELECT 
-        Id,
-        Email,
-        Name,
-        PasswordHash,
-        RefreshToken,
-        RefreshTokenExpiryTime,
-        CreatedAt,
-        UpdatedAt
-    FROM Users
-    WHERE Id = SCOPE_IDENTITY();
-END
-GO
-
--- 3. sp_UpdateRefreshToken
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_UpdateRefreshToken]') AND type in (N'P', N'PC'))
-    DROP PROCEDURE [dbo].[sp_UpdateRefreshToken]
-GO
-
-CREATE PROCEDURE [dbo].[sp_UpdateRefreshToken]
-    @UserId INT,
-    @RefreshToken NVARCHAR(500),
-    @RefreshTokenExpiryTime DATETIME2,
-    @UpdatedAt DATETIME2
-AS
-BEGIN
-    SET NOCOUNT ON;
-    
-    UPDATE Users
-    SET 
-        RefreshToken = @RefreshToken,
-        RefreshTokenExpiryTime = @RefreshTokenExpiryTime,
-        UpdatedAt = @UpdatedAt
-    WHERE Id = @UserId;
-END
-GO
-
--- 4. sp_GetUserByRefreshToken
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_GetUserByRefreshToken]') AND type in (N'P', N'PC'))
-    DROP PROCEDURE [dbo].[sp_GetUserByRefreshToken]
-GO
-
-CREATE PROCEDURE [dbo].[sp_GetUserByRefreshToken]
-    @RefreshToken NVARCHAR(500)
-AS
-BEGIN
-    SET NOCOUNT ON;
-    
-    SELECT 
-        Id,
-        Email,
-        Name,
-        PasswordHash,
-        RefreshToken,
-        RefreshTokenExpiryTime,
-        CreatedAt,
-        UpdatedAt
-    FROM Users
-    WHERE RefreshToken = @RefreshToken;
-END
-GO
-
--- 5. sp_EmailExists
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_EmailExists]') AND type in (N'P', N'PC'))
-    DROP PROCEDURE [dbo].[sp_EmailExists]
-GO
-
-CREATE PROCEDURE [dbo].[sp_EmailExists]
-    @Email NVARCHAR(255),
-    @Result BIT OUTPUT
-AS
-BEGIN
-    SET NOCOUNT ON;
-    
-    IF EXISTS (SELECT 1 FROM Users WHERE Email = @Email)
-        SET @Result = 1;
-    ELSE
-        SET @Result = 0;
-END
-GO
-```
-
-## Estructura de la Tabla Users
-
-Asegúrate de que la tabla Users tenga la siguiente estructura:
-
-```sql
-CREATE TABLE [dbo].[Users] (
-    [Id] INT IDENTITY(1,1) PRIMARY KEY,
-    [Email] NVARCHAR(255) NOT NULL UNIQUE,
-    [Name] NVARCHAR(255) NOT NULL,
-    [PasswordHash] NVARCHAR(500) NOT NULL,
-    [RefreshToken] NVARCHAR(500) NULL,
-    [RefreshTokenExpiryTime] DATETIME2 NULL,
-    [CreatedAt] DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
-    [UpdatedAt] DATETIME2 NULL
-);
-GO
-
-CREATE UNIQUE INDEX IX_Users_Email ON [Users]([Email]);
-GO
-```
-
-## Permisos Requeridos
-
-El usuario de la base de datos debe tener permisos para:
-- `EXECUTE` en los stored procedures
-- `SELECT`, `INSERT`, `UPDATE` en la tabla `Users`
-
-```sql
--- Ejemplo de asignación de permisos
-GRANT EXECUTE ON [dbo].[sp_GetUserByEmail] TO [tu_usuario];
-GRANT EXECUTE ON [dbo].[sp_RegisterUser] TO [tu_usuario];
-GRANT EXECUTE ON [dbo].[sp_UpdateRefreshToken] TO [tu_usuario];
-GRANT EXECUTE ON [dbo].[sp_GetUserByRefreshToken] TO [tu_usuario];
-GRANT EXECUTE ON [dbo].[sp_EmailExists] TO [tu_usuario];
-```
-
-## Verificación
-
-Para verificar que los stored procedures están creados correctamente:
-
-```sql
--- Listar todos los stored procedures de autenticación
-SELECT 
-    name AS ProcedureName,
-    create_date AS CreatedDate,
-    modify_date AS ModifiedDate
-FROM sys.procedures
-WHERE name LIKE 'sp_%'
-ORDER BY name;
-```
-
-## Notas Importantes
-
-1. **Orden de Columnas**: Los stored procedures deben retornar las columnas en el mismo orden que se definen en el modelo `User` de C#.
-
-2. **Tipos de Datos**: Asegúrate de que los tipos de datos en SQL Server coincidan con los del modelo C#:
-   - `INT` para `Id`
-   - `NVARCHAR(255)` para `Email` y `Name`
-   - `NVARCHAR(500)` para `PasswordHash` y `RefreshToken`
-   - `DATETIME2` para fechas
-
-3. **Case Sensitivity**: Los stored procedures usan comparaciones exactas. Si necesitas case-insensitive, ajusta las comparaciones en los stored procedures.
-
-4. **Transacciones**: Los stored procedures no usan transacciones explícitas. Si necesitas transacciones, puedes agregarlas según tus requisitos.
-
-5. **Validaciones**: Los stored procedures asumen que las validaciones de negocio se hacen en la capa de aplicación. Puedes agregar validaciones adicionales en los stored procedures si es necesario.
-
+1. Agregar método en `AuthDbContext` con parámetros tipados.
+2. Mapear columnas nulas de forma defensiva.
+3. Exponerlo por interfaz de negocio antes del controller.
+4. Documentar endpoint, parámetros y columnas aquí.
+5. Si el frontend lo consume, agregar método en `src/services/previo.service.js`.
