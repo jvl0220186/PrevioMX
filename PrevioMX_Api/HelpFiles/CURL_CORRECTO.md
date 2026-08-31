@@ -1,86 +1,87 @@
-# Comando cURL Correcto para Endpoints Protegidos
+# cURL — flujos reales
 
-## ❌ INCORRECTO (Tu comando actual)
+Perfil local: `https://localhost:5001`. Aceptar el certificado de desarrollo (`-k`) si hace falta.
 
-```bash
-curl -X 'GET' \
-  'https://localhost:7145/WeatherForecast' \
-  -H 'accept: text/plain' \
-  -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",   "refreshToken": "itvKoqerI7o8Gdmi1UbNFUJa666ZkJJOAjlsnX5K6pthnMBPPFwm/WhAKET9dVjAew7GR4FfmrWdznRafpntaw=='
-```
-
-**Problemas:**
-1. El `refreshToken` NO debe ir en el header `Authorization`
-2. El header tiene comillas y formato JSON incorrecto
-3. El `refreshToken` es solo para el endpoint `/api/auth/refresh`, no para otros endpoints
-
-## ✅ CORRECTO
+## 1. Login
 
 ```bash
-curl -X 'GET' \
-  'https://localhost:7145/WeatherForecast' \
-  -H 'accept: application/json' \
-  -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IllSTyIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6Inlyb3NhbGVzLm10eUBncnVwb2VpLmNvbS5teCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJ5cm9zYWxlcy5tdHkiLCJFcXVpcG8iOiJNQU5DSEVTVEVSIiwiR3J1cG9JZCI6IjczRjI5MTU2LTlERjctNEY5Ni1CQTRGLTY5M0FDREQ3NTU5MCIsIkxpZGVyIjoieXJvc2FsZXMubXR5IiwianRpIjoiMTUyMTJjYTYtZDllZi00NDQwLThjYmQtZTU0Yzc0ZGU1NzdlIiwiZXhwIjoxNzY0MzY4NjcyLCJpc3MiOiJQcmV2aW9NWF9BUEkiLCJhdWQiOiJQcmV2aW9NWF9XZWIifQ.w96Vs2ZCq181ZYGMToDaBxbA5zhfeZd7gPPDycYmlIw'
+curl -sk -X POST "https://localhost:5001/api/Auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"usuario":"TU.USUARIO","password":"TU_PASSWORD"}'
 ```
 
-## Formato Correcto del Header
-
-El header `Authorization` debe tener **SOLO** el token JWT:
-
-```
-Authorization: Bearer {token_completo_sin_espacios_ni_comillas}
-```
-
-**Ejemplo:**
-```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IllSTyIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6Inlyb3NhbGVzLm10eUBncnVwb2VpLmNvbS5teCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJ5cm9zYWxlcy5tdHkiLCJFcXVpcG8iOiJNQU5DSEVTVEVSIiwiR3J1cG9JZCI6IjczRjI5MTU2LTlERjctNEY5Ni1CQTRGLTY5M0FDREQ3NTU5MCIsIkxpZGVyIjoieXJvc2FsZXMubXR5IiwianRpIjoiMTUyMTJjYTYtZDllZi00NDQwLThjYmQtZTU0Yzc0ZGU1NzdlIiwiZXhwIjoxNzY0MzY4NjcyLCJpc3MiOiJQcmV2aW9NWF9BUEkiLCJhdWQiOiJQcmV2aW9NWF9XZWIifQ.w96Vs2ZCq181ZYGMToDaBxbA5zhfeZd7gPPDycYmlIw
-```
-
-## Comando cURL Simplificado (Una Línea)
+Guardar solo `token`:
 
 ```bash
-curl -X GET "https://localhost:7145/WeatherForecast" -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IllSTyIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6Inlyb3NhbGVzLm10eUBncnVwb2VpLmNvbS5teCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJ5cm9zYWxlcy5tdHkiLCJFcXVpcG8iOiJNQU5DSEVTVEVSIiwiR3J1cG9JZCI6IjczRjI5MTU2LTlERjctNEY5Ni1CQTRGLTY5M0FDREQ3NTU5MCIsIkxpZGVyIjoieXJvc2FsZXMubXR5IiwianRpIjoiMTUyMTJjYTYtZDllZi00NDQwLThjYmQtZTU0Yzc0ZGU1NzdlIiwiZXhwIjoxNzY0MzY4NjcyLCJpc3MiOiJQcmV2aW9NWF9BUEkiLCJhdWQiOiJQcmV2aW9NWF9XZWIifQ.w96Vs2ZCq181ZYGMToDaBxbA5zhfeZd7gPPDycYmlIw"
+TOKEN="$(curl -sk -X POST "https://localhost:5001/api/Auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"usuario":"TU.USUARIO","password":"TU_PASSWORD"}' \
+  | python3 -c "import sys,json; print(json.load(sys.stdin).get('token',''))")"
 ```
 
-## Usar Variable para el Token
+## 2. Pendientes del equipo
 
 ```bash
-# Guardar el token en una variable
-TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IllSTyIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6Inlyb3NhbGVzLm10eUBncnVwb2VpLmNvbS5teCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJ5cm9zYWxlcy5tdHkiLCJFcXVpcG8iOiJNQU5DSEVTVEVSIiwiR3J1cG9JZCI6IjczRjI5MTU2LTlERjctNEY5Ni1CQTRGLTY5M0FDREQ3NTU5MCIsIkxpZGVyIjoieXJvc2FsZXMubXR5IiwianRpIjoiMTUyMTJjYTYtZDllZi00NDQwLThjYmQtZTU0Yzc0ZGU1NzdlIiwiZXhwIjoxNzY0MzY4NjcyLCJpc3MiOiJQcmV2aW9NWF9BUEkiLCJhdWQiOiJQcmV2aW9NWF9XZWIifQ.w96Vs2ZCq181ZYGMToDaBxbA5zhfeZd7gPPDycYmlIw"
-
-# Usar el token
-curl -X GET "https://localhost:7145/WeatherForecast" \
+curl -sk "https://localhost:5001/api/Visualization/pendientes/EQUIPO" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
-## Notas Importantes
+## 3. Clasificación (ruta viva)
 
-1. **El refreshToken NO va en el header Authorization**
-   - El `refreshToken` solo se usa en el endpoint `/api/auth/refresh`
-   - Para otros endpoints, solo necesitas el `token` JWT
+```bash
+curl -sk -X POST "https://localhost:5001/api/Clasificacion/validar-post" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"idEntrada":"ENT-001","idProducto":"NP-123"}'
+```
 
-2. **Formato del header:**
-   - `Authorization: Bearer {token}`
-   - Sin comillas alrededor del token
-   - Un solo espacio después de "Bearer"
-   - El token completo sin espacios ni saltos de línea
+## 4. Registrar partida
 
-3. **Verificar el token:**
-   - El token debe ser el que obtuviste del endpoint `/api/auth/login`
-   - Copia solo el valor del campo `token` de la respuesta JSON
-   - No incluyas el `refreshToken` en el header
+`mms` vacío o `marca|modelo|serie~...`.
 
-## Si Sigue Dando 401
+```bash
+curl -sk -X POST "https://localhost:5001/api/Visualization/registrar-partida" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "idBulto":"B-1",
+    "referencia":"ENT-001",
+    "idProveedor":"P-1",
+    "idProducto":"NP-123",
+    "um":"PZA",
+    "cantidad":"2",
+    "subCantidad":"0",
+    "paisOrigen":"CN",
+    "comentarios":"",
+    "usuario":"TU.USUARIO",
+    "ocCompra":"PO-1",
+    "noParteFisico":"",
+    "mms":"ACME|X1|SN001~ACME|X1|SN002"
+  }'
+```
 
-1. **Verifica que el token no haya expirado:**
-   - El token expira en 60 minutos
-   - Haz login nuevamente para obtener un nuevo token
+## 5. Eliminar partida (DELETE + body)
 
-2. **Verifica el SecretKey:**
-   - El `SecretKey` en `appsettings.json` debe ser el mismo usado para generar el token
-   - Si cambiaste el SecretKey, necesitas generar un nuevo token
+```bash
+curl -sk -X DELETE "https://localhost:5001/api/Visualization/eliminar-partida" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"id":10,"idBulto":"B-1","referencia":"ENT-001","idProducto":"NP-123"}'
+```
 
-3. **Revisa los logs de la aplicación:**
-   - Ahora los logs mostrarán el tipo de error específico
-   - Busca mensajes que digan "Error de autenticación JWT"
+## 6. OpenPO
 
+`packing` es obligatorio en API (typo del mensaje: `"Paking es requerido"`).
+
+```bash
+curl -sk -X POST "https://localhost:5001/api/Visualization/agregar-openpo" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"referencia":"ENT-001","po":"PO-99","packing":"PK-1"}'
+```
+
+## Errores de header
+
+No concatenar `refreshToken` al Bearer. No usar `WeatherForecast` como ejemplo de negocio: existe, pero no toca Aduasis.
+
+Si 401: token vencido (1440 min), `SecretKey` distinta, o falta `Bearer `.

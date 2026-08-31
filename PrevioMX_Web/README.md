@@ -1,114 +1,93 @@
 # PrevioMX Web
 
-Aplicación web desarrollada en React + JavaScript para conectar con la API .NET Core de PrevioMX.
+SPA React 18 + Vite 5. Habla con PrevioMX API por Axios. Base de rutas: `/PrevioMX`.
 
-## Características
+## Intento
 
-- ✅ Autenticación JWT
-- ✅ Arquitectura separada (vistas, componentes, servicios, estilos)
-- ✅ Rutas protegidas
-- ✅ Interceptores de Axios para manejo de tokens
-- ✅ Context API para gestión de estado de autenticación
+- Login JWT y dashboard de pendientes por `user.equipo`.
+- Captura de partidas (clasificación, Standard Pack, MMS, OpenPO).
+- Visualización OCR de PDFs de documentos del pendiente.
 
-## Estructura del Proyecto
+## Estructura
 
 ```
 PrevioMX_Web/
 ├── src/
-│   ├── components/          # Componentes reutilizables
-│   │   ├── auth/           # Componentes de autenticación
-│   │   ├── common/         # Componentes comunes (Loading, etc.)
-│   │   └── layout/         # Componentes de layout (Header, etc.)
-│   ├── config/             # Configuraciones
-│   ├── contexts/           # Context API (AuthContext)
-│   ├── routes/             # Configuración de rutas
-│   ├── services/           # Servicios de API
-│   ├── styles/             # Estilos globales
-│   └── views/              # Vistas/páginas
-├── package.json
-├── vite.config.js
-└── README.md
+│   ├── components/     # auth, capture, dashboard, layout, common
+│   ├── config/         # api.config.js (BASE_URL)
+│   ├── contexts/       # AuthProvider / AuthContext
+│   ├── routes/         # AppRoutes.jsx
+│   ├── services/       # api.service.js, auth.service.js, previo.service.js
+│   ├── views/          # Login, Dashboard, Capture
+│   └── App.jsx         # BrowserRouter basename="/PrevioMX"
+├── docs/FLUJO_CAPTURA.md
+├── vite.config.js      # base: '/PrevioMX/', copia pdf.worker.min.mjs
+└── .env.development / .env.production
 ```
 
-## Instalación
+## Rutas
 
-1. Instalar dependencias:
+| Path | Guard | Vista |
+|------|-------|-------|
+| `/` | público; si hay sesión → dashboard | Login |
+| `/login` | redirect a `/` | — |
+| `/dashboard` | JWT / user | Pendientes |
+| `/capture/:reference` | JWT / user | Captura |
+| `*` | → `/dashboard` | — |
+
+URL local: `http://localhost:5173/PrevioMX/`.
+
+## Setup
+
 ```bash
 npm install
+npm run dev      # Vite, puerto 5173
+npm run build    # sale a dist/; copia pdf.worker.min.mjs
+npm run preview
 ```
 
-2. Configurar variables de entorno:
+### Variables
 
-   **Opción A: Archivo único `.env` (recomendado para empezar)**
-   ```bash
-   # Crear archivo .env en la raíz del proyecto
-   VITE_API_BASE_URL=http://localhost:5000/api
-   ```
+| Variable | Desarrollo (repo) | Producción (repo) | Efecto |
+|----------|-------------------|-------------------|--------|
+| `VITE_API_BASE_URL` | `https://localhost:5001` | `https://preproduccion.grupoei.com.mx/PrevioMXApi` | Base de Axios (**absoluta**) |
+| `VITE_DEV_MODE` | `false` | — | Si `true`, `AuthProvider` mockea user **sin JWT** |
+| `VITE_AB3_URL` | definida | definida | **No se lee** en `src/` |
 
-   **Opción B: Archivos específicos por ambiente (recomendado para producción)**
-   
-   Para desarrollo, crear `.env.development`:
-   ```bash
-   VITE_API_BASE_URL=http://localhost:5000/api
-   ```
-   
-   Para producción, crear `.env.production`:
-   ```bash
-   VITE_API_BASE_URL=https://api.tudominio.com/api
-   ```
+Si no hay env: desarrollo → `https://localhost:5001`; otro → `http://192.168.6.185/PrevioMX/Api` (`api.config.js`).
 
-   > **Nota**: Los archivos `.env` NO se commitean al repositorio (están en `.gitignore`). 
-   > Vite carga automáticamente `.env.development` en `npm run dev` y `.env.production` en `npm run build`.
+Vite **no** llama `loadEnv` en `vite.config.js`. El proxy `/api` usa `process.env.VITE_API_BASE_URL` del **shell**, o `http://localhost:5001`. Axios **no** usa ese proxy: pega a `API_CONFIG.BASE_URL`.
 
-## Desarrollo
+## Autenticación (UI)
 
-Ejecutar el servidor de desarrollo:
-```bash
-npm run dev
-```
+- Login: `POST /api/Auth/login` con `{ usuario, password }`.
+- Guarda `token` y `user` en `localStorage`.
+- Interceptor: Bearer + chequeo de `exp`; 401/403 → limpia token/user/`captureData` y manda a `/PrevioMX/` (excepto `valida-token-teamleader`).
+- `register` / `refresh` en `auth.service.js` no tienen flujo de UI y la API no los implementa.
 
-La aplicación estará disponible en `http://localhost:3000`
+## Servicios de negocio
 
-## Build
+`previo.service.js` cubre catálogos, pendientes, partidas, OpenPO, marca/modelo, cierre y reapertura.
 
-Generar build de producción:
-```bash
-npm run build
-```
+No hay cliente para `POST /api/Visualization/validar-cuarentenas`.
 
-**Importante para producción:**
-- Asegúrate de tener `.env.production` configurado con la URL correcta de tu API
-- O configura las variables de entorno en tu plataforma de deployment (Vercel, Netlify, etc.)
-- El build incluirá las variables del `.env.production` en el código compilado
+`getClasificacion()` llama un GET que **no existe**. Usar `validarPost()`.
 
-## Autenticación
+## CORS y PDF
 
-La aplicación utiliza JWT para autenticación. El token se almacena en `localStorage` y se incluye automáticamente en todas las peticiones mediante interceptores de Axios.
+La API solo permite orígenes localhost (5173/3000/5000). Un build servido desde otro host necesita que CORS se amplíe en `Program.cs`.
 
-### Endpoints esperados en la API:
+PDFs cross-origin van a `GET /api/Visualization/pdf-proxy?url=`. Hosts: `*.grupoei.com.mx`, `*.aduax.com`, `*.amazonaws.com`. Un 403 del proxy cierra sesión.
 
-- `POST /api/auth/login` - Iniciar sesión
-- `POST /api/auth/register` - Registrar usuario
-- `POST /api/auth/refresh` - Refrescar token
+OCR: `pdfjs-dist` + `tesseract.js`. En prod el worker es `{base}pdf.worker.min.mjs` (plugin `copyPdfWorker`).
 
-### Formato de respuesta esperado:
+## Pitfalls
 
-```json
-{
-  "token": "jwt_token_here",
-  "user": {
-    "id": 1,
-    "email": "user@example.com",
-    "name": "Usuario"
-  }
-}
-```
+1. Abrir `http://localhost:5173/` sin `/PrevioMX/` rompe el router.
+2. `VITE_DEV_MODE=true` “loguea” pero todas las APIs `[Authorize]` fallan.
+3. `ProveedoresCombo` pagina desde 0; el API calcula `more` 1-based → puede pedir páginas de más.
+4. OpenPO: la UI exige solo `po`; la API exige también `packing`.
+5. Certificado HTTPS local: el browser debe confiar en `https://localhost:5001`.
+6. `appsettings` embebido y DLLs `onecore.security.*` son problemas de API, no de npm.
 
-## Estructura de Archivos
-
-- **Vistas**: Cada vista tiene su propio archivo JSX y CSS
-- **Componentes**: Separados por funcionalidad (auth, layout, common)
-- **Servicios**: Lógica de negocio y comunicación con API
-- **Contextos**: Estado global de la aplicación
-- **Estilos**: CSS separado por componente/vista
-
+Flujo de captura, MMS y reapertura: [docs/FLUJO_CAPTURA.md](docs/FLUJO_CAPTURA.md).
