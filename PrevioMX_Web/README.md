@@ -1,114 +1,84 @@
 # PrevioMX Web
 
-Aplicación web desarrollada en React + JavaScript para conectar con la API .NET Core de PrevioMX.
+SPA React 18 + Vite 5. Consume la API .NET (`PrevioMX_Api`).
 
-## Características
+## Rutas (`basename="/PrevioMX"`)
 
-- ✅ Autenticación JWT
-- ✅ Arquitectura separada (vistas, componentes, servicios, estilos)
-- ✅ Rutas protegidas
-- ✅ Interceptores de Axios para manejo de tokens
-- ✅ Context API para gestión de estado de autenticación
+| Ruta | Vista | Guard |
+|---|---|---|
+| `/` | Login | pública; si hay sesión → `/dashboard` |
+| `/login` | redirect a `/` | — |
+| `/dashboard` | Pendientes del equipo | JWT / `VITE_DEV_MODE` |
+| `/capture/:reference` | Captura de partidas | JWT / `VITE_DEV_MODE` |
+| `*` | redirect a `/dashboard` | — |
 
-## Estructura del Proyecto
+URL de desarrollo: `http://localhost:5173/PrevioMX/` (no el puerto 3000).
 
-```
-PrevioMX_Web/
-├── src/
-│   ├── components/          # Componentes reutilizables
-│   │   ├── auth/           # Componentes de autenticación
-│   │   ├── common/         # Componentes comunes (Loading, etc.)
-│   │   └── layout/         # Componentes de layout (Header, etc.)
-│   ├── config/             # Configuraciones
-│   ├── contexts/           # Context API (AuthContext)
-│   ├── routes/             # Configuración de rutas
-│   ├── services/           # Servicios de API
-│   ├── styles/             # Estilos globales
-│   └── views/              # Vistas/páginas
-├── package.json
-├── vite.config.js
-└── README.md
-```
+## Setup
 
-## Instalación
-
-1. Instalar dependencias:
 ```bash
 npm install
-```
-
-2. Configurar variables de entorno:
-
-   **Opción A: Archivo único `.env` (recomendado para empezar)**
-   ```bash
-   # Crear archivo .env en la raíz del proyecto
-   VITE_API_BASE_URL=http://localhost:5000/api
-   ```
-
-   **Opción B: Archivos específicos por ambiente (recomendado para producción)**
-   
-   Para desarrollo, crear `.env.development`:
-   ```bash
-   VITE_API_BASE_URL=http://localhost:5000/api
-   ```
-   
-   Para producción, crear `.env.production`:
-   ```bash
-   VITE_API_BASE_URL=https://api.tudominio.com/api
-   ```
-
-   > **Nota**: Los archivos `.env` NO se commitean al repositorio (están en `.gitignore`). 
-   > Vite carga automáticamente `.env.development` en `npm run dev` y `.env.production` en `npm run build`.
-
-## Desarrollo
-
-Ejecutar el servidor de desarrollo:
-```bash
 npm run dev
 ```
 
-La aplicación estará disponible en `http://localhost:3000`
+`.env.development`:
+
+```
+VITE_API_BASE_URL=https://localhost:5001
+VITE_DEV_MODE=false
+```
+
+`.env.production` (build): `https://preproduccion.grupoei.com.mx/PrevioMXApi`.
+
+Sin `VITE_API_BASE_URL`: dev → `https://localhost:5001`; prod → `http://192.168.6.185/PrevioMX/Api`.
+
+`VITE_AB3_URL` está en `.env*` y **no se referencia** en `src/`.
+
+## Auth
+
+1. Login llama `POST /api/Auth/login` con `{ usuario, password }`. El formulario dice “Email”/“correo”; el valor se envía como `usuario`.
+2. Guarda `token` y `user` en `localStorage`.
+3. Interceptor: si `exp` ya pasó, limpia sesión **antes** de llamar.
+4. 401/403 → logout y redirect a `/PrevioMX/`, **excepto** `POST /api/Protected/valida-token-teamleader` (un token de TL inválido no debe cerrar la sesión del capturista).
+5. `register` / `refresh` existen en `auth.service.js` pero la API no los implementa.
+
+`VITE_DEV_MODE=true` crea un usuario mock (`id: dev-user`) **sin JWT**. Sirve para pintar UI; las llamadas `[Authorize]` fallan.
+
+## Servicios
+
+| Archivo | Rol |
+|---|---|
+| `src/config/api.config.js` | `BASE_URL`, timeout 30s |
+| `src/services/api.service.js` | Axios + interceptores |
+| `src/services/auth.service.js` | login / storage |
+| `src/services/previo.service.js` | catálogos, visualización, clasificación, TL |
+
+`getClasificacion()` llama un GET que **no existe**. El formulario usa `validarPost()`.
+
+No hay cliente para `validar-cuarentenas`.
+
+## Vite / PDF
+
+- `base: '/PrevioMX/'`.
+- Plugin `copyPdfWorker` copia `pdf.worker.min.mjs` a `dist/` (producción / IIS).
+- En dev, PDF.js carga el worker desde `node_modules`.
+- Proxy `/api` → `process.env.VITE_API_BASE_URL || http://localhost:5001`. Axios **no** usa ese proxy (URL absoluta). `loadEnv` no se llama.
+
+El visor pide PDFs vía `GET {BASE_URL}/api/Visualization/pdf-proxy?url=`. Hosts permitidos: grupoei, aduax, `*.amazonaws.com`. Un 403 del proxy dispara logout.
 
 ## Build
 
-Generar build de producción:
 ```bash
 npm run build
+npm run preview
 ```
 
-**Importante para producción:**
-- Asegúrate de tener `.env.production` configurado con la URL correcta de tu API
-- O configura las variables de entorno en tu plataforma de deployment (Vercel, Netlify, etc.)
-- El build incluirá las variables del `.env.production` en el código compilado
+El artefacto espera hospedarse bajo `/PrevioMX/`. `pdf.worker.min.mjs` debe quedar en la raíz del publish junto al `index.html`.
 
-## Autenticación
+## Trampas
 
-La aplicación utiliza JWT para autenticación. El token se almacena en `localStorage` y se incluye automáticamente en todas las peticiones mediante interceptores de Axios.
-
-### Endpoints esperados en la API:
-
-- `POST /api/auth/login` - Iniciar sesión
-- `POST /api/auth/register` - Registrar usuario
-- `POST /api/auth/refresh` - Refrescar token
-
-### Formato de respuesta esperado:
-
-```json
-{
-  "token": "jwt_token_here",
-  "user": {
-    "id": 1,
-    "email": "user@example.com",
-    "name": "Usuario"
-  }
-}
-```
-
-## Estructura de Archivos
-
-- **Vistas**: Cada vista tiene su propio archivo JSX y CSS
-- **Componentes**: Separados por funcionalidad (auth, layout, common)
-- **Servicios**: Lógica de negocio y comunicación con API
-- **Contextos**: Estado global de la aplicación
-- **Estilos**: CSS separado por componente/vista
-
+- CORS de la API solo acepta localhost. Front en otro origen + API local = error de navegador.
+- Certificado `https://localhost:5001`: el navegador debe confiarlo o las llamadas fallan.
+- Catálogo proveedores: la UI pagina desde `0`; el API default y `More` asumen 1-based.
+- OpenPO: enviar `packing` aunque el form no lo valide.
+- `api.service.js` trata casi cualquier 403 como sesión expirada.
