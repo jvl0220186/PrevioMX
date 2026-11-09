@@ -1,0 +1,125 @@
+# PrevioMX
+
+Monorepo de captura de previos: API .NET 8 (`PrevioMX_Api`) y SPA React/Vite (`PrevioMX_Web`).
+
+## Arquitectura
+
+```
+Navegador (/PrevioMX)  →  API (/api/*)  →  SQL Server (stored procedures CSP_PMX_*)
+         JWT Bearer              AuthDbContext
+```
+
+- **Web**: login, dashboard de pendientes por equipo y captura de partidas (MMS, OpenPO, cierre/reapertura, PDF/OCR).
+- **API**: JWT + EF Core contra SQL Server. La lógica de negocio vive en stored procedures; la API mapea resultados.
+- **Auth**: `POST /api/Auth/login` llama `CSP_PMX_Login`. `register` y `refresh` existen en el controlador pero **no están implementados** (409 / 401).
+
+## Setup local
+
+### API
+
+1. .NET 8 SDK.
+2. DLLs externas referenciadas fuera del repo (el build falla si no existen):
+   - `..\..\..\DLL\onecore.security.encryptvr.dll`
+   - `..\..\..\Apostol\Dev\ApostolWeb\ApostolWeb\onecore.security.services.dll`
+3. Cadena `ConnectionStrings:DefaultConnection` en `PrevioMX_Api/appsettings.json` (SQL Server). No commitear contraseñas en docs.
+4. `appsettings.json` está marcado como `EmbeddedResource` y se copia al output.
+5. Perfil `https` en `launchSettings.json`: `https://localhost:5001` y `http://localhost:5000`. Swagger solo en `Development`.
+
+```bash
+cd PrevioMX_Api
+dotnet run --launch-profile https
+```
+
+`Program.cs` llama `UseHttpsRedirection()`. Si el front apunta a `http://localhost:5000`, el navegador puede recibir un 307 hacia HTTPS.
+
+`PrevioMX_Api.http` apunta a `http://localhost:5196` y a `/weatherforecast/`. Ese puerto no está en `launchSettings.json`. IIS Express usa `http://localhost:52156` y SSL `44367`. El request de plantilla no sirve como smoke de negocio.
+
+El perfil de Visual Studio `Properties/PublishProfiles/FolderProfile.pubxml` no es el `dotnet run` local. Publica **self-contained** `win-x86` (`DeleteExistingFiles=true`) a `I:\WWW\Previo MX\Api`. En otra máquina esa unidad no existe; en la máquina que sí la tiene, Publish borra el contenido de esa carpeta.
+
+`PrevioMX_Api/.config/dotnet-tools.json` fija `dotnet-ef` **10.0.2**. Los paquetes del csproj son EF Core **8.0.0** y no hay migraciones. El esquema no se crea con `dotnet ef`.
+
+### Web
+
+```bash
+cd PrevioMX_Web
+npm install
+# .env.development ya define VITE_API_BASE_URL=https://localhost:5001
+npm run dev
+```
+
+Vite sirve en `http://localhost:5173`. El router usa `basename="/PrevioMX"`, así que la app queda en `http://localhost:5173/PrevioMX/`.
+
+Axios usa `API_CONFIG.BASE_URL` (absoluta). El proxy `/api` de Vite **no** se usa salvo que el cliente apunte a rutas relativas. `vite.config.js` no llama `loadEnv`; el proxy solo lee `process.env.VITE_API_BASE_URL` del shell.
+
+CORS en `Program.cs` permite únicamente `http://localhost:5173`, `:3000` y `:5000`. Un origen de preproducción no pasará CORS contra una API local.
+
+## Variables de entorno (web)
+
+| Variable | Uso |
+|---|---|
+| `VITE_API_BASE_URL` | Base de Axios. Sin env: `https://localhost:5001` en dev; `http://192.168.6.185/PrevioMX/Api` en build. |
+| `VITE_DEV_MODE=true` | Usuario mock en React **sin JWT y sin escribir `localStorage.user`**. El dashboard lee el equipo de `localStorage` y llama `GET /pendientes/` (equipo vacío). |
+| `VITE_AB3_URL` | Presente en `.env*` (URL de iframes AB3); **no se usa** en `src/`. |
+
+Producción (`.env.production`): `https://preproduccion.grupoei.com.mx/PrevioMXApi`.
+
+## Sesión y `localStorage`
+
+Tres caminos de cierre, con efectos distintos:
+
+| Origen | Qué borra |
+|---|---|
+| Botón del `Header` | `localStorage.clear()` + redirect duro a `/PrevioMX/` |
+| Interceptor Axios (`api.service.js`) | `token`, `user`, `captureData` |
+| `authService.logout()` (boot con JWT vencido) | solo `token` y `user` — **deja** `captureData` |
+
+El dashboard **no** usa `AuthContext` para el equipo: lee `JSON.parse(localStorage.user).equipo`. `AddPartidasForm` toma `usuario` de `user.idUsuario \|\| user.usuario \|\| 'unknown'`.
+
+## Mapa de documentación
+
+| Doc | Contenido |
+|---|---|
+| [PrevioMX_Api/HelpFiles/README.md](PrevioMX_Api/HelpFiles/README.md) | Índice de la API |
+| [PrevioMX_Api/HelpFiles/USO_ENDPOINTS.md](PrevioMX_Api/HelpFiles/USO_ENDPOINTS.md) | Superficie HTTP real |
+| [PrevioMX_Api/HelpFiles/AUTENTICACION_JWT.md](PrevioMX_Api/HelpFiles/AUTENTICACION_JWT.md) | Login, claims, expiración |
+| [PrevioMX_Api/HelpFiles/STORED_PROCEDURES.md](PrevioMX_Api/HelpFiles/STORED_PROCEDURES.md) | SPs invocados por código |
+| [PrevioMX_Api/HelpFiles/CONFIGURACION_BD.md](PrevioMX_Api/HelpFiles/CONFIGURACION_BD.md) | SQL Server y EF |
+| [PrevioMX_Api/HelpFiles/RUNBOOK.md](PrevioMX_Api/HelpFiles/RUNBOOK.md) | Troubleshooting y trampas operativas |
+| [PrevioMX_Web/README.md](PrevioMX_Web/README.md) | Setup y trampas del frontend |
+| [PrevioMX_Web/docs/FLUJO_CAPTURA.md](PrevioMX_Web/docs/FLUJO_CAPTURA.md) | Dashboard → captura, MMS, OpenPO, cierre |
+
+## Hallazgos operativos (verificados)
+
+- `POST /api/Visualization/validar-cuarentenas` no tiene cliente en el frontend.
+- OpenPO: el modal tiene campo `packing`, pero el cliente solo exige `po`. Si `packing` va vacío, la API responde 400 (“Paking es requerido”).
+- `CatalogosService.More` asume página 1-based; `ProveedoresCombo` empieza en `0` → con una sola página `More` permanece `true`. El scroll pide `page + 1` y **concatena** la respuesta. Con el cuadro de búsqueda vacío el filtro no es “todo el catálogo”: vuelve a `initialFilter` (el id de proveedor actual).
+- `main.jsx` envuelve la app en `React.StrictMode`. En `npm run dev` los `useEffect` se montan dos veces. El dashboard (`getPendientes`) y la carga de captura no cancelan la primera petición. El visor PDF sí marca `cancelled`, pero el GET del documento igual sale dos veces.
+- Publish de la API (`FolderProfile.pubxml`): self-contained `win-x86`, borra y escribe `I:\WWW\Previo MX\Api`. No es el perfil de `launchSettings.json`.
+- El visor PDF usa `pdfjsLib.getDocument` (fetch propio + header JWT). Ese 403 **no** pasa por el interceptor de Axios. El interceptor sí haría logout si algún cliente Axios llamara `pdf-proxy`.
+- PDFs same-origin se cargan directo; solo se proxifica cuando `origin(pdf) !== origin(app)`.
+- `GET /api/Clasificacion/{entrada}/{producto}` no existe; `getClasificacion()` está muerto. El flujo activo es `POST /api/Clasificacion/validar-post`.
+- `sp_previo_TL`: si hay fila, el mapeo fuerza `PuedeRegenerar=true` y `LUsuario=""`. Sin fila, `puede-reabrir-previo` responde 500 (no `puedeRegenerar: false`). Password vacío es 400; la UI igual deja validar sin contraseña y cierra el modal antes del request.
+- Desviar la cantidad respecto de `spCantidades` (lista separada por comas) también pide token de Team Leader. Ese POST usa `user.usuario`, no `idUsuario`.
+- Un producto se considera clasificado solo si `clasificacion` son exactamente 10 dígitos. Si no, y la descripción va vacía, `comentarios` empieza con `REVISION`.
+- `POST /api/Auth/refresh` sin body (el helper web) es 400. El 401 solo aparece si se envía un `refreshToken` no vacío.
+- `GET /WeatherForecast` es leftover de plantilla (`[Authorize]`); no forma parte del flujo de negocio.
+- Login activo: `LoginView.jsx` (`type="text"`, etiqueta “Usuario / Correo”). `LoginForm.jsx` (`type="email"`) **no se importa**.
+- Interceptor: timeout/red (`ECONNABORTED` / `ERR_NETWORK`) también limpia sesión si el JWT ya venció.
+- IIS: `public/web.config` mapea `.mjs` y reescribe SPA a `index.html`.
+- `UrlFileServices.ExtracFileNameFromUrl` hace `new Uri(url)`. Una URL malformada en `ruta_documento` tumba todo el listado de pendientes.
+- `authService.refreshToken()` hace POST **sin body**; aunque la API implementara refresh, no enviaría `refreshToken`.
+- La tabla de pendientes muestra bodega y tipo de envío, pero la búsqueda no los filtra. El orden por fecha compara el texto `es-ES`, no el calendario.
+- Editar una partida no usa el bool `clasificado` ni recibe el string `clasificacion` (`detalle-entrada` no lo trae). Hasta el blur del número de parte el form trata el producto como no clasificado. Un `REVISION` viejo en notas se puede duplicar al guardar.
+- `validar-marca` / `validar-modelo` sin fila responden 404; el form no bloquea el campo. OCR (Tesseract `spa`) no llama `validar-post` hasta blur o Enter.
+- El header de captura (cliente, fecha) y la lista de PDF no salen de `detalle-entrada` (`{ items }` únicamente). Sin `captureData` de esa referencia no hay visor aunque el detalle responda 200.
+- Cambiar proveedor es estado local y el lápiz se deshabilita en cuanto hay una línea con `idProducto`. Se manda como `idProveedor` en la siguiente partida y se pierde al recargar (`proveedor-previo` vuelve a pisar).
+- Elegir bulto lo bloquea. “Guardar y Agregar Otra” deja el form abierto. El contador del bulto es de sesión. `refreshPartidas()` no muestra el error si el detalle falla después.
+- “Ver expediente” abre `https://web.aduax.com/Arrivedexp/referencias.aspx?id={reference}&r=0`. No usa `VITE_AB3_URL`. “Abrir en nueva pestaña” salta el `pdf-proxy`. El `pageNum` del visor no se reinicia al cambiar de PDF.
+- `fecha_entrada` NULL se serializa como año 1 (`DateTime.MinValue`). El dashboard no lo trata como fecha vacía.
+- `subCantidad` se envía y no se lee de vuelta. Editar una UM `JGO` deja el campo vacío y bloquea el guardado hasta recapturarla.
+- El badge de discrepancia de la fila y el bool `series` no alimentan el cierre ni el form MMS. El cierre manda sus propios checkboxes (default `false`). El badge MMS mira el string `mms`.
+- `POST valida-token-teamleader`: 200 solo con fila y `Correcto == true`; 401 si la fila no aprueba; 404 si no hay fila. `user.lider` no autoriza el desvío.
+- El login devuelve `refreshToken` y el cliente no lo guarda. El guard usa `!!user`. `authService.isAuthenticated()` mira solo el token y no se llama. Un `localStorage.user` que no es JSON tumba el arranque.
+- El cliente decide “token vencido” con `atob` del payload, sin convertir base64url. Un `-` o `_` bota la sesión aunque el `exp` siga vigente (misma función al arrancar y en cada Axios, incluido el login). El 401 de credenciales también borra `captureData`.
+- `validar-post` “vacío” (sin clasificación, descripción ni `isSpum`/`isSppo`/`isSpmms`) descarta `isRrmms`, `spCantidades` y `spMms`. `spMms` nunca se pinta. En OpenPO, elegir el producto e recibir ese vacío inventa flags SP a partir de la UM y el país del PO, así que cambiarlos pide token de Team Leader. El toast de fotografías no tiene pantalla de carga de imágenes.
+- El alta de partida no se muestra hasta bloquear un `idBulto` que ya vino en `detalle-entrada`. Teclear el número de parte llama `resetSpInfo()` y borra series y autorizaciones de token antes de revalidar.
